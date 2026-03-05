@@ -502,8 +502,20 @@ function renderChecklist(section) {
 
         if (section.result.notifications) {
             const notifEl = el('div', 'alert alert-info small mb-3');
-            notifEl.innerHTML = '<strong>Notifikace:</strong><ul class="mb-0 mt-1">'
-                + section.result.notifications.map(n => `<li>${n}</li>`).join('') + '</ul>';
+            const notifs = section.result.notifications;
+            let html = '<strong>Notifikace:</strong><ul class="mb-0 mt-1">';
+            if (notifs.length > 0 && typeof notifs[0] === 'object') {
+                notifs.forEach(group => {
+                    html += `<li class="fw-semibold mt-1">${group.condition}</li>`;
+                    html += '<ul class="mb-0">';
+                    (group.actions || []).forEach(a => { html += `<li>${a}</li>`; });
+                    html += '</ul>';
+                });
+            } else {
+                notifs.forEach(n => { html += `<li>${n}</li>`; });
+            }
+            html += '</ul>';
+            notifEl.innerHTML = html;
             resEl.appendChild(notifEl);
         }
 

@@ -248,9 +248,27 @@
             "options": ["Zahájit Investigaci", "Uzavřít incident"]}
         ],
         "notifications": [
-          "True Positive, High → informuj CISO do 1 hodiny · informuj Vlastníka dotčeného systému do 30 minut",
-          "True Positive, Critical → informuj CISO a Management ihned · zvaž notifikaci CERT / NÚKIB",
-          "False Positive / Benign True Positive → informuj oznamovatele · přejdi na Uzavření incidentu"
+          {
+            "condition": "True Positive, High",
+            "actions": [
+              "informuj CISO",
+              "informuj Vlastníka dotčeného systému"
+            ]
+          },
+          {
+            "condition": "True Positive, Critical",
+            "actions": [
+              "informuj CISO a Management",
+              "zvaž notifikaci CERT / NÚKIB"
+            ]
+          },
+          {
+            "condition": "False Positive / Benign True Positive",
+            "actions": [
+              "informuj oznamovatele",
+              "přejdi na Uzavření incidentu"
+            ]
+          }
         ]
       }
     },
