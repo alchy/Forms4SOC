@@ -157,16 +157,38 @@ function renderForm(fields) {
 // ---------------------------------------------------------------------------
 
 function renderPlaybookHeader(section) {
-    const wrap = el('div', 'row g-2');
-    (section.fields || []).forEach(field => {
-        const col = el('div', 'col-md-6');
-        col.innerHTML = `
-            <div class="d-flex flex-column">
-                <span class="text-muted small">${field.label}</span>
-                <span class="fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-            </div>`;
-        wrap.appendChild(col);
+    const wrap = el('div');
+
+    // Editovatelná pole (case_title apod.) zobrazit prominentně nahoře
+    const editableFields = (section.fields || []).filter(f => f.editable);
+    const readonlyFields = (section.fields || []).filter(f => !f.editable);
+
+    editableFields.forEach(field => {
+        const row = el('div', 'row mb-3 align-items-center');
+        const labelCol = el('div', 'col-md-4');
+        labelCol.innerHTML = `<label class="form-label fw-semibold small mb-0">${field.label}</label>
+            ${field.hint ? `<div class="form-text text-muted" style="font-size:0.75rem">${field.hint}</div>` : ''}`;
+        const inputCol = el('div', 'col-md-8');
+        inputCol.appendChild(renderFieldInput(field));
+        row.appendChild(labelCol);
+        row.appendChild(inputCol);
+        wrap.appendChild(row);
     });
+
+    if (readonlyFields.length > 0) {
+        const infoGrid = el('div', 'row g-2 mt-1 pt-2 border-top');
+        readonlyFields.forEach(field => {
+            const col = el('div', 'col-md-4 col-lg-3');
+            col.innerHTML = `
+                <div class="d-flex flex-column">
+                    <span class="text-muted small">${field.label}</span>
+                    <span class="small fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
+                </div>`;
+            infoGrid.appendChild(col);
+        });
+        wrap.appendChild(infoGrid);
+    }
+
     return wrap;
 }
 

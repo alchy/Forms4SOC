@@ -75,6 +75,7 @@
                     <tr>
                         <th class="ps-3">ID</th>
                         <th>Šablona</th>
+                        <th>Popis události</th>
                         <th>Stav</th>
                         <th>Vytvořil</th>
                         <th>Vytvořeno</th>
@@ -90,6 +91,12 @@
 
 {% block scripts %}
 <script>
+    function getCaseTitle(c) {
+        const headerSec = (c.data?.sections || []).find(s => s.type === 'playbook_header');
+        const f = (headerSec?.fields || []).find(f => f.key === 'case_title');
+        return f?.value || null;
+    }
+
     const STATUS_CONFIG = {
         'open':           {label: 'Otevřený',      cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
         'in_progress':    {label: 'Probíhá',        cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
@@ -125,11 +132,13 @@
         filtered.forEach(c => {
             const st = STATUS_CONFIG[c.status] || {label: c.status, cls: 'bg-secondary-subtle text-secondary'};
             const tr = document.createElement('tr');
+            const title = getCaseTitle(c);
             tr.innerHTML = `
                 <td class="ps-3 align-middle">
                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">${c.case_id}</span>
                 </td>
-                <td class="align-middle small">${c.data?.template_name || c.template_id}</td>
+                <td class="align-middle small text-muted">${c.data?.template_name || c.template_id}</td>
+                <td class="align-middle small">${title ? `<span>${title}</span>` : '<span class="text-muted fst-italic">nevyplněno</span>'}</td>
                 <td class="align-middle"><span class="badge ${st.cls}">${st.label}</span></td>
                 <td class="align-middle small text-muted">${c.created_by}</td>
                 <td class="align-middle small text-muted">${new Date(c.created_at).toLocaleString('cs-CZ')}</td>

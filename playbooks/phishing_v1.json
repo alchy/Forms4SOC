@@ -22,6 +22,7 @@
       "type": "playbook_header",
       "title": "Hlavička",
       "fields": [
+        {"key": "case_title",      "label": "Stručný popis události",       "type": "text", "editable": true,  "is_example": true, "value": "Phishing – faktura od neznámého odesílatele, uživatel nereagoval", "hint": "Výstižný popis pro odlišení od ostatních případů stejné šablony"},
         {"key": "playbook_name",   "label": "Název playbooku",              "type": "text", "editable": false, "value": "Podezřelý e-mail"},
         {"key": "playbook_id",     "label": "Playbook ID",                  "type": "text", "editable": false, "value": "2026-001"},
         {"key": "version",         "label": "Verze",                        "type": "text", "editable": false, "value": "1.0"},

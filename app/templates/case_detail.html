@@ -111,13 +111,21 @@
         }
     }
 
+    function getCaseTitle(c) {
+        const headerSec = (c.data?.sections || []).find(s => s.type === 'playbook_header');
+        const f = (headerSec?.fields || []).find(f => f.key === 'case_title');
+        return f?.value || null;
+    }
+
     function renderCaseHeader(c) {
         const st = STATUS_CONFIG[c.status] || {label: c.status, cls: 'bg-secondary-subtle text-secondary'};
         const badge = document.getElementById('status-badge');
         badge.textContent = st.label;
         badge.className = `badge ${st.cls}`;
-        document.getElementById('case-title').textContent = c.data.template_name || c.template_id;
+        const caseTitle = getCaseTitle(c);
+        document.getElementById('case-title').textContent = caseTitle || c.data.template_name || c.template_id;
         document.getElementById('case-meta').innerHTML =
+            `<i class="bi bi-file-earmark-text me-1"></i>${c.data.template_name || c.template_id} &nbsp;·&nbsp; ` +
             `<i class="bi bi-person me-1"></i>${c.created_by} &nbsp;·&nbsp; ` +
             `<i class="bi bi-calendar me-1"></i>${new Date(c.created_at).toLocaleString('cs-CZ')}`;
     }
