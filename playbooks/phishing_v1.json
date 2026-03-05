@@ -22,7 +22,7 @@
       "type": "playbook_header",
       "title": "Hlavička",
       "fields": [
-        {"key": "case_title",      "label": "Stručný popis události",       "type": "text", "editable": true,  "is_example": true, "value": "Phishing – faktura od neznámého odesílatele, uživatel nereagoval", "hint": "Výstižný popis pro odlišení od ostatních případů stejné šablony"},
+        {"key": "case_title",      "label": "Stručný popis události",       "type": "text", "editable": true,  "is_example": true, "value": "Stručný popis pro vyhledání události", "hint": "Výstižný popis pro odlišení od ostatních případů stejné šablony"},
         {"key": "playbook_name",   "label": "Název playbooku",              "type": "text", "editable": false, "value": "Podezřelý e-mail"},
         {"key": "playbook_id",     "label": "Playbook ID",                  "type": "text", "editable": false, "value": "2026-001"},
         {"key": "version",         "label": "Verze",                        "type": "text", "editable": false, "value": "1.0"},
@@ -41,13 +41,13 @@
         {"key": "mitre_tactic",        "label": "MITRE Tactic",                   "type": "text",   "editable": false, "value": "Initial Access"},
         {"key": "mitre_technique",     "label": "MITRE Technique",                "type": "text",   "editable": false, "value": "T1566 – Phishing"},
         {"key": "mitre_subtechnique",  "label": "MITRE Sub-technique",            "type": "text",   "editable": false, "value": "T1566.001 – Spearphishing Attachment"},
-        {"key": "data_sources",        "label": "Zdroje dat pro investigaci",     "type": "text",   "editable": false, "value": "Inbound SMTP Mail Gateway, Proxy, Antivirus, Umbrella, SIEM"}
+        {"key": "data_sources",        "label": "Doporučené zdroje dat pro investigaci", "type": "text", "editable": false, "value": "Inbound SMTP Mail Gateway, Proxy, Antivirus, Umbrella, SIEM"}
       ]
     },
 
     {
       "id": "contacts",
-      "title": "Správci zdrojů dat & eskalace",
+      "title": "Kontaktní matice",
       "type": "contact_table",
       "description": "Kontakty pro investigaci a eskalaci. Vyplň dle aktuální struktury organizace.",
       "columns": ["system_role", "name", "email", "phone", "when_to_contact"],
@@ -59,6 +59,8 @@
         "when_to_contact": "Kdy kontaktovat"
       },
       "editable_columns": ["name", "email", "phone"],
+      "allow_append": true,
+      "append_row_template": {"system_role": null, "name": null, "email": null, "phone": null, "when_to_contact": null},
       "rows": [
         {"system_role": "Správce Exchange / Mail GW", "name": "Jan Novák",        "email": "jan.novak@firma.cz",        "phone": "+420 123 456 789", "when_to_contact": "Získání e-mailových logů, blokace odesílatele", "is_example": true},
         {"system_role": "Správce Proxy",              "name": "Petra Svobodová",  "email": "petra.svobodova@firma.cz",  "phone": "+420 123 456 790", "when_to_contact": "Proxy logy, blokace URL / domény",             "is_example": true},
@@ -88,7 +90,7 @@
               "type": "text",
               "editable": false,
               "value": null,
-              "hint": "Generováno automaticky systémem"
+              "auto_value": "case_id"
             }
           ]
         },
@@ -137,20 +139,19 @@
           "type": "assets_table",
           "note": "Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope",
           "hint": "Pokud je některý asset součástí kritické infrastruktury → ihned informuj CISO.",
-          "columns": ["asset", "asset_type", "critical_infrastructure", "owner", "email", "phone", "discovered_at"],
+          "always_expanded": true,
+          "columns": ["asset", "asset_type", "critical_infrastructure", "owner", "email", "phone"],
           "column_labels": {
             "asset": "Asset (hostname, IP, mailbox, IS)",
             "asset_type": "Typ assetu",
             "critical_infrastructure": "Kritická infrastruktura",
             "owner": "Vlastník / odpovědná osoba",
             "email": "E-mail",
-            "phone": "Telefon",
-            "discovered_at": "Zjištěno při"
+            "phone": "Telefon"
           },
           "column_options": {
             "asset_type": ["Endpoint", "Server", "Mailbox", "Informační systém", "Síťový prvek", "Sdílené úložiště", "Jiné"],
-            "critical_infrastructure": ["Ano", "Ne"],
-            "discovered_at": ["Hlášení", "Triage", "Investigace"]
+            "critical_infrastructure": ["Ano", "Ne"]
           },
           "editable": true,
           "rows": []
@@ -306,6 +307,9 @@
       "column_labels": {"action": "Akce", "responsible_role": "Zodpovědná role", "cooperation": "Součinnost", "status": "Stav"},
       "status_options": ["Provedeno", "Probíhá", "Čeká", "N/A"],
       "editable_columns": ["status"],
+      "allow_append": true,
+      "allow_delete": true,
+      "append_row_template": {"action": null, "responsible_role": null, "cooperation": null, "status": null},
       "rows": [
         {"action": "Izolace postižených zařízení od sítě",                    "responsible_role": "SOC Analytický tým",  "cooperation": "Správce AV/EDR · IT Helpdesk", "status": null},
         {"action": "Blokace domény odesílatele na mail serveru",              "responsible_role": "SOC Analytický tým",  "cooperation": "Správce Exchange",             "status": null},

@@ -231,24 +231,26 @@ function renderClassification(section) {
 // ---------------------------------------------------------------------------
 
 function renderContactTable(section) {
-    const wrap = el('div', 'table-responsive');
+    const wrap = el('div');
+    const tableWrap = el('div', 'table-responsive');
     const table = el('table', 'table table-sm table-bordered mb-0');
 
     const thead = document.createElement('thead');
     const hr = document.createElement('tr');
     (section.columns || []).forEach(col => {
-        const th = el('th', 'text-muted small', section.column_labels?.[col] || col);
-        hr.appendChild(th);
+        hr.appendChild(el('th', 'text-muted small', section.column_labels?.[col] || col));
     });
+    if (section.allow_append) hr.appendChild(el('th', 'text-muted small', ''));
     thead.appendChild(hr);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    (section.rows || []).forEach(row => {
+
+    const renderContactRow = (row) => {
         const tr = document.createElement('tr');
         (section.columns || []).forEach(col => {
             const td = document.createElement('td');
-            const editable = (section.editable_columns || []).includes(col);
+            const editable = row.analyst_added || (section.editable_columns || []).includes(col);
             if (editable) {
                 const inp = el('input', 'form-control form-control-sm border-0 p-0');
                 inp.type = 'text';
@@ -263,10 +265,40 @@ function renderContactTable(section) {
             }
             tr.appendChild(td);
         });
-        tbody.appendChild(tr);
-    });
+        if (section.allow_append) {
+            const delTd = document.createElement('td');
+            if (row.analyst_added) {
+                const delBtn = el('button', 'btn btn-link btn-sm text-danger p-0',
+                    '<i class="bi bi-trash"></i>');
+                delBtn.addEventListener('click', () => {
+                    const idx = section.rows.indexOf(row);
+                    if (idx > -1) section.rows.splice(idx, 1);
+                    tr.remove();
+                });
+                delTd.appendChild(delBtn);
+            }
+            tr.appendChild(delTd);
+        }
+        return tr;
+    };
+
+    (section.rows || []).forEach(row => tbody.appendChild(renderContactRow(row)));
     table.appendChild(tbody);
-    wrap.appendChild(table);
+    tableWrap.appendChild(table);
+    wrap.appendChild(tableWrap);
+
+    if (section.allow_append) {
+        const addBtn = el('button', 'btn btn-outline-secondary btn-sm mt-2',
+            '<i class="bi bi-plus me-1"></i>Přidat řádek');
+        addBtn.addEventListener('click', () => {
+            const newRow = Object.assign({}, section.append_row_template || {}, {analyst_added: true});
+            if (!section.rows) section.rows = [];
+            section.rows.push(newRow);
+            tbody.appendChild(renderContactRow(newRow));
+        });
+        wrap.appendChild(addBtn);
+    }
+
     return wrap;
 }
 
@@ -285,18 +317,31 @@ function renderSectionGroup(section) {
         const bodyId = `sb-${section.id}-${sub.id}`;
         const isFirst = idx === 0;
 
-        item.innerHTML = `
-            <h2 class="accordion-header" id="${headerId}">
-                <button class="accordion-button ${isFirst ? '' : 'collapsed'}"
-                        type="button" data-bs-toggle="collapse"
-                        data-bs-target="#${bodyId}" aria-expanded="${isFirst}">
-                    ${sub.title}
-                    ${sub.note ? `<small class="text-muted ms-3">${sub.note}</small>` : ''}
-                </button>
-            </h2>
-            <div id="${bodyId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}" data-bs-parent="#${acc.id}">
-                <div class="accordion-body pt-2" id="body-${bodyId}"></div>
-            </div>`;
+        if (sub.always_expanded) {
+            item.innerHTML = `
+                <h2 class="accordion-header" id="${headerId}">
+                    <button class="accordion-button pe-none bg-light" type="button" style="cursor:default;opacity:1">
+                        ${sub.title}
+                        ${sub.note ? `<small class="text-muted ms-3">${sub.note}</small>` : ''}
+                    </button>
+                </h2>
+                <div id="${bodyId}" class="accordion-collapse collapse show">
+                    <div class="accordion-body pt-2" id="body-${bodyId}"></div>
+                </div>`;
+        } else {
+            item.innerHTML = `
+                <h2 class="accordion-header" id="${headerId}">
+                    <button class="accordion-button ${isFirst ? '' : 'collapsed'}"
+                            type="button" data-bs-toggle="collapse"
+                            data-bs-target="#${bodyId}" aria-expanded="${isFirst}">
+                        ${sub.title}
+                        ${sub.note ? `<small class="text-muted ms-3">${sub.note}</small>` : ''}
+                    </button>
+                </h2>
+                <div id="${bodyId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}">
+                    <div class="accordion-body pt-2" id="body-${bodyId}"></div>
+                </div>`;
+        }
 
         acc.appendChild(item);
 
@@ -474,7 +519,8 @@ function renderChecklist(section) {
 // ---------------------------------------------------------------------------
 
 function renderActionTable(section) {
-    const wrap = el('div', 'table-responsive');
+    const wrap = el('div');
+    const tableWrap = el('div', 'table-responsive');
     const table = el('table', 'table table-sm table-bordered mb-0');
 
     const thead = document.createElement('thead');
@@ -482,17 +528,20 @@ function renderActionTable(section) {
     (section.columns || []).forEach(col => {
         hr.appendChild(el('th', 'text-muted small', section.column_labels?.[col] || col));
     });
+    if (section.allow_delete || section.allow_append) hr.appendChild(el('th', 'text-muted small', ''));
     thead.appendChild(hr);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    (section.rows || []).forEach(row => {
+
+    const renderActionRow = (row) => {
         const tr = document.createElement('tr');
         (section.columns || []).forEach(col => {
-            const td = document.createElement('td');
-            td.className = 'small';
-            const editable = (section.editable_columns || []).includes(col);
-            if (editable && section.status_options) {
+            const td = el('td', 'small align-middle');
+            const isStatus = (section.editable_columns || []).includes(col) && section.status_options;
+            const isEditable = row.analyst_added || (section.editable_columns || []).includes(col);
+
+            if (isStatus) {
                 const sel = el('select', 'form-select form-select-sm border-0');
                 const emptyOpt = document.createElement('option');
                 emptyOpt.value = ''; emptyOpt.textContent = '–';
@@ -505,16 +554,40 @@ function renderActionTable(section) {
                 });
                 sel.addEventListener('change', () => { row[col] = sel.value || null; });
                 td.appendChild(sel);
+            } else if (row.analyst_added) {
+                const inp = el('input', 'form-control form-control-sm border-0 p-0');
+                inp.type = 'text';
+                inp.value = row[col] || '';
+                inp.style.background = 'transparent';
+                inp.addEventListener('change', () => { row[col] = inp.value || null; });
+                td.appendChild(inp);
             } else {
-                td.className = 'small align-middle';
                 td.textContent = row[col] || '–';
             }
             tr.appendChild(td);
         });
-        tbody.appendChild(tr);
-    });
+
+        if (section.allow_delete || section.allow_append) {
+            const delTd = el('td', 'align-middle text-center');
+            if (section.allow_delete || row.analyst_added) {
+                const delBtn = el('button', 'btn btn-link btn-sm text-danger p-0',
+                    '<i class="bi bi-trash"></i>');
+                delBtn.addEventListener('click', () => {
+                    const idx = section.rows.indexOf(row);
+                    if (idx > -1) section.rows.splice(idx, 1);
+                    tr.remove();
+                });
+                delTd.appendChild(delBtn);
+            }
+            tr.appendChild(delTd);
+        }
+        return tr;
+    };
+
+    (section.rows || []).forEach(row => tbody.appendChild(renderActionRow(row)));
     table.appendChild(tbody);
-    wrap.appendChild(table);
+    tableWrap.appendChild(table);
+    wrap.appendChild(tableWrap);
 
     if (section.hints) {
         section.hints.forEach(hint => {
@@ -522,6 +595,19 @@ function renderActionTable(section) {
                 `<i class="bi bi-info-circle me-1"></i>${hint}`));
         });
     }
+
+    if (section.allow_append) {
+        const addBtn = el('button', 'btn btn-outline-secondary btn-sm mt-2',
+            '<i class="bi bi-plus me-1"></i>Přidat akci');
+        addBtn.addEventListener('click', () => {
+            const newRow = Object.assign({}, section.append_row_template || {}, {analyst_added: true});
+            if (!section.rows) section.rows = [];
+            section.rows.push(newRow);
+            tbody.appendChild(renderActionRow(newRow));
+        });
+        wrap.appendChild(addBtn);
+    }
+
     return wrap;
 }
 

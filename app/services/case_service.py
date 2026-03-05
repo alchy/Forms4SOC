@@ -60,6 +60,18 @@ def _strip_examples(obj: object) -> None:
                 _strip_examples(v)
 
 
+def _fill_auto_values(sections: list, case_id: str) -> None:
+    """Vyplní pole označená auto_value skutečnými systémovými hodnotami."""
+    for section in sections:
+        for field in section.get("fields", []):
+            if field.get("auto_value") == "case_id":
+                field["value"] = case_id
+        for subsection in section.get("subsections", []):
+            for field in subsection.get("fields", []):
+                if field.get("auto_value") == "case_id":
+                    field["value"] = case_id
+
+
 def _clone_template_sections(sections: list) -> list:
     """
     Hluboká kopie sekcí šablony pro nový incident.
@@ -113,6 +125,7 @@ async def create_case(
         "data_sources": template.data_sources,
         "sections": _clone_template_sections(template.sections),
     }
+    _fill_auto_values(document["sections"], case_id)
 
     await db.execute(
         """
