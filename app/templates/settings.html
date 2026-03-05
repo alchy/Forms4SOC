@@ -12,7 +12,7 @@
         </li>
         <li class="nav-item">
             <a href="/cases" class="nav-link">
-                <i class="bi bi-folder2-open me-2"></i>Incidenty
+                <i class="bi bi-folder2-open me-2"></i>Bezpečnostní události
             </a>
         </li>
         <li class="nav-item">
@@ -62,8 +62,8 @@
             <div class="mb-3">
                 <label class="form-label fw-semibold">Adresář incidentů</label>
                 <input type="text" class="form-control" id="incidents_dir"
-                       value="{{ settings.get('incidents_dir', 'data/incidents') }}"
-                       placeholder="data/incidents">
+                       value="{{ settings.get('incidents_dir', 'data/events') }}"
+                       placeholder="data/events">
                 <div class="form-text">Relativní nebo absolutní cesta kde se ukládají JSON soubory incidentů.</div>
             </div>
             <div class="mb-4">

@@ -171,7 +171,7 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
 
 | Klíč | Popis | Výchozí hodnota |
 |---|---|---|
-| `incidents_dir` | Adresář pro ukládání JSON souborů incidentů | `data/incidents` |
+| `incidents_dir` | Adresář pro ukládání JSON souborů incidentů | `data/events` |
 | `templates_dir` | Adresář pro načítání JSON šablon | `data/playbooks` |
 
 **PATCH /settings/**

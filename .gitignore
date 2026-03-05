@@ -11,8 +11,8 @@ data/forms4soc.db
 *.db
 *.sqlite
 
-# Incidenty (lokální data – nekompitovat)
-data/incidents/
+# Události (lokální data – nekompitovat)
+data/events/
 
 # PDF exporty
 data/tisk/

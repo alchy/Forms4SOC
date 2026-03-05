@@ -181,7 +181,17 @@ function renderTable(section, parent) {
     rows.forEach((row, i) => {
       const tr = document.createElement('tr');
       if (i % 2 === 1) tr.className = 'even';
-      cols.forEach(c => { const td = document.createElement('td'); td.textContent = row[c] || ''; tr.appendChild(td); });
+      cols.forEach(c => {
+        const td = document.createElement('td');
+        const val = row[c];
+        const example = row[c + '_example'];
+        if (val !== null && val !== undefined && val !== '') {
+          td.textContent = val;
+        } else if (example !== null && example !== undefined && example !== '') {
+          td.innerHTML = `<span class="field-empty">${example}</span>`;
+        }
+        tr.appendChild(td);
+      });
       tbody.appendChild(tr);
     });
   }
@@ -226,8 +236,7 @@ function renderChecklist(section, parent) {
 function renderClassification(section, parent) {
   const grid = el('div', 'classif-grid');
   (section.fields || []).filter(f => f.key !== 'data_sources').forEach(field => {
-    const val = field.value;
-    if (val === null || val === undefined || val === '') return;
+    const val = (field.value !== null && field.value !== undefined && field.value !== '') ? field.value : '–';
     const d = el('div', 'classif-item');
     d.innerHTML = `<div class="classif-label-txt">${field.label}</div><div class="classif-val-txt">${val}</div>`;
     grid.appendChild(d);
@@ -248,34 +257,47 @@ function renderClassification(section, parent) {
   }
 }
 
+function renderSubsection(sub, parent) {
+  switch (sub.type) {
+    case 'form':
+    case 'closure_form':
+      renderFields(sub.fields || [], parent);
+      break;
+    case 'checklist':
+      renderChecklist(sub, parent);
+      break;
+    default:
+      // assets_table, contact_table, action_table, notification_table, raci_table, …
+      if (sub.columns !== undefined) renderTable(sub, parent);
+  }
+}
+
 function renderSection(section, caseData) {
   const div = el('div', 'section');
   div.id = 'sec-' + section.id;
+  div.appendChild(el('div', 'section-title', section.title));
 
-  const title = el('div', 'section-title', section.title);
-  div.appendChild(title);
-
-  if (section.type === 'playbook_header' || section.type === 'form' || section.type === 'closure_form') {
-    renderFields(section.fields || [], div);
-
-  } else if (section.type === 'classification') {
-    renderClassification(section, div);
-
-  } else if (section.type === 'section_group') {
-    (section.subsections || []).forEach(sub => {
-      div.appendChild(el('div', 'subsection-title', sub.title));
-      if (sub.type === 'form' || sub.type === 'closure_form') {
-        renderFields(sub.fields || [], div);
-      } else if (sub.type === 'checklist') {
-        renderChecklist(sub, div);
-      }
-    });
-
-  } else if (section.type === 'checklist') {
-    renderChecklist(section, div);
-
-  } else if (['contact_table','action_table','notification_table','raci_table','assets_table'].includes(section.type)) {
-    renderTable(section, div);
+  switch (section.type) {
+    case 'playbook_header':
+    case 'form':
+    case 'closure_form':
+      renderFields(section.fields || [], div);
+      break;
+    case 'classification':
+      renderClassification(section, div);
+      break;
+    case 'section_group':
+      (section.subsections || []).forEach(sub => {
+        div.appendChild(el('div', 'subsection-title', sub.title));
+        renderSubsection(sub, div);
+      });
+      break;
+    case 'checklist':
+      renderChecklist(section, div);
+      break;
+    default:
+      // contact_table, assets_table, action_table, notification_table, raci_table, …
+      if (section.columns !== undefined) renderTable(section, div);
   }
 
   return div;
