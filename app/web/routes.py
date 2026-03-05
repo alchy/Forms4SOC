@@ -1,11 +1,14 @@
+import aiosqlite
 import jwt
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.core.database import get_db
 from app.core.security import COOKIE_NAME, decode_token
 from app.models.user import TokenPayload
-from app.services.template_service import load_all_templates
+from app.services.settings_service import get_all_settings
+from app.storage import get_storage_backend
 
 router = APIRouter(tags=["Web"])
 templates = Jinja2Templates(directory="app/templates")
@@ -38,12 +41,13 @@ async def login_page(request: Request):
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
+async def dashboard(request: Request, db: aiosqlite.Connection = Depends(get_db)):
     user = _get_user_from_cookie(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    soc_templates = load_all_templates()
+    storage = await get_storage_backend(db)
+    soc_templates = await storage.list_templates()
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
@@ -64,11 +68,12 @@ async def cases_list(request: Request):
 
 
 @router.get("/templates", response_class=HTMLResponse)
-async def templates_list(request: Request):
+async def templates_list(request: Request, db: aiosqlite.Connection = Depends(get_db)):
     user = _get_user_from_cookie(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    soc_templates = load_all_templates()
+    storage = await get_storage_backend(db)
+    soc_templates = await storage.list_templates()
     return templates.TemplateResponse("templates_list.html", {
         "request": request,
         "user": {"username": user.sub, "role": user.role},
@@ -86,6 +91,36 @@ async def case_detail(request: Request, case_id: str):
         "request": request,
         "user": {"username": user.sub, "role": user.role},
         "case_id": case_id,
+    })
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request, db: aiosqlite.Connection = Depends(get_db)):
+    user = _get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.role != "admin":
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    current_settings = await get_all_settings(db)
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "user": {"username": user.sub, "role": user.role},
+        "settings": current_settings,
+    })
+
+
+@router.get("/admin/users", response_class=HTMLResponse)
+async def admin_users_page(request: Request):
+    user = _get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if user.role != "admin":
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    return templates.TemplateResponse("admin_users.html", {
+        "request": request,
+        "user": {"username": user.sub, "role": user.role},
     })
 
 

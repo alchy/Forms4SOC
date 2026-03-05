@@ -1,8 +1,10 @@
 from collections.abc import AsyncGenerator
+from pathlib import Path
 
 import aiosqlite
 
 from app.config import settings
+from app.core.security import hash_password
 
 
 async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
@@ -13,10 +15,12 @@ async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
 
 
 async def init_db() -> None:
-    """Inicializuje SQLite databázi a vytvoří tabulky (spouští se při startu)."""
-    settings.database_path.parent.mkdir(parents=True, exist_ok=True)
+    """Inicializuje SQLite databázi, vytvoří tabulky a seed admin uživatele."""
+    Path(settings.database_path).parent.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(settings.database_path) as db:
+        db.row_factory = aiosqlite.Row
+
         await db.executescript("""
             CREATE TABLE IF NOT EXISTS users (
                 id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,17 +31,31 @@ async def init_db() -> None:
                 created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
             );
 
-            CREATE TABLE IF NOT EXISTS cases (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                case_id      TEXT    UNIQUE NOT NULL,
-                template_id  TEXT    NOT NULL,
-                status       TEXT    NOT NULL DEFAULT 'open',
-                created_by   TEXT    NOT NULL,
-                created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-                updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-                data         TEXT    NOT NULL DEFAULT '{}'
+            CREATE TABLE IF NOT EXISTS settings (
+                key   TEXT PRIMARY KEY,
+                value TEXT NOT NULL
             );
-            -- data sloupec je JSON dokument – klon šablony s hodnotami analytika.
-            -- Pole jako severity, title atd. jsou součástí data dokumentu, ne schématu.
         """)
+
+        # Výchozí nastavení (přepsatelná adminem v GUI)
+        await db.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('incidents_dir', ?)",
+            (settings.default_incidents_dir,),
+        )
+        await db.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('templates_dir', ?)",
+            (settings.default_templates_dir,),
+        )
+
+        # Seed admin uživatele pokud žádný neexistuje
+        async with db.execute("SELECT COUNT(*) FROM users") as cursor:
+            row = await cursor.fetchone()
+            user_count = row[0]
+
+        if user_count == 0:
+            await db.execute(
+                "INSERT INTO users (username, hashed_password, role, is_active) VALUES (?, ?, 'admin', 1)",
+                (settings.admin_username, hash_password(settings.admin_password)),
+            )
+
         await db.commit()

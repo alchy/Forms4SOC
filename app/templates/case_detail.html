@@ -6,8 +6,8 @@
 <nav class="col-auto sidebar d-flex flex-column py-3 px-2" style="min-width: 220px; min-height: calc(100vh - 57px);">
     <ul class="nav flex-column gap-1">
         <li class="nav-item">
-            <a href="/dashboard" class="nav-link">
-                <i class="bi bi-arrow-left me-2"></i>Dashboard
+            <a href="/cases" class="nav-link">
+                <i class="bi bi-arrow-left me-2"></i>Incidenty
             </a>
         </li>
     </ul>
@@ -17,7 +17,7 @@
     </div>
     <div class="mt-auto">
         <div class="text-muted small px-2 pb-1 border-top pt-3">
-            <i class="bi bi-info-circle me-1"></i>v0.1.0
+            <i class="bi bi-info-circle me-1"></i>v0.2.0
         </div>
     </div>
 </nav>
@@ -26,6 +26,20 @@
 {% block main_class %}col py-4 px-4{% endblock %}
 
 {% block content %}
+
+<!-- Lock warning banner -->
+<div id="lock-banner" class="alert alert-warning d-flex align-items-center gap-2 d-none mb-3">
+    <i class="bi bi-lock-fill fs-5"></i>
+    <div>
+        <strong>Incident je zamčen</strong> –
+        <span id="lock-banner-msg">editace blokována.</span>
+    </div>
+    {% if user and user.role == 'admin' %}
+    <button class="btn btn-sm btn-warning ms-auto" onclick="forceUnlock()">
+        <i class="bi bi-unlock me-1"></i>Odemknout
+    </button>
+    {% endif %}
+</div>
 
 <!-- Hlavička incidentu -->
 <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
@@ -58,7 +72,7 @@
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('closed')">
-                    <i class="bi bi-check-circle me-2 text-success"></i>Uzavřený
+                    <i class="bi bi-check-circle me-2 text-success\"></i>Uzavřený
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('false_positive')">
                     <i class="bi bi-x-circle me-2 text-secondary"></i>False Positive
@@ -85,7 +99,11 @@
 <script src="/static/js/case_form.js"></script>
 <script>
     const CASE_ID = '{{ case_id }}';
+    const CURRENT_USER = '{{ user.username if user else "" }}';
+    const IS_ADMIN = {{ 'true' if user and user.role == 'admin' else 'false' }};
+
     let caseDocument = null;
+    let lockAcquired = false;
 
     const STATUS_CONFIG = {
         'open':           {label: 'Otevřený',      cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
@@ -93,6 +111,62 @@
         'closed':         {label: 'Uzavřený',       cls: 'bg-success-subtle text-success border border-success-subtle'},
         'false_positive': {label: 'False Positive', cls: 'bg-secondary-subtle text-secondary border border-secondary-subtle'},
     };
+
+    async function acquireLock() {
+        try {
+            const resp = await apiFetch(`/api/v1/cases/${CASE_ID}/lock`, {method: 'POST'});
+            if (resp.ok) {
+                lockAcquired = true;
+                return true;
+            } else if (resp.status === 423) {
+                const err = await resp.json();
+                const detail = err.detail || {};
+                const lockedBy = detail.locked_by || '?';
+                showLockBanner(`Edituje uživatel <strong>${lockedBy}</strong>. Formulář je pouze pro čtení.`);
+                setReadOnly(true);
+                return false;
+            }
+        } catch (e) {
+            // Network error – allow editing without lock
+        }
+        return false;
+    }
+
+    async function releaseLock() {
+        if (!lockAcquired) return;
+        try {
+            await fetch(`/api/v1/cases/${CASE_ID}/lock`, {
+                method: 'DELETE',
+                credentials: 'include',
+                keepalive: true,
+            });
+        } catch (e) { /* ignore */ }
+        lockAcquired = false;
+    }
+
+    async function forceUnlock() {
+        await apiFetch(`/api/v1/cases/${CASE_ID}/lock`, {method: 'DELETE'});
+        hideLockBanner();
+        setReadOnly(false);
+    }
+
+    function showLockBanner(msg) {
+        document.getElementById('lock-banner-msg').innerHTML = msg;
+        document.getElementById('lock-banner').classList.remove('d-none');
+    }
+
+    function hideLockBanner() {
+        document.getElementById('lock-banner').classList.add('d-none');
+    }
+
+    function setReadOnly(readonly) {
+        const saveBtn = document.getElementById('btn-save');
+        saveBtn.disabled = readonly;
+        // Disable all inputs/selects/textareas in sections container
+        document.querySelectorAll('#sections-container input, #sections-container select, #sections-container textarea').forEach(el => {
+            el.disabled = readonly;
+        });
+    }
 
     async function loadCase() {
         try {
@@ -106,6 +180,9 @@
             renderCaseHeader(c);
             renderSections(c.data.sections || [], document.getElementById('sections-container'));
             buildSectionNav(c.data.sections || []);
+
+            // Try to acquire lock
+            await acquireLock();
         } catch (e) {
             showPageAlert('Chyba při načítání incidentu: ' + e.message);
         }
@@ -158,6 +235,8 @@
                 const ind = document.getElementById('save-indicator');
                 ind.classList.remove('d-none');
                 setTimeout(() => ind.classList.add('d-none'), 3000);
+                // Release lock after save
+                await releaseLock();
             } else {
                 showPageAlert('Uložení selhalo.');
             }
@@ -183,6 +262,17 @@
         el.textContent = msg;
         el.classList.remove('d-none');
     }
+
+    // Release lock when navigating away
+    window.addEventListener('beforeunload', () => {
+        if (lockAcquired) {
+            fetch(`/api/v1/cases/${CASE_ID}/lock`, {
+                method: 'DELETE',
+                credentials: 'include',
+                keepalive: true,
+            });
+        }
+    });
 
     loadCase();
 </script>

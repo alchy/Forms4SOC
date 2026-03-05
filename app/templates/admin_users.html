@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Správa uživatelů – Forms4SOC{% endblock %}
+
+{% block sidebar %}
+<nav class="col-auto sidebar d-flex flex-column py-3 px-2" style="min-width: 220px; min-height: calc(100vh - 57px);">
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link">
+                <i class="bi bi-grid-1x2 me-2"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link active">
+                <i class="bi bi-people me-2"></i>Uživatelé
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/settings" class="nav-link">
+                <i class="bi bi-gear me-2"></i>Nastavení
+            </a>
+        </li>
+    </ul>
+    <div class="mt-auto">
+        <div class="text-muted small px-2 pb-1 border-top pt-3">
+            <i class="bi bi-info-circle me-1"></i>v0.2.0
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block main_class %}col py-4 px-4{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-people me-2 text-danger"></i>Správa uživatelů
+        </h5>
+        <small class="text-muted">Vytváření a správa přístupů do aplikace</small>
+    </div>
+    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <i class="bi bi-plus me-1"></i>Nový uživatel
+    </button>
+</div>
+
+<div id="users-alert" class="d-none mb-3"></div>
+
+<!-- Tabulka uživatelů -->
+<div class="card border shadow-sm">
+    <div class="card-body p-0">
+        <div id="users-loading" class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>Načítám...
+        </div>
+        <div class="table-responsive d-none" id="users-table-wrap">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Uživatel</th>
+                        <th>Role</th>
+                        <th>Stav</th>
+                        <th>Vytvořen</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create user modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Nový uživatel</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="create-alert" class="d-none mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label">Uživatelské jméno</label>
+                    <input type="text" class="form-control" id="new-username" placeholder="jmeno.prijmeni">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Heslo</label>
+                    <input type="password" class="form-control" id="new-password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="new-role">
+                        <option value="analyst" selected>analyst</option>
+                        <option value="admin">admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zrušit</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="createUser()">Vytvořit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit user modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Upravit uživatele: <span id="edit-username-label"></span></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="edit-alert" class="d-none mb-3"></div>
+                <input type="hidden" id="edit-username">
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="edit-role">
+                        <option value="analyst">analyst</option>
+                        <option value="admin">admin</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Stav</label>
+                    <select class="form-select" id="edit-active">
+                        <option value="true">Aktivní</option>
+                        <option value="false">Deaktivován</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nové heslo <span class="text-muted small">(nechat prázdné = beze změny)</span></label>
+                    <input type="password" class="form-control" id="edit-password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zrušit</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="saveUser()">Uložit</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CURRENT_USER = '{{ user.username if user else "" }}';
+    let allUsers = [];
+
+    async function loadUsers() {
+        const resp = await apiFetch('/api/v1/users/');
+        if (!resp.ok) return;
+        allUsers = await resp.json();
+        document.getElementById('users-loading').classList.add('d-none');
+        document.getElementById('users-table-wrap').classList.remove('d-none');
+        renderUsers();
+    }
+
+    function renderUsers() {
+        const tbody = document.getElementById('users-tbody');
+        tbody.innerHTML = '';
+        allUsers.forEach(u => {
+            const isSelf = u.username === CURRENT_USER;
+            const activeBadge = u.is_active
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Aktivní</span>'
+                : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Deaktivován</span>';
+            const roleBadge = u.role === 'admin'
+                ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">admin</span>'
+                : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">analyst</span>';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-3 align-middle fw-semibold">${u.username}${isSelf ? ' <span class="text-muted small">(vy)</span>' : ''}</td>
+                <td class="align-middle">${roleBadge}</td>
+                <td class="align-middle">${activeBadge}</td>
+                <td class="align-middle small text-muted">${new Date(u.created_at).toLocaleString('cs-CZ')}</td>
+                <td class="align-middle text-end pe-3">
+                    <div class="d-flex gap-1 justify-content-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal('${u.username}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        ${!isSelf ? `<button class="btn btn-outline-danger btn-sm" onclick="deleteUser('${u.username}')">
+                            <i class="bi bi-trash"></i>
+                        </button>` : ''}
+                    </div>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function createUser() {
+        const alertEl = document.getElementById('create-alert');
+        alertEl.className = 'd-none';
+
+        const username = document.getElementById('new-username').value.trim();
+        const password = document.getElementById('new-password').value;
+        const role = document.getElementById('new-role').value;
+
+        if (!username || !password) {
+            alertEl.className = 'alert alert-warning';
+            alertEl.textContent = 'Vyplňte uživatelské jméno a heslo.';
+            return;
+        }
+
+        const resp = await apiFetch('/api/v1/users/', {
+            method: 'POST',
+            body: JSON.stringify({username, password, role}),
+        });
+
+        if (resp.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+            document.getElementById('new-username').value = '';
+            document.getElementById('new-password').value = '';
+            await loadUsers();
+        } else {
+            const err = await resp.json();
+            alertEl.className = 'alert alert-danger';
+            alertEl.textContent = err.detail || 'Vytvoření selhalo.';
+        }
+    }
+
+    function openEditModal(username) {
+        const u = allUsers.find(x => x.username === username);
+        if (!u) return;
+        document.getElementById('edit-username').value = u.username;
+        document.getElementById('edit-username-label').textContent = u.username;
+        document.getElementById('edit-role').value = u.role;
+        document.getElementById('edit-active').value = u.is_active ? 'true' : 'false';
+        document.getElementById('edit-password').value = '';
+        document.getElementById('edit-alert').className = 'd-none';
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    }
+
+    async function saveUser() {
+        const alertEl = document.getElementById('edit-alert');
+        alertEl.className = 'd-none';
+
+        const username = document.getElementById('edit-username').value;
+        const payload = {
+            role: document.getElementById('edit-role').value,
+            is_active: document.getElementById('edit-active').value === 'true',
+        };
+        const password = document.getElementById('edit-password').value;
+        if (password) payload.password = password;
+
+        const resp = await apiFetch(`/api/v1/users/${username}`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+        });
+
+        if (resp.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            await loadUsers();
+        } else {
+            const err = await resp.json();
+            alertEl.className = 'alert alert-danger';
+            alertEl.textContent = err.detail || 'Uložení selhalo.';
+        }
+    }
+
+    async function deleteUser(username) {
+        if (!confirm(`Smazat uživatele ${username}?`)) return;
+        const resp = await apiFetch(`/api/v1/users/${username}`, {method: 'DELETE'});
+        if (resp.ok || resp.status === 204) {
+            await loadUsers();
+        }
+    }
+
+    loadUsers();
+</script>
+{% endblock %}

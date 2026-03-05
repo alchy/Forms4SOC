@@ -46,16 +46,13 @@ def decode_token(token: str) -> TokenPayload:
 
 
 # ---------------------------------------------------------------------------
-# FastAPI dependency – ochrana API endpointů
+# FastAPI dependencies – ochrana API endpointů
 # ---------------------------------------------------------------------------
 
 async def require_auth(
     forms4soc_token: Optional[str] = Cookie(default=None),
 ) -> User:
-    """
-    Dependency pro ochranu API endpointů.
-    Použití: current_user: User = Depends(require_auth)
-    """
+    """Dependency pro ochranu API endpointů – vyžaduje platný JWT token."""
     if not forms4soc_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,3 +71,13 @@ async def require_auth(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Neplatný autentizační token",
         )
+
+
+async def require_admin(current_user: User = Depends(require_auth)) -> User:
+    """Dependency pro admin-only endpointy – vyžaduje roli admin."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Přístup odepřen – vyžadována role admin",
+        )
+    return current_user

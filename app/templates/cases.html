@@ -23,7 +23,7 @@
     </ul>
     <div class="mt-auto">
         <div class="text-muted small px-2 pb-1 border-top pt-3">
-            <i class="bi bi-info-circle me-1"></i>v0.1.0
+            <i class="bi bi-info-circle me-1"></i>v0.2.0
         </div>
     </div>
 </nav>
@@ -70,7 +70,7 @@
             <p class="mb-0">Žádné incidenty nenalezeny</p>
         </div>
         <div class="table-responsive d-none" id="cases-table-wrap">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0" id="cases-table">
                 <thead class="table-light">
                     <tr>
                         <th class="ps-3">ID</th>
@@ -79,6 +79,7 @@
                         <th>Stav</th>
                         <th>Vytvořil</th>
                         <th>Vytvořeno</th>
+                        <th>Zámek</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -87,10 +88,35 @@
         </div>
     </div>
 </div>
+
+<!-- Confirm delete modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Smazat incident?</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small text-muted" id="deleteModalBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                <button type="button" class="btn btn-sm btn-danger" id="confirmDeleteBtn">Smazat</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<!-- jQuery + DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
+    const IS_ADMIN = {{ 'true' if user and user.role == 'admin' else 'false' }};
+
     function getCaseTitle(c) {
         const headerSec = (c.data?.sections || []).find(s => s.type === 'playbook_header');
         const f = (headerSec?.fields || []).find(f => f.key === 'case_title');
@@ -106,33 +132,26 @@
 
     let allCases = [];
     let activeFilter = new URLSearchParams(location.search).get('filter') || 'all';
+    let dt = null;
+    let pendingDeleteId = null;
 
-    function renderCases(cases) {
+    function buildTableRows(cases) {
         const tbody = document.getElementById('cases-tbody');
-        const tableWrap = document.getElementById('cases-table-wrap');
-        const empty = document.getElementById('cases-empty');
-
         tbody.innerHTML = '';
 
-        const filtered = activeFilter === 'all'
-            ? cases
-            : activeFilter === 'open'
-                ? cases.filter(c => c.status === 'open' || c.status === 'in_progress')
-                : cases.filter(c => c.status === activeFilter);
-
-        if (filtered.length === 0) {
-            tableWrap.classList.add('d-none');
-            empty.classList.remove('d-none');
-            return;
-        }
-
-        empty.classList.add('d-none');
-        tableWrap.classList.remove('d-none');
-
-        filtered.forEach(c => {
+        cases.forEach(c => {
             const st = STATUS_CONFIG[c.status] || {label: c.status, cls: 'bg-secondary-subtle text-secondary'};
             const tr = document.createElement('tr');
             const title = getCaseTitle(c);
+            const lockBadge = c.locked_by
+                ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-lock-fill me-1"></i>${c.locked_by}</span>`
+                : '<span class="text-muted small">–</span>';
+
+            const adminActions = IS_ADMIN ? `
+                ${c.locked_by ? `<button class="btn btn-outline-warning btn-sm" onclick="unlockCase('${c.case_id}')" title="Odemknout"><i class="bi bi-unlock"></i></button>` : ''}
+                <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete('${c.case_id}')" title="Smazat"><i class="bi bi-trash"></i></button>
+            ` : '';
+
             tr.innerHTML = `
                 <td class="ps-3 align-middle">
                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">${c.case_id}</span>
@@ -142,13 +161,29 @@
                 <td class="align-middle"><span class="badge ${st.cls}">${st.label}</span></td>
                 <td class="align-middle small text-muted">${c.created_by}</td>
                 <td class="align-middle small text-muted">${new Date(c.created_at).toLocaleString('cs-CZ')}</td>
+                <td class="align-middle">${lockBadge}</td>
                 <td class="align-middle text-end pe-3">
-                    <a href="/cases/${c.case_id}" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-arrow-right me-1"></i>Otevřít
-                    </a>
+                    <div class="d-flex gap-1 justify-content-end">
+                        ${adminActions}
+                        <a href="/cases/${c.case_id}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-arrow-right me-1"></i>Otevřít
+                        </a>
+                    </div>
                 </td>`;
             tbody.appendChild(tr);
         });
+    }
+
+    function applyFilter() {
+        if (!dt) return;
+        if (activeFilter === 'all') {
+            dt.column(3).search('').draw();
+        } else if (activeFilter === 'open') {
+            dt.column(3).search('Otevřený|Probíhá', true, false).draw();
+        } else {
+            const label = STATUS_CONFIG[activeFilter]?.label || activeFilter;
+            dt.column(3).search('^' + label + '$', true, false).draw();
+        }
     }
 
     function setFilter(filter) {
@@ -156,7 +191,58 @@
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.filter === filter);
         });
-        renderCases(allCases);
+        applyFilter();
+    }
+
+    function confirmDelete(caseId) {
+        pendingDeleteId = caseId;
+        document.getElementById('deleteModalBody').textContent = `Opravdu smazat incident ${caseId}? Tuto akci nelze vrátit.`;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+        if (!pendingDeleteId) return;
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        const resp = await apiFetch(`/api/v1/cases/${pendingDeleteId}`, {method: 'DELETE'});
+        if (resp.ok || resp.status === 204) {
+            allCases = allCases.filter(c => c.case_id !== pendingDeleteId);
+            pendingDeleteId = null;
+            if (dt) { dt.destroy(); dt = null; }
+            buildTableRows(allCases);
+            initDataTable();
+            applyFilter();
+        }
+    });
+
+    async function unlockCase(caseId) {
+        const resp = await apiFetch(`/api/v1/cases/${caseId}/lock`, {method: 'DELETE'});
+        if (resp.ok || resp.status === 204) {
+            const c = allCases.find(x => x.case_id === caseId);
+            if (c) c.locked_by = null;
+            if (dt) { dt.destroy(); dt = null; }
+            buildTableRows(allCases);
+            initDataTable();
+            applyFilter();
+        }
+    }
+
+    function initDataTable() {
+        dt = $('#cases-table').DataTable({
+            language: {
+                search: 'Hledat:',
+                lengthMenu: 'Zobrazit _MENU_ záznamů',
+                info: 'Zobrazeno _START_–_END_ z _TOTAL_ incidentů',
+                infoEmpty: 'Žádné incidenty',
+                infoFiltered: '(filtrováno z _MAX_ celkem)',
+                zeroRecords: 'Žádné incidenty nenalezeny',
+                paginate: {first: 'První', last: 'Poslední', next: 'Další', previous: 'Předchozí'},
+            },
+            order: [[5, 'desc']],
+            columnDefs: [
+                {orderable: false, targets: [7]},
+            ],
+            pageLength: 25,
+        });
     }
 
     async function loadCases() {
@@ -165,7 +251,20 @@
             if (!resp.ok) return;
             allCases = await resp.json();
             document.getElementById('cases-loading').classList.add('d-none');
-            renderCases(allCases);
+
+            if (allCases.length === 0) {
+                document.getElementById('cases-empty').classList.remove('d-none');
+                return;
+            }
+
+            buildTableRows(allCases);
+            document.getElementById('cases-table-wrap').classList.remove('d-none');
+            initDataTable();
+
+            // Apply URL filter param
+            if (activeFilter !== 'all') {
+                setFilter(activeFilter);
+            }
         } catch (e) {
             document.getElementById('cases-loading').innerHTML =
                 `<div class="text-danger py-4">Chyba při načítání: ${e.message}</div>`;
@@ -176,9 +275,11 @@
         btn.addEventListener('click', () => setFilter(btn.dataset.filter));
     });
 
-    // Apply filter from URL param
+    // Highlight active filter button from URL
     if (activeFilter !== 'all') {
-        setFilter(activeFilter);
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === activeFilter);
+        });
     }
 
     loadCases();

@@ -22,3 +22,25 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+# --- Modely pro správu uživatelů ---
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    role: str
+    is_active: bool
+    created_at: str
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "analyst"
+
+
+class UserUpdate(BaseModel):
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None

@@ -7,9 +7,15 @@ env/
 .env
 
 # Databáze
-data/
+data/forms4soc.db
 *.db
 *.sqlite
+
+# Incidenty (lokální data – nekompitovat)
+data/incidents/
+
+# Šablony jsou součástí repozitáře
+!data/playbooks/
 
 # Python
 __pycache__/

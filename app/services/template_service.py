@@ -3,28 +3,23 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from app.config import settings
 from app.models.template import SOCTemplate
 
 logger = logging.getLogger(__name__)
 
 
-def load_all_templates() -> list[SOCTemplate]:
+def load_templates_from_dir(templates_dir: Path) -> list[SOCTemplate]:
     """
-    Načte všechny JSON šablony z adresáře playbooks/.
-
-    Adresář je zdrojem pravdy – šablony se načítají při každém requestu,
-    takže přidání nebo odebrání JSON souboru se projeví okamžitě bez restartu.
-    Poškozené soubory jsou přeskočeny a zalogována chyba.
+    Synchronní načtení šablon z adresáře – používá se při startu a v sync kontextech.
+    Pro async kontext použij storage.list_templates().
     """
-    playbooks_dir: Path = settings.playbooks_dir
     templates: list[SOCTemplate] = []
 
-    if not playbooks_dir.exists():
-        playbooks_dir.mkdir(parents=True, exist_ok=True)
+    if not templates_dir.exists():
+        templates_dir.mkdir(parents=True, exist_ok=True)
         return templates
 
-    for json_file in sorted(playbooks_dir.glob("*.json")):
+    for json_file in sorted(templates_dir.glob("*.json")):
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
             template = SOCTemplate(**data, filename=json_file.name)
@@ -33,11 +28,3 @@ def load_all_templates() -> list[SOCTemplate]:
             logger.warning("Cannot load template '%s': %s", json_file.name, exc)
 
     return templates
-
-
-def get_template(template_id: str) -> Optional[SOCTemplate]:
-    """Načte konkrétní šablonu dle template_id. Vrátí None pokud nenalezena."""
-    for template in load_all_templates():
-        if template.template_id == template_id:
-            return template
-    return None

@@ -1,23 +1,15 @@
 import copy
-import json
 from datetime import datetime, timezone
 from typing import Optional
 
-import aiosqlite
-
 from app.models.case import CreateCaseRequest, IncidentCase, UpdateCaseRequest
-from app.services.template_service import get_template
+from app.storage.base import StorageBackend
 
 
-async def _generate_case_id(db: aiosqlite.Connection) -> str:
-    """Generuje unikátní ID incidentu ve formátu INC-YYYY-NNNN."""
-    year = datetime.now(timezone.utc).year
-    async with db.execute(
-        "SELECT COUNT(*) FROM cases WHERE case_id LIKE ?", (f"INC-{year}-%",)
-    ) as cursor:
-        row = await cursor.fetchone()
-        count = row[0] + 1
-    return f"INC-{year}-{count:04d}"
+def generate_case_id(username: str) -> str:
+    """Generuje unikátní ID incidentu ve formátu SOC-IN-DDMMYYYY-HHMMSS-{username}."""
+    now = datetime.now(timezone.utc)
+    return f"SOC-IN-{now.strftime('%d%m%Y-%H%M%S')}-{username}"
 
 
 def _strip_examples(obj: object) -> None:
@@ -25,11 +17,10 @@ def _strip_examples(obj: object) -> None:
     Rekurzivně projde JSON strukturu a zpracuje pole označená is_example: true.
 
     Design princip:
-      - V šabloně jsou příkladové hodnoty (odpovídají kurzívě v markdown) označeny
-        is_example: true a mají vyplněné value / analyst_note.
-      - Při klonování do nového case se tato hodnota přesune do klíče 'example'
+      - V šabloně jsou příkladové hodnoty označeny is_example: true.
+      - Při klonování do nového case se hodnota přesune do klíče 'example'
         (slouží jako placeholder v UI) a 'value' / 'analyst_note' se nastaví na null.
-      - Hodnoty bez is_example (plain text v markdown) se kopírují beze změny.
+      - Hodnoty bez is_example se kopírují beze změny.
     """
     if isinstance(obj, list):
         for item in obj:
@@ -47,9 +38,11 @@ def _strip_examples(obj: object) -> None:
                     obj["example"] = obj["analyst_note"]
                     obj["analyst_note"] = None
             else:
-                # Table rows (contact_table apod.): každý editovatelný string klíč → {key}_example
-                _SYSTEM_KEYS = {"id", "is_example", "system_role", "when_to_contact",
-                                 "type", "title", "action", "done"}
+                # Table rows: každý editovatelný string klíč → {key}_example
+                _SYSTEM_KEYS = {
+                    "id", "is_example", "system_role", "when_to_contact",
+                    "type", "title", "action", "done",
+                }
                 for key in list(obj.keys()):
                     if key not in _SYSTEM_KEYS and not key.endswith("_example"):
                         if obj[key] is not None:
@@ -75,46 +68,26 @@ def _fill_auto_values(sections: list, case_id: str) -> None:
 def _clone_template_sections(sections: list) -> list:
     """
     Hluboká kopie sekcí šablony pro nový incident.
-    Příkladové hodnoty (is_example: true) jsou přesunuty do 'example' jako placeholder,
-    skutečné hodnoty analytika začínají jako null.
+    Příkladové hodnoty jsou přesunuty do 'example' jako placeholder.
     """
     cloned = copy.deepcopy(sections)
     _strip_examples(cloned)
     return cloned
 
 
-def _row_to_case(row: aiosqlite.Row) -> IncidentCase:
-    """Převede DB řádek na model IncidentCase."""
-    return IncidentCase(
-        id=row["id"],
-        case_id=row["case_id"],
-        template_id=row["template_id"],
-        status=row["status"],
-        created_by=row["created_by"],
-        created_at=datetime.fromisoformat(row["created_at"]),
-        updated_at=datetime.fromisoformat(row["updated_at"]),
-        data=json.loads(row["data"]),
-    )
-
-
 async def create_case(
-    db: aiosqlite.Connection,
+    storage: StorageBackend,
     request: CreateCaseRequest,
     username: str,
 ) -> IncidentCase:
-    """
-    Vytvoří nový incident jako klon šablony.
-    Celá struktura šablony (sekce, kroky, pole) se zkopíruje do data dokumentu.
-    Analytik poté vyplňuje hodnoty přímo v dokumentu.
-    """
-    template = get_template(request.template_id)
+    """Vytvoří nový incident jako klon šablony a uloží ho do storage."""
+    template = await storage.get_template(request.template_id)
     if not template:
         raise ValueError(f"Šablona '{request.template_id}' nenalezena")
 
-    case_id = await _generate_case_id(db)
-    now = datetime.now(timezone.utc).isoformat()
+    case_id = generate_case_id(username)
+    now = datetime.now(timezone.utc)
 
-    # JSON dokument = metadata šablony + klonované sekce připravené k vyplnění
     document = {
         "template_id": template.template_id,
         "template_version": template.version,
@@ -127,64 +100,49 @@ async def create_case(
     }
     _fill_auto_values(document["sections"], case_id)
 
-    await db.execute(
-        """
-        INSERT INTO cases (case_id, template_id, status, created_by, created_at, updated_at, data)
-        VALUES (?, ?, 'open', ?, ?, ?, ?)
-        """,
-        (case_id, request.template_id, username, now, now, json.dumps(document, ensure_ascii=False)),
-    )
-    await db.commit()
-
-    return IncidentCase(
+    case = IncidentCase(
         case_id=case_id,
         template_id=request.template_id,
         status="open",
         created_by=username,
-        created_at=datetime.fromisoformat(now),
-        updated_at=datetime.fromisoformat(now),
+        created_at=now,
+        updated_at=now,
         data=document,
     )
+    await storage.save_case(case)
+    return case
 
 
-async def list_cases(db: aiosqlite.Connection) -> list[IncidentCase]:
+async def list_cases(storage: StorageBackend) -> list[IncidentCase]:
     """Vrátí všechny incidenty seřazené od nejnovějšího."""
-    async with db.execute("SELECT * FROM cases ORDER BY created_at DESC") as cursor:
-        rows = await cursor.fetchall()
-    return [_row_to_case(row) for row in rows]
+    return await storage.list_cases()
 
 
-async def get_case(db: aiosqlite.Connection, case_id: str) -> Optional[IncidentCase]:
+async def get_case(storage: StorageBackend, case_id: str) -> Optional[IncidentCase]:
     """Vrátí konkrétní incident dle case_id nebo None."""
-    async with db.execute("SELECT * FROM cases WHERE case_id = ?", (case_id,)) as cursor:
-        row = await cursor.fetchone()
-    return _row_to_case(row) if row else None
+    return await storage.get_case(case_id)
 
 
 async def update_case(
-    db: aiosqlite.Connection,
+    storage: StorageBackend,
     case_id: str,
     request: UpdateCaseRequest,
 ) -> Optional[IncidentCase]:
-    """
-    Aktualizuje incident – status workflow a/nebo celý JSON dokument.
-    Dokument se nahrazuje celý (klient posílá kompletní aktualizovaný stav).
-    """
-    case = await get_case(db, case_id)
+    """Aktualizuje incident – status a/nebo JSON dokument."""
+    case = await storage.get_case(case_id)
     if not case:
         return None
 
-    new_status = request.status if request.status is not None else case.status
-    new_data = request.data if request.data is not None else case.data
-    now = datetime.now(timezone.utc).isoformat()
+    if request.status is not None:
+        case.status = request.status
+    if request.data is not None:
+        case.data = request.data
+    case.updated_at = datetime.now(timezone.utc)
 
-    await db.execute(
-        "UPDATE cases SET status = ?, data = ?, updated_at = ? WHERE case_id = ?",
-        (new_status, json.dumps(new_data, ensure_ascii=False), now, case_id),
-    )
-    await db.commit()
-
-    case.status = new_status
-    case.data = new_data
-    case.updated_at = datetime.fromisoformat(now)
+    await storage.save_case(case)
     return case
+
+
+async def delete_case(storage: StorageBackend, case_id: str) -> bool:
+    """Smaže incident. Vrátí True pokud existoval."""
+    return await storage.delete_case(case_id)

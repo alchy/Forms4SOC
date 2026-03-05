@@ -1,4 +1,3 @@
-from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
@@ -16,13 +15,16 @@ class Settings(BaseSettings):
     # Auth provider: "simple" | "oauth" | "ldap"
     auth_provider: str = "simple"
 
-    # Jednoduchá autentizace (simple provider)
+    # Počáteční admin účet (použit při prvním spuštění, pokud neexistuje žádný uživatel)
     admin_username: str = "admin"
     admin_password: str = "admin"
 
     # Cesty
-    playbooks_dir: Path = Path("playbooks")
-    database_path: Path = Path("data/forms4soc.db")
+    database_path: str = "data/forms4soc.db"
+
+    # Výchozí adresáře (lze přepsat v GUI Settings)
+    default_incidents_dir: str = "data/incidents"
+    default_templates_dir: str = "data/playbooks"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

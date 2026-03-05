@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Nastavení – Forms4SOC{% endblock %}
+
+{% block sidebar %}
+<nav class="col-auto sidebar d-flex flex-column py-3 px-2" style="min-width: 220px; min-height: calc(100vh - 57px);">
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link">
+                <i class="bi bi-grid-1x2 me-2"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/admin/users" class="nav-link">
+                <i class="bi bi-people me-2"></i>Uživatelé
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/settings" class="nav-link active">
+                <i class="bi bi-gear me-2"></i>Nastavení
+            </a>
+        </li>
+    </ul>
+    <div class="mt-auto">
+        <div class="text-muted small px-2 pb-1 border-top pt-3">
+            <i class="bi bi-info-circle me-1"></i>v0.2.0
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block main_class %}col py-4 px-4{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-gear me-2 text-danger"></i>Nastavení aplikace
+    </h5>
+    <small class="text-muted">Konfigurace ukládacích adresářů. Platí po restartu operací se soubory.</small>
+</div>
+
+<div id="settings-alert" class="d-none"></div>
+
+<div class="card border shadow-sm" style="max-width: 600px;">
+    <div class="card-body">
+        <form id="settings-form">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Adresář incidentů</label>
+                <input type="text" class="form-control" id="incidents_dir"
+                       value="{{ settings.get('incidents_dir', 'data/incidents') }}"
+                       placeholder="data/incidents">
+                <div class="form-text">Relativní nebo absolutní cesta kde se ukládají JSON soubory incidentů.</div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Adresář šablon</label>
+                <input type="text" class="form-control" id="templates_dir"
+                       value="{{ settings.get('templates_dir', 'data/playbooks') }}"
+                       placeholder="data/playbooks">
+                <div class="form-text">Relativní nebo absolutní cesta kde se načítají JSON šablony playbooku.</div>
+            </div>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-floppy me-1"></i>Uložit nastavení
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertEl = document.getElementById('settings-alert');
+        alertEl.className = 'd-none';
+
+        const payload = {
+            incidents_dir: document.getElementById('incidents_dir').value.trim(),
+            templates_dir: document.getElementById('templates_dir').value.trim(),
+        };
+
+        const resp = await apiFetch('/api/v1/settings/', {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+        });
+
+        if (resp.ok) {
+            alertEl.className = 'alert alert-success';
+            alertEl.textContent = 'Nastavení bylo uloženo.';
+        } else {
+            alertEl.className = 'alert alert-danger';
+            alertEl.textContent = 'Uložení selhalo.';
+        }
+    });
+</script>
+{% endblock %}

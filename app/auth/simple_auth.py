@@ -1,53 +1,42 @@
 from typing import Optional
 
+import aiosqlite
+
 from app.auth.auth_provider import AuthProvider
-from app.config import settings
-from app.core.security import hash_password, verify_password
+from app.core.security import verify_password
 from app.models.user import User
-
-
-def _build_users() -> dict[str, dict]:
-    """
-    Sestaví in-memory slovník uživatelů z konfigurace.
-    V produkci nahradit dotazem do databáze.
-    """
-    return {
-        settings.admin_username: {
-            "username": settings.admin_username,
-            "hashed_password": hash_password(settings.admin_password),
-            "role": "admin",
-            "is_active": True,
-        }
-    }
-
-
-# Inicializace při načtení modulu
-_USERS: dict[str, dict] = _build_users()
 
 
 class SimpleAuthProvider(AuthProvider):
     """
-    Jednoduchý autentizační provider – username/password.
-
-    Uživatelé jsou definováni v .env (ADMIN_USERNAME, ADMIN_PASSWORD).
-    Vhodné pro vývoj a první nasazení.
-
-    Nahrazení: implementuj OAuthProvider nebo LDAPProvider se stejným rozhraním
-    a nastav AUTH_PROVIDER v .env.
+    Autentizační provider čtoucí uživatele z SQLite databáze.
+    Admin uživatel je vytvořen při startu aplikace (init_db).
+    Správa uživatelů je dostupná v admin GUI.
     """
 
+    def __init__(self, db: aiosqlite.Connection) -> None:
+        self.db = db
+
     async def authenticate(self, username: str, password: str) -> Optional[User]:
-        user_data = _USERS.get(username)
-        if not user_data:
+        async with self.db.execute(
+            "SELECT username, hashed_password, role, is_active FROM users WHERE username = ?",
+            (username,),
+        ) as cursor:
+            row = await cursor.fetchone()
+
+        if not row or not row["is_active"]:
             return None
-        if not user_data.get("is_active"):
+        if not verify_password(password, row["hashed_password"]):
             return None
-        if not verify_password(password, user_data["hashed_password"]):
-            return None
-        return User(username=user_data["username"], role=user_data["role"])
+        return User(username=row["username"], role=row["role"])
 
     async def get_user(self, username: str) -> Optional[User]:
-        user_data = _USERS.get(username)
-        if not user_data or not user_data.get("is_active"):
+        async with self.db.execute(
+            "SELECT username, role, is_active FROM users WHERE username = ?",
+            (username,),
+        ) as cursor:
+            row = await cursor.fetchone()
+
+        if not row or not row["is_active"]:
             return None
-        return User(username=user_data["username"], role=user_data["role"])
+        return User(username=row["username"], role=row["role"])
