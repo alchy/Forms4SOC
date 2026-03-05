@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Přihlášení – Forms4SOC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+
+<div class="card shadow-sm border" style="width: 400px;">
+    <div class="card-body p-4">
+
+        <!-- Logo -->
+        <div class="text-center mb-4">
+            <i class="bi bi-shield-lock-fill text-danger" style="font-size: 2.8rem;"></i>
+            <h5 class="fw-bold mt-2 mb-0 text-dark">Forms4SOC</h5>
+            <small class="text-muted">SOC Incident Management Portal</small>
+        </div>
+
+        <!-- Chybové hlášení -->
+        <div id="alert-error" class="alert alert-danger d-none" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span id="alert-message">Nesprávné přihlašovací údaje</span>
+        </div>
+
+        <!-- Formulář -->
+        <form id="login-form">
+            <div class="mb-3">
+                <label for="username" class="form-label text-muted small fw-semibold">UŽIVATELSKÉ JMÉNO</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-person text-muted"></i>
+                    </span>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="username"
+                        name="username"
+                        placeholder="Zadejte uživatelské jméno"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label text-muted small fw-semibold">HESLO</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-lock text-muted"></i>
+                    </span>
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="password"
+                        name="password"
+                        placeholder="Zadejte heslo"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-danger w-100" id="login-btn">
+                <span id="login-spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                <i class="bi bi-box-arrow-in-right me-1" id="login-icon"></i>
+                Přihlásit se
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('login-btn');
+        const spinner = document.getElementById('login-spinner');
+        const icon = document.getElementById('login-icon');
+        const alertBox = document.getElementById('alert-error');
+        const alertMsg = document.getElementById('alert-message');
+
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        icon.classList.add('d-none');
+        alertBox.classList.add('d-none');
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                }),
+                credentials: 'same-origin',
+            });
+
+            if (response.ok) {
+                window.location.href = '/dashboard';
+            } else {
+                const data = await response.json();
+                alertMsg.textContent = data.detail || 'Přihlášení se nezdařilo';
+                alertBox.classList.remove('d-none');
+            }
+        } catch {
+            alertMsg.textContent = 'Chyba připojení k serveru';
+            alertBox.classList.remove('d-none');
+        } finally {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+            icon.classList.remove('d-none');
+        }
+    });
+</script>
+</body>
+</html>
