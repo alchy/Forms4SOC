@@ -43,7 +43,7 @@ Dostupné šablony: `phishing_v1.json` (původní), `phishing_v2.json` (sloučen
 | `description` | string | Popis účelu šablony |
 | `mitre_tactic` | string | MITRE ATT&CK taktika |
 | `mitre_technique` | string | MITRE ATT&CK technika (např. `"T1566"`) |
-| `mitre_subtechnique` | string | Sub-technika (např. `"T1566.001"`) |
+| `mitre_subtechnique` | string | Sub-technika šablony (např. `"T1566.001"`) – slouží jako metadata šablony; v sekci `classification` se sub-technika řeší jako editovatelný `select`, který analytik vyplní až po Triage & Investigaci |
 | `data_sources` | array of strings | Doporučené zdroje dat pro investigaci – zobrazeny jako samostatné badge |
 
 ---
@@ -66,7 +66,7 @@ Každá sekce má `id`, `title` a `type`. Typ určuje způsob renderování.
 | `type` | Popis |
 |---|---|
 | `playbook_header` | Hlavička incidentu – editovatelná pole + read-only metadata playbooku |
-| `classification` | Read-only panel s MITRE informacemi a zdroji dat |
+| `classification` | Panel s MITRE informacemi a zdroji dat. Tactic a Technique jsou read-only (primární indikátory dané šablonou); Sub-technique je editovatelný `select` – analytik vyplní po Triage & Investigaci, kdy je znám konkrétní vektor útoku |
 | `contact_table` | Tabulka kontaktů pro investigaci a eskalaci |
 | `section_group` | Kontejner pro více podsekce zobrazených jako accordion |
 | `form` | Formulář s libovolnými poli |

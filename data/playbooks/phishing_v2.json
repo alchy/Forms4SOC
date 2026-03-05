@@ -37,10 +37,17 @@
       "type": "classification",
       "title": "Klasifikace",
       "fields": [
-        {"key": "incident_category",   "label": "Kategorie incidentu",            "type": "text",   "editable": false, "value": "Phishing"},
         {"key": "mitre_tactic",        "label": "MITRE Tactic",                   "type": "text",   "editable": false, "value": "Initial Access"},
         {"key": "mitre_technique",     "label": "MITRE Technique",                "type": "text",   "editable": false, "value": "T1566 – Phishing"},
-        {"key": "mitre_subtechnique",  "label": "MITRE Sub-technique",            "type": "text",   "editable": false, "value": "T1566.001 – Spearphishing Attachment"},
+        {"key": "mitre_subtechnique",  "label": "MITRE Sub-technique",            "type": "select", "editable": true,  "value": null,
+          "options": [
+            "T1566.001 – Spearphishing Attachment",
+            "T1566.002 – Spearphishing Link",
+            "T1566.003 – Spearphishing via Service",
+            "T1566.004 – Spearphishing Voice",
+            "Nelze určit"
+          ],
+          "hint": "Vyplň po Triage & Investigaci, kdy je zřejmý konkrétní vektor útoku."},
         {"key": "data_sources",        "label": "Doporučené zdroje dat pro investigaci", "type": "text", "editable": false, "value": "Inbound SMTP Mail Gateway, Proxy, Antivirus / EDR, Umbrella, SIEM"}
       ]
     },
