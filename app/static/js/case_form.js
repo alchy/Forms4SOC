@@ -214,7 +214,9 @@ function renderClassification(section) {
     // Data sources jako badge seznam
     const dsField = (section.fields || []).find(f => f.key === 'data_sources');
     if (dsField && dsField.value) {
-        const sources = Array.isArray(dsField.value) ? dsField.value : [dsField.value];
+        const sources = Array.isArray(dsField.value)
+            ? dsField.value
+            : String(dsField.value).split(',').map(s => s.trim()).filter(Boolean);
         const dsWrap = el('div', 'mt-2');
         dsWrap.appendChild(el('span', 'text-muted small me-2', dsField.label + ':'));
         sources.forEach(src => {
@@ -458,8 +460,10 @@ function renderChecklist(section) {
         groupEl.appendChild(titleEl);
 
         (group.hints || []).forEach(hint => {
-            groupEl.appendChild(el('div', 'alert alert-secondary py-1 px-2 small mb-2',
-                `<i class="bi bi-info-circle me-1"></i>${hint}`));
+            groupEl.appendChild(el('div', 'alert alert-secondary py-1 px-2 small mb-2', '<i class="bi bi-info-circle me-1"></i>' + hint));
+        });
+        (group.classification_hints || []).forEach(hint => {
+            groupEl.appendChild(el('div', 'hint-classification py-2 px-3 small mb-2 rounded', '<i class="bi bi-diagram-3 me-1"></i>' + hint));
         });
 
         const stepsEl = el('div', 'border border-secondary rounded');

@@ -21,6 +21,23 @@
             </a>
         </li>
     </ul>
+    {% if user and user.role == 'admin' %}
+    <div class="mt-3 border-top pt-3">
+        <div class="text-muted small px-2 mb-2 fw-semibold text-uppercase" style="font-size:0.7rem; letter-spacing:0.05em;">Admin</div>
+        <ul class="nav flex-column gap-1">
+            <li class="nav-item">
+                <a href="/admin/users" class="nav-link">
+                    <i class="bi bi-people me-2"></i>Uživatelé
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/settings" class="nav-link">
+                    <i class="bi bi-gear me-2"></i>Nastavení
+                </a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
     <div class="mt-auto">
         <div class="text-muted small px-2 pb-1 border-top pt-3">
             <i class="bi bi-info-circle me-1"></i>v0.2.0
@@ -35,7 +52,7 @@
 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
         <h5 class="fw-bold mb-0">
-            <i class="bi bi-folder2-open me-2 text-danger"></i>Incidenty
+            <i class="bi bi-folder2-open me-2 text-primary"></i>Incidenty
         </h5>
         <small class="text-muted">Přehled všech bezpečnostních událostí</small>
     </div>
@@ -45,13 +62,13 @@
 <div class="d-flex gap-2 mb-3 flex-wrap">
     <button class="btn btn-sm filter-btn active" data-filter="all">Všechny</button>
     <button class="btn btn-sm filter-btn" data-filter="open">
-        <i class="bi bi-circle me-1 text-warning"></i>Otevřené
+        <i class="bi bi-circle me-1 text-primary"></i>Přiřazeno
     </button>
     <button class="btn btn-sm filter-btn" data-filter="in_progress">
-        <i class="bi bi-play-circle me-1 text-primary"></i>Probíhá
+        <i class="bi bi-play-circle me-1 text-success"></i>V řešení
     </button>
     <button class="btn btn-sm filter-btn" data-filter="closed">
-        <i class="bi bi-check-circle me-1 text-success"></i>Uzavřené
+        <i class="bi bi-check-circle me-1 text-dark"></i>Uzavřené
     </button>
     <button class="btn btn-sm filter-btn" data-filter="false_positive">
         <i class="bi bi-x-circle me-1 text-secondary"></i>False Positive
@@ -124,9 +141,9 @@
     }
 
     const STATUS_CONFIG = {
-        'open':           {label: 'Otevřený',      cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
-        'in_progress':    {label: 'Probíhá',        cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
-        'closed':         {label: 'Uzavřený',       cls: 'bg-success-subtle text-success border border-success-subtle'},
+        'open':           {label: 'Přiřazeno',     cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
+        'in_progress':    {label: 'V řešení',       cls: 'bg-success-subtle text-success border border-success-subtle'},
+        'closed':         {label: 'Uzavřený',       cls: 'bg-dark-subtle text-dark border border-dark-subtle'},
         'false_positive': {label: 'False Positive', cls: 'bg-secondary-subtle text-secondary border border-secondary-subtle'},
     };
 
@@ -154,7 +171,7 @@
 
             tr.innerHTML = `
                 <td class="ps-3 align-middle">
-                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">${c.case_id}</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">${c.case_id}</span>
                 </td>
                 <td class="align-middle small text-muted">${c.data?.template_name || c.template_id}</td>
                 <td class="align-middle small">${title ? `<span>${title}</span>` : '<span class="text-muted fst-italic">nevyplněno</span>'}</td>
@@ -165,7 +182,10 @@
                 <td class="align-middle text-end pe-3">
                     <div class="d-flex gap-1 justify-content-end">
                         ${adminActions}
-                        <a href="/cases/${c.case_id}" class="btn btn-outline-danger btn-sm">
+                        <a href="/cases/${c.case_id}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
+                            <i class="bi bi-printer me-1"></i>Tisk
+                        </a>
+                        <a href="/cases/${c.case_id}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-arrow-right me-1"></i>Otevřít
                         </a>
                     </div>
@@ -179,7 +199,7 @@
         if (activeFilter === 'all') {
             dt.column(3).search('').draw();
         } else if (activeFilter === 'open') {
-            dt.column(3).search('Otevřený|Probíhá', true, false).draw();
+            dt.column(3).search('^Přiřazeno$', true, false).draw();
         } else {
             const label = STATUS_CONFIG[activeFilter]?.label || activeFilter;
             dt.column(3).search('^' + label + '$', true, false).draw();
@@ -284,9 +304,4 @@
 
     loadCases();
 </script>
-<style>
-    .filter-btn { border: 1px solid #dee2e6; background: #fff; color: #495057; }
-    .filter-btn.active { background: #dc3545; border-color: #dc3545; color: #fff; }
-    .filter-btn:hover:not(.active) { background: #f8f9fa; }
-</style>
 {% endblock %}

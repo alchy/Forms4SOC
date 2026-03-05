@@ -94,6 +94,18 @@ async def case_detail(request: Request, case_id: str):
     })
 
 
+@router.get("/cases/{case_id}/print", response_class=HTMLResponse)
+async def case_print(request: Request, case_id: str):
+    user = _get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse("print_case.html", {
+        "request": request,
+        "case_id": case_id,
+    })
+
+
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, db: aiosqlite.Connection = Depends(get_db)):
     user = _get_user_from_cookie(request)

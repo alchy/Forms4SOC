@@ -45,34 +45,43 @@
 <div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold">{{ case_id }}</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">{{ case_id }}</span>
             <span class="badge" id="status-badge">Načítám...</span>
         </div>
         <h5 class="fw-bold mb-1" id="case-title">Načítám incident...</h5>
         <small class="text-muted" id="case-meta"></small>
+        <div id="case-filepath-container" class="d-none mt-1 d-flex align-items-center gap-1">
+            <code class="text-muted small" id="case-filepath" style="font-size:0.78rem;"></code>
+            <button class="btn btn-link btn-sm p-0 text-muted" id="copy-path-btn" onclick="copyFilePath()" title="Kopírovat cestu">
+                <i class="bi bi-clipboard" style="font-size:0.8rem;"></i>
+            </button>
+        </div>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <div id="save-indicator" class="text-success small d-none">
             <i class="bi bi-check-circle me-1"></i>Uloženo
         </div>
-        <button class="btn btn-outline-secondary btn-sm" id="btn-save" onclick="saveCase()">
+        <a href="/cases/{{ case_id }}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
+            <i class="bi bi-printer me-1"></i>Tisk
+        </a>
+        <button class="btn btn-outline-success btn-sm" id="btn-save" onclick="saveCase()">
             <span id="save-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
             <i class="bi bi-floppy me-1"></i>Uložit
         </button>
         <div class="dropdown">
-            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="bi bi-circle me-1"></i>Stav
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-arrow-repeat me-1"></i>Změnit stav
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('open')">
-                    <i class="bi bi-circle me-2 text-warning"></i>Otevřený
+                    <i class="bi bi-circle me-2 text-primary"></i>Přiřazeno
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('in_progress')">
-                    <i class="bi bi-play-circle me-2 text-primary"></i>Probíhá
+                    <i class="bi bi-play-circle me-2 text-success"></i>V řešení
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('closed')">
-                    <i class="bi bi-check-circle me-2 text-success\"></i>Uzavřený
+                    <i class="bi bi-check-circle me-2 text-dark"></i>Uzavřený
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('false_positive')">
                     <i class="bi bi-x-circle me-2 text-secondary"></i>False Positive
@@ -106,9 +115,9 @@
     let lockAcquired = false;
 
     const STATUS_CONFIG = {
-        'open':           {label: 'Otevřený',      cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
-        'in_progress':    {label: 'Probíhá',        cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
-        'closed':         {label: 'Uzavřený',       cls: 'bg-success-subtle text-success border border-success-subtle'},
+        'open':           {label: 'Přiřazeno',     cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
+        'in_progress':    {label: 'V řešení',       cls: 'bg-success-subtle text-success border border-success-subtle'},
+        'closed':         {label: 'Uzavřený',       cls: 'bg-dark-subtle text-dark border border-dark-subtle'},
         'false_positive': {label: 'False Positive', cls: 'bg-secondary-subtle text-secondary border border-secondary-subtle'},
     };
 
@@ -263,6 +272,29 @@
         el.classList.remove('d-none');
     }
 
+    async function loadFilePath() {
+        try {
+            const resp = await apiFetch('/api/v1/settings/');
+            if (resp.ok) {
+                const s = await resp.json();
+                const dir = (s.incidents_dir || 'data/incidents').replace(/\\/g, '/');
+                const path = dir + '/' + CASE_ID + '.json';
+                document.getElementById('case-filepath').textContent = path;
+                document.getElementById('case-filepath-container').classList.remove('d-none');
+                document.getElementById('case-filepath-container').classList.add('d-flex');
+            }
+        } catch (e) {}
+    }
+
+    function copyFilePath() {
+        const path = document.getElementById('case-filepath').textContent;
+        navigator.clipboard.writeText(path).then(() => {
+            const btn = document.getElementById('copy-path-btn');
+            btn.innerHTML = '<i class="bi bi-clipboard-check text-success" style="font-size:0.8rem;"></i>';
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard" style="font-size:0.8rem;"></i>'; }, 2000);
+        });
+    }
+
     // Release lock when navigating away
     window.addEventListener('beforeunload', () => {
         if (lockAcquired) {
@@ -275,5 +307,6 @@
     });
 
     loadCase();
+    loadFilePath();
 </script>
 {% endblock %}

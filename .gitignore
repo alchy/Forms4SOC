@@ -14,6 +14,9 @@ data/forms4soc.db
 # Incidenty (lokální data – nekompitovat)
 data/incidents/
 
+# PDF exporty
+data/tisk/
+
 # Šablony jsou součástí repozitáře
 !data/playbooks/
 

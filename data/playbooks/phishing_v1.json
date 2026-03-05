@@ -353,7 +353,7 @@
         "Oznamovatele informuj vždy — bez ohledu na výsledek klasifikace."
       ],
       "rows": [
-        {"recipient": "Vlastník dotčeného systému / IS", "communication_method": "E-mail / telefon",  "sla": "Do 30 min od Triage",          "note": null},
+        {"recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon",  "sla": "Do 30 min od Triage",          "note": null},
         {"recipient": "CISO / Management",               "communication_method": "E-mail / telefon",  "sla": "Do 1 h (High / Critical)",     "note": null},
         {"recipient": "Postižení uživatelé",             "communication_method": "Hromadný e-mail",   "sla": "Do 2 h",                       "note": null},
         {"recipient": "Oznamovatel události",            "communication_method": "E-mail / telefon",  "sla": "Po uzavření incidentu",        "note": null},
@@ -391,7 +391,7 @@
       "columns": ["activity", "soc_team", "system_owners", "is_owner", "ciso_management", "external"],
       "column_labels": {
         "activity": "Aktivita", "soc_team": "SOC Analytický tým", "system_owners": "Správci systémů / zdrojů dat",
-        "is_owner": "Vlastník dotčeného IS", "ciso_management": "CISO / Management", "external": "Externí subjekt"
+        "is_owner": "Vlastník dotčeného aktiva", "ciso_management": "CISO / Management", "external": "NÚKIB"
       },
       "rows": [
         {"activity": "Příjem a zaevidování události",    "soc_team": "R, A", "system_owners": "–",             "is_owner": "I", "ciso_management": "–",             "external": "–"},
@@ -400,7 +400,7 @@
         {"activity": "Containment & Remediation",        "soc_team": "R, A", "system_owners": "C",             "is_owner": "C", "ciso_management": "I (High/Critical)","external": "–"},
         {"activity": "Notifikace uživatelů / organizace","soc_team": "R, A", "system_owners": "–",             "is_owner": "I", "ciso_management": "I",             "external": "–"},
         {"activity": "Eskalace na CISO / Management",    "soc_team": "R",    "system_owners": "–",             "is_owner": "–", "ciso_management": "A",             "external": "–"},
-        {"activity": "Notifikace CERT / NÚKIB",          "soc_team": "R",    "system_owners": "–",             "is_owner": "–", "ciso_management": "A",             "external": "I"},
+        {"activity": "Notifikace CERT / NÚKIB",          "soc_team": "R",    "system_owners": "–",             "is_owner": "–", "ciso_management": "A",             "external": "I (Critical)"},
         {"activity": "Uzavření incidentu",               "soc_team": "R, A", "system_owners": "–",             "is_owner": "I", "ciso_management": "I (High/Critical)","external": "–"}
       ]
     }

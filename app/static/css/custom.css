@@ -1,4 +1,11 @@
-/* Forms4SOC – světlý styl */
+/* Forms4SOC – světlý styl, primární barva: modrá */
+
+:root {
+    --soc-primary:       #0d6efd;
+    --soc-primary-light: #eff6ff;
+    --soc-primary-muted: #cfe2ff;
+    --soc-border:        #dee2e6;
+}
 
 body {
     background-color: #f8f9fa;
@@ -8,13 +15,13 @@ body {
 /* Navbar */
 .navbar {
     background-color: #ffffff !important;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--soc-border);
 }
 
 /* Sidebar */
 .sidebar {
     background-color: #ffffff;
-    border-right: 1px solid #dee2e6;
+    border-right: 1px solid var(--soc-border);
 }
 
 .sidebar .nav-link {
@@ -31,15 +38,15 @@ body {
 }
 
 .sidebar .nav-link.active {
-    background-color: #fff1f2;
-    color: #dc3545;
+    background-color: var(--soc-primary-light);
+    color: var(--soc-primary);
     font-weight: 500;
 }
 
 /* Karty šablon */
 .template-card {
     background-color: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
+    border: 1px solid var(--soc-border) !important;
     transition: box-shadow 0.15s ease, transform 0.1s ease;
 }
 
@@ -51,12 +58,12 @@ body {
 /* Sekce incidentu */
 .case-section {
     background-color: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
+    border: 1px solid var(--soc-border) !important;
 }
 
 .case-section .card-header {
     background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--soc-border);
 }
 
 /* Accordion */
@@ -66,8 +73,8 @@ body {
 }
 
 .accordion-button:not(.collapsed) {
-    background-color: #fff1f2;
-    color: #dc3545;
+    background-color: var(--soc-primary-light);
+    color: var(--soc-primary);
     box-shadow: none;
 }
 
@@ -77,7 +84,7 @@ body {
 
 .accordion-item {
     background-color: #ffffff;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--soc-border);
 }
 
 /* Formulářové prvky */
@@ -88,8 +95,8 @@ body {
 }
 
 .form-control:focus, .form-select:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
+    border-color: var(--soc-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
 }
 
 /* Tabulky */
@@ -99,7 +106,7 @@ body {
 
 .table thead th {
     background-color: #f8f9fa;
-    border-color: #dee2e6;
+    border-color: var(--soc-border);
     color: #6c757d;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -107,7 +114,7 @@ body {
 }
 
 .table td, .table th {
-    border-color: #dee2e6;
+    border-color: var(--soc-border);
 }
 
 /* Tabulkové inputy */
@@ -121,8 +128,8 @@ body {
 
 .table .form-control:focus,
 .table .form-select:focus {
-    background-color: #fff8f8;
-    border: 1px solid #dc3545 !important;
+    background-color: var(--soc-primary-light);
+    border: 1px solid var(--soc-primary) !important;
     box-shadow: none;
 }
 
@@ -132,7 +139,15 @@ body {
     color: #6c757d;
 }
 
-/* Badge – severity */
+/* Klasifikační nápověda v checklistu (hints_style: classification) */
+.hint-classification {
+    background-color: #fff8e1;
+    border-left: 3px solid #f59e0b;
+    color: #78350f;
+    font-size: 0.82rem;
+}
+
+/* Badge – severity (ponechat výrazné barvy) */
 .severity-critical { background-color: #dc3545 !important; }
 .severity-high     { background-color: #fd7e14 !important; }
 .severity-medium   { background-color: #ffc107 !important; color: #212529 !important; }
@@ -142,6 +157,23 @@ body {
 #save-indicator { font-size: 0.85rem; }
 
 code {
-    color: #e83e8c;
+    color: #0d6efd;
     font-size: 0.82em;
+}
+
+/* Filter buttons – pro seznam incidentů */
+.filter-btn {
+    border: 1px solid var(--soc-border);
+    background: #fff;
+    color: #495057;
+}
+
+.filter-btn.active {
+    background: var(--soc-primary);
+    border-color: var(--soc-primary);
+    color: #fff;
+}
+
+.filter-btn:hover:not(.active) {
+    background: #f8f9fa;
 }

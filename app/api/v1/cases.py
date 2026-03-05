@@ -138,3 +138,4 @@ async def release_lock(
     # Admin může uvolnit zámek kohokoliv
     force = current_user.role == "admin"
     await storage.release_lock(case_id, current_user.username, force=force)
+
