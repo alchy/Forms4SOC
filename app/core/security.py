@@ -12,6 +12,18 @@ COOKIE_NAME = "forms4soc_token"
 
 
 # ---------------------------------------------------------------------------
+# Výjimky pro web routes (vrátí redirect místo JSON chyby)
+# ---------------------------------------------------------------------------
+
+class WebLoginRequired(Exception):
+    """Uživatel není přihlášen – přesměruj na /login."""
+
+
+class WebAdminRequired(Exception):
+    """Uživatel nemá roli admin – přesměruj na /dashboard."""
+
+
+# ---------------------------------------------------------------------------
 # Hesla
 # ---------------------------------------------------------------------------
 

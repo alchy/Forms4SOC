@@ -3,28 +3,47 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+import aiosqlite
+from fastapi import Depends
+
+from app.config import settings
+from app.core.database import get_db
 from app.models.template import SOCTemplate
+from app.services.settings_service import get_setting
 
 logger = logging.getLogger(__name__)
 
 
-def load_templates_from_dir(templates_dir: Path) -> list[SOCTemplate]:
+class TemplateService:
     """
-    Synchronní načtení šablon z adresáře – používá se při startu a v sync kontextech.
-    Pro async kontext použij storage.list_templates().
+    Přístup k read-only JSON šablonám ze souborového systému.
+    Odděleno od StorageBackend – šablony nemají CRUD ani zámky.
     """
-    templates: list[SOCTemplate] = []
 
-    if not templates_dir.exists():
+    def __init__(self, templates_dir: Path) -> None:
+        self.templates_dir = templates_dir
         templates_dir.mkdir(parents=True, exist_ok=True)
-        return templates
 
-    for json_file in sorted(templates_dir.glob("*.json")):
-        try:
-            data = json.loads(json_file.read_text(encoding="utf-8"))
-            template = SOCTemplate(**data, filename=json_file.name)
-            templates.append(template)
-        except Exception as exc:
-            logger.warning("Cannot load template '%s': %s", json_file.name, exc)
+    async def list_templates(self) -> list[SOCTemplate]:
+        result = []
+        for json_file in sorted(self.templates_dir.glob("*.json")):
+            try:
+                data = json.loads(json_file.read_text(encoding="utf-8"))
+                result.append(SOCTemplate(**data, filename=json_file.name))
+            except Exception as exc:
+                logger.warning("Cannot load template '%s': %s", json_file.name, exc)
+        return result
 
-    return templates
+    async def get_template(self, template_id: str) -> Optional[SOCTemplate]:
+        for template in await self.list_templates():
+            if template.template_id == template_id:
+                return template
+        return None
+
+
+async def get_template_service(db: aiosqlite.Connection = Depends(get_db)) -> TemplateService:
+    """FastAPI dependency – vrátí TemplateService nakonfigurovaný dle nastavení v DB."""
+    templates_dir = Path(
+        await get_setting(db, "templates_dir") or settings.default_templates_dir
+    )
+    return TemplateService(templates_dir)

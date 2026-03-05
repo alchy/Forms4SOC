@@ -2,7 +2,8 @@ import copy
 from datetime import datetime, timezone
 from typing import Optional
 
-from app.models.case import CreateCaseRequest, IncidentCase, UpdateCaseRequest
+from app.models.case import IncidentCase, UpdateCaseRequest
+from app.models.template import SOCTemplate
 from app.storage.base import StorageBackend
 
 
@@ -53,16 +54,17 @@ def _strip_examples(obj: object) -> None:
                 _strip_examples(v)
 
 
-def _fill_auto_values(sections: list, case_id: str) -> None:
-    """Vyplní pole označená auto_value skutečnými systémovými hodnotami."""
-    for section in sections:
-        for field in section.get("fields", []):
-            if field.get("auto_value") == "case_id":
-                field["value"] = case_id
-        for subsection in section.get("subsections", []):
-            for field in subsection.get("fields", []):
-                if field.get("auto_value") == "case_id":
-                    field["value"] = case_id
+def _fill_auto_values(obj: object, case_id: str) -> None:
+    """Rekurzivně vyplní pole označená auto_value skutečnými systémovými hodnotami."""
+    if isinstance(obj, list):
+        for item in obj:
+            _fill_auto_values(item, case_id)
+    elif isinstance(obj, dict):
+        if obj.get("auto_value") == "case_id":
+            obj["value"] = case_id
+        for v in obj.values():
+            if isinstance(v, (dict, list)):
+                _fill_auto_values(v, case_id)
 
 
 def _clone_template_sections(sections: list) -> list:
@@ -77,14 +79,10 @@ def _clone_template_sections(sections: list) -> list:
 
 async def create_case(
     storage: StorageBackend,
-    request: CreateCaseRequest,
+    template: SOCTemplate,
     username: str,
 ) -> IncidentCase:
     """Vytvoří nový incident jako klon šablony a uloží ho do storage."""
-    template = await storage.get_template(request.template_id)
-    if not template:
-        raise ValueError(f"Šablona '{request.template_id}' nenalezena")
-
     case_id = generate_case_id(username)
     now = datetime.now(timezone.utc)
 

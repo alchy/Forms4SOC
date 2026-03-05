@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Optional
 
 from app.models.case import IncidentCase
-from app.models.template import SOCTemplate
 from app.storage.base import StorageBackend
 
 logger = logging.getLogger(__name__)
@@ -17,14 +16,11 @@ class FileStorageBackend(StorageBackend):
 
     Incidenty: {incidents_dir}/{case_id}.json
     Zámky:     {incidents_dir}/{case_id}.lock
-    Šablony:   {templates_dir}/*.json
     """
 
-    def __init__(self, incidents_dir: Path, templates_dir: Path) -> None:
+    def __init__(self, incidents_dir: Path) -> None:
         self.incidents_dir = incidents_dir
-        self.templates_dir = templates_dir
         incidents_dir.mkdir(parents=True, exist_ok=True)
-        templates_dir.mkdir(parents=True, exist_ok=True)
 
     def _case_path(self, case_id: str) -> Path:
         return self.incidents_dir / f"{case_id}.json"
@@ -137,19 +133,3 @@ class FileStorageBackend(StorageBackend):
         except Exception:
             return None
 
-    async def list_templates(self) -> list[SOCTemplate]:
-        templates = []
-        for json_file in sorted(self.templates_dir.glob("*.json")):
-            try:
-                data = json.loads(json_file.read_text(encoding="utf-8"))
-                template = SOCTemplate(**data, filename=json_file.name)
-                templates.append(template)
-            except Exception as exc:
-                logger.warning("Cannot load template '%s': %s", json_file.name, exc)
-        return templates
-
-    async def get_template(self, template_id: str) -> Optional[SOCTemplate]:
-        for template in await self.list_templates():
-            if template.template_id == template_id:
-                return template
-        return None

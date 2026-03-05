@@ -1,11 +1,9 @@
-import aiosqlite
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.core.database import get_db
 from app.core.security import require_auth
 from app.models.template import SOCTemplate
 from app.models.user import User
-from app.storage import get_storage_backend
+from app.services.template_service import TemplateService, get_template_service
 
 router = APIRouter(prefix="/templates", tags=["Šablony"])
 
@@ -17,10 +15,9 @@ router = APIRouter(prefix="/templates", tags=["Šablony"])
 )
 async def list_templates(
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    svc: TemplateService = Depends(get_template_service),
 ) -> list[SOCTemplate]:
-    storage = await get_storage_backend(db)
-    return await storage.list_templates()
+    return await svc.list_templates()
 
 
 @router.get(
@@ -31,13 +28,9 @@ async def list_templates(
 async def get_template_by_id(
     template_id: str,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    svc: TemplateService = Depends(get_template_service),
 ) -> SOCTemplate:
-    storage = await get_storage_backend(db)
-    template = await storage.get_template(template_id)
+    template = await svc.get_template(template_id)
     if not template:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Šablona '{template_id}' nebyla nalezena",
-        )
+        raise HTTPException(status_code=404, detail=f"Šablona '{template_id}' nebyla nalezena")
     return template

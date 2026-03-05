@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import auth, cases, settings, templates, users
 from app.config import settings as app_settings
 from app.core.database import init_db
+from app.core.security import WebAdminRequired, WebLoginRequired
 from app.web import routes as web_routes
 
 
@@ -25,6 +27,17 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+
+@app.exception_handler(WebLoginRequired)
+async def web_login_required_handler(request: Request, exc: WebLoginRequired) -> RedirectResponse:
+    return RedirectResponse(url="/login", status_code=302)
+
+
+@app.exception_handler(WebAdminRequired)
+async def web_admin_required_handler(request: Request, exc: WebAdminRequired) -> RedirectResponse:
+    return RedirectResponse(url="/dashboard", status_code=302)
+
 
 # Statické soubory (CSS, JS)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

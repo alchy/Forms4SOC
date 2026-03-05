@@ -1,12 +1,12 @@
-import aiosqlite
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.core.database import get_db
 from app.core.security import require_admin, require_auth
 from app.models.case import CreateCaseRequest, IncidentCase, UpdateCaseRequest
 from app.models.user import User
 from app.services import case_service
-from app.storage import get_storage_backend
+from app.services.template_service import TemplateService, get_template_service
+from app.storage import get_storage
+from app.storage.base import StorageBackend
 
 router = APIRouter(prefix="/cases", tags=["Incidenty"])
 
@@ -18,9 +18,8 @@ router = APIRouter(prefix="/cases", tags=["Incidenty"])
 )
 async def list_cases(
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> list[IncidentCase]:
-    storage = await get_storage_backend(db)
     return await case_service.list_cases(storage)
 
 
@@ -33,13 +32,13 @@ async def list_cases(
 async def create_case(
     request: CreateCaseRequest,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
+    svc: TemplateService = Depends(get_template_service),
 ) -> IncidentCase:
-    storage = await get_storage_backend(db)
-    try:
-        return await case_service.create_case(storage, request, current_user.username)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    template = await svc.get_template(request.template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail=f"Šablona '{request.template_id}' nenalezena")
+    return await case_service.create_case(storage, template, current_user.username)
 
 
 @router.get(
@@ -50,9 +49,8 @@ async def create_case(
 async def get_case(
     case_id: str,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> IncidentCase:
-    storage = await get_storage_backend(db)
     case = await case_service.get_case(storage, case_id)
     if not case:
         raise HTTPException(status_code=404, detail=f"Incident '{case_id}' nebyl nalezen")
@@ -68,9 +66,8 @@ async def update_case(
     case_id: str,
     request: UpdateCaseRequest,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> IncidentCase:
-    storage = await get_storage_backend(db)
     case = await case_service.update_case(storage, case_id, request)
     if not case:
         raise HTTPException(status_code=404, detail=f"Incident '{case_id}' nebyl nalezen")
@@ -85,9 +82,8 @@ async def update_case(
 async def delete_case(
     case_id: str,
     current_user: User = Depends(require_admin),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> None:
-    storage = await get_storage_backend(db)
     deleted = await case_service.delete_case(storage, case_id)
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Incident '{case_id}' nebyl nalezen")
@@ -103,9 +99,8 @@ async def delete_case(
 async def acquire_lock(
     case_id: str,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> dict:
-    storage = await get_storage_backend(db)
     case = await storage.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail=f"Incident '{case_id}' nebyl nalezen")
@@ -132,10 +127,8 @@ async def acquire_lock(
 async def release_lock(
     case_id: str,
     current_user: User = Depends(require_auth),
-    db: aiosqlite.Connection = Depends(get_db),
+    storage: StorageBackend = Depends(get_storage),
 ) -> None:
-    storage = await get_storage_backend(db)
-    # Admin může uvolnit zámek kohokoliv
     force = current_user.role == "admin"
     await storage.release_lock(case_id, current_user.username, force=force)
 
