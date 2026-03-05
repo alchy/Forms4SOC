@@ -104,7 +104,7 @@ Pole se používají v sekcích `playbook_header`, `form`, `closure_form`, podse
 | `value` | any | Výchozí hodnota (nebo `null`) |
 | `hint` | string | Nápověda zobrazená pod polem |
 | `is_example` | bool | Pokud `true`, hodnota se při klonování přesune do `example` (placeholder) |
-| `auto_value` | string | Automaticky vyplněno systémem – podporovaná hodnota: `"case_id"` |
+| `auto_value` | string | Automaticky vyplněno systémem při vytvoření incidentu (viz tabulka níže) |
 
 ### Typy polí (`type`)
 
@@ -569,7 +569,7 @@ Read-only RACI matice. Buňky obsahující `R` jsou zvýrazněny tučně červen
 | Klíč | Umístění | Popis |
 |---|---|---|
 | `is_example: true` | pole, kroky, řádky tabulek | Hodnota = ukázka, při klonování se stane placeholderem |
-| `auto_value: "case_id"` | pole | Automaticky vyplněno ID incidentu při vytvoření |
+| `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu. Podporované hodnoty: `"case_id"` · `"template_name"` · `"template_version"` · `"template_status"` · `"template_mitre_tactic"` · `"template_mitre_technique"` · `"template_data_sources"` |
 | `always_expanded: true` | podsekce v `section_group` | Podsekce se nezbaluje |
 | `allow_append: true` | tabulky | Analytik může přidat řádek tlačítkem `+` |
 | `allow_delete: true` | tabulky | Analytik může smazat libovolný řádek |

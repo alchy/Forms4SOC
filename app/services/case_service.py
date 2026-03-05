@@ -54,17 +54,18 @@ def _strip_examples(obj: object) -> None:
                 _strip_examples(v)
 
 
-def _fill_auto_values(obj: object, case_id: str) -> None:
-    """Rekurzivně vyplní pole označená auto_value skutečnými systémovými hodnotami."""
+def _fill_auto_values(obj: object, auto_values: dict) -> None:
+    """Rekurzivně vyplní pole označená auto_value hodnotami ze slovníku (case_id, template metadata…)."""
     if isinstance(obj, list):
         for item in obj:
-            _fill_auto_values(item, case_id)
+            _fill_auto_values(item, auto_values)
     elif isinstance(obj, dict):
-        if obj.get("auto_value") == "case_id":
-            obj["value"] = case_id
+        av = obj.get("auto_value")
+        if av and av in auto_values:
+            obj["value"] = auto_values[av]
         for v in obj.values():
             if isinstance(v, (dict, list)):
-                _fill_auto_values(v, case_id)
+                _fill_auto_values(v, auto_values)
 
 
 def _clone_template_sections(sections: list) -> list:
@@ -86,6 +87,16 @@ async def create_case(
     case_id = generate_case_id(username)
     now = datetime.now(timezone.utc)
 
+    auto_values = {
+        "case_id":                  case_id,
+        "template_name":            template.name,
+        "template_version":         template.version,
+        "template_status":          template.status,
+        "template_mitre_tactic":    template.mitre_tactic or "",
+        "template_mitre_technique": template.mitre_technique or "",
+        "template_data_sources":    ", ".join(template.data_sources) if template.data_sources else "",
+    }
+
     document = {
         "template_id": template.template_id,
         "template_version": template.version,
@@ -96,11 +107,11 @@ async def create_case(
         "data_sources": template.data_sources,
         "sections": _clone_template_sections(template.sections),
     }
-    _fill_auto_values(document["sections"], case_id)
+    _fill_auto_values(document["sections"], auto_values)
 
     case = IncidentCase(
         case_id=case_id,
-        template_id=request.template_id,
+        template_id=template.template_id,
         status="open",
         created_by=username,
         created_at=now,
