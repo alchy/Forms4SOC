@@ -114,7 +114,7 @@
             {"key": "reporter_department",     "label": "Oddělení / organizační jednotka",                 "type": "text",     "editable": true, "is_example": true, "value": "Účetní oddělení"},
             {"key": "reporter_contact",        "label": "Kontakt (e-mail / telefon)",                      "type": "text",     "editable": true, "is_example": true, "value": "novakj@ans.cz / +420 123 456 789"},
             {"key": "affected_user",           "label": "Postižený uživatel (pokud jiný než oznamovatel)", "type": "text",     "editable": true, "is_example": true, "value": "(oznamovatel = postižený)"},
-            {"key": "affected_asset",          "label": "Postižený asset",                                 "type": "text",     "editable": true, "is_example": true, "value": "PC-NOVAK-01 · mailbox: novakj@ans.cz",
+            {"key": "affected_asset",          "label": "Postižené aktivum",                               "type": "text",     "editable": true, "is_example": true, "value": "PC-NOVAK-01 · mailbox: novakj@ans.cz",
               "hint": "Uveď hostname počítače, IP adresu, název systému nebo mailbox"},
             {"key": "target_type",             "label": "Cíl události",                                    "type": "select",   "editable": true, "is_example": true, "value": "Uživatel",
               "options": ["Uživatel", "Informační systém", "Kombinace"],
@@ -133,7 +133,7 @@
             {"key": "alert_timestamp",      "label": "Datum a čas alertu",                "type": "datetime", "editable": true, "is_example": true, "value": "2025-03-15T09:38"},
             {"key": "detection_tool",       "label": "Identifikace detekčního nástroje",  "type": "text",     "editable": true, "value": null},
             {"key": "alert_id",             "label": "ID alertu / Identifikace pravidla", "type": "text",     "editable": true, "value": null},
-            {"key": "affected_asset_auto",  "label": "Postižený asset (hostname, IP, IS)","type": "text",     "editable": true, "value": null},
+            {"key": "affected_asset_auto",  "label": "Postižené aktivum (hostname, IP, IS)","type": "text",   "editable": true, "value": null},
             {"key": "target_type",          "label": "Cíl události",                      "type": "select",   "editable": true, "value": null,
               "options": ["Uživatel", "Informační systém", "Kombinace"]},
             {"key": "alert_description",    "label": "Popis alertu",                      "type": "textarea", "editable": true, "value": null}
@@ -142,16 +142,16 @@
 
         {
           "id": "affected_assets",
-          "title": "Dotčené assety",
+          "title": "Dotčená aktiva",
           "type": "assets_table",
           "note": "Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope",
-          "hint": "Pokud je některý asset součástí kritické infrastruktury → ihned informuj CISO.",
+          "hint": "Pokud je některé aktivum součástí kritické infrastruktury → ihned informuj CISO.",
           "always_expanded": true,
           "columns": ["asset_name", "asset_ip", "asset_type", "critical_infrastructure", "contact_owner", "guarantor", "email", "phone"],
           "column_labels": {
-            "asset_name":              "Název assetu (hostname, mailbox, IS)",
+            "asset_name":              "Název aktiva (hostname, mailbox, IS)",
             "asset_ip":                "IP adresa",
-            "asset_type":              "Typ assetu",
+            "asset_type":              "Typ aktiva",
             "critical_infrastructure": "Kritická infrastruktura",
             "contact_owner":           "Kontakt vlastníka",
             "guarantor":               "Garant",
@@ -159,7 +159,7 @@
             "phone":                   "Telefon"
           },
           "column_options": {
-            "asset_type": ["Endpoint", "Server", "Mailbox", "Informační systém", "Síťový prvek", "Sdílené úložiště", "Jiné"],
+            "asset_type": ["Endpoint", "Server", "Mailbox", "Informační systém", "Síťový prvek", "Sdílené úložiště", "Jiné aktivum"],
             "critical_infrastructure": ["Ano", "Ne"]
           },
           "editable": true,
