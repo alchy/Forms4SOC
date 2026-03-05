@@ -259,7 +259,7 @@
 |-|-|
 |Finální klasifikace|*True Positive*|
 |Finální Severity|*High*|
-|Potvrzený rozsah|*3 zařízení · maliciózní soubor spuštěn na PC-NOVAK-01 · 18 příjemců phishingové kampaně*|
+|Potvrzený rozsah|*3 zařízení · škodlivá soubor spuštěn na PC-NOVAK-01 · 18 příjemců phishingové kampaně*|
 
 
 
@@ -331,7 +331,7 @@
 |-|-|
 |Klasifikace výsledku|*True Positive*|
 |Finální Severity|*High*|
-|Root Cause|*Maliciózní příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem*|
+|Root Cause|*Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem*|
 |Popis přijatých opatření|*Izolace 3 zařízení, blokace domény na mail serveru, AV scan*|
 |Doporučení pro zlepšení|*Zvážit implementaci sandboxingu příloh na inbound mail gateway*|
 |Lessons Learned|*5 uživatelů prokliklo URL před blokací – zvážit proaktivní blokaci na úrovni DNS*|

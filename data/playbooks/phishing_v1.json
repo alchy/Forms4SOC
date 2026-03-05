@@ -4,7 +4,7 @@
   "version": "1.0",
   "category": "Phishing",
   "status": "active",
-  "description": "Playbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, maliciózní příloha, URL).",
+  "description": "Playbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL).",
   "mitre_tactic": "Initial Access",
   "mitre_technique": "T1566",
   "mitre_subtechnique": "T1566.001",
@@ -307,7 +307,7 @@
             "options": ["True Positive", "False Positive", "Benign True Positive"]},
           {"key": "final_severity",       "label": "Finální Severity",    "type": "select",   "editable": true, "is_example": true, "value": "high",
             "options": ["critical", "high", "medium", "low"]},
-          {"key": "confirmed_scope",      "label": "Potvrzený rozsah",    "type": "textarea", "editable": true, "is_example": true, "value": "3 zařízení · maliciózní soubor spuštěn na PC-NOVAK-01 · 18 příjemců phishingové kampaně"}
+          {"key": "confirmed_scope",      "label": "Potvrzený rozsah",    "type": "textarea", "editable": true, "is_example": true, "value": "3 zařízení · škodlivá soubor spuštěn na PC-NOVAK-01 · 18 příjemců phishingové kampaně"}
         ],
         "notifications": [
           "Severity High → potvrď notifikaci CISO · informuj Vlastníka dotčeného systému o výsledcích",
@@ -372,7 +372,7 @@
           "options": ["True Positive", "False Positive", "Benign True Positive"]},
         {"key": "final_severity",        "label": "Finální Severity",            "type": "select",   "editable": true, "is_example": true, "value": "high",
           "options": ["critical", "high", "medium", "low"]},
-        {"key": "root_cause",            "label": "Root Cause",                  "type": "textarea", "editable": true, "is_example": true, "value": "Maliciózní příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem"},
+        {"key": "root_cause",            "label": "Root Cause",                  "type": "textarea", "editable": true, "is_example": true, "value": "Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem"},
         {"key": "actions_taken",         "label": "Popis přijatých opatření",    "type": "textarea", "editable": true, "is_example": true, "value": "Izolace 3 zařízení, blokace domény na mail serveru, AV scan"},
         {"key": "recommendations",       "label": "Doporučení pro zlepšení",     "type": "textarea", "editable": true, "is_example": true, "value": "Zvážit implementaci sandboxingu příloh na inbound mail gateway"},
         {"key": "lessons_learned",       "label": "Lessons Learned",             "type": "textarea", "editable": true, "is_example": true, "value": "5 uživatelů prokliklo URL před blokací – zvážit proaktivní blokaci na úrovni DNS"},
