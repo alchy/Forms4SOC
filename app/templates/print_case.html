@@ -223,25 +223,22 @@ function renderChecklist(section, parent) {
   }
 }
 
-function renderClassification(caseData, parent) {
+function renderClassification(section, parent) {
   const grid = el('div', 'classif-grid');
-  const items = [
-    ['Kategorie', caseData.category],
-    ['MITRE taktika', caseData.mitre_tactic],
-    ['Technika', caseData.mitre_technique],
-    ['Sub-technika', caseData.mitre_subtechnique],
-  ];
-  items.forEach(([label, val]) => {
-    if (!val) return;
+  (section.fields || []).filter(f => f.key !== 'data_sources').forEach(field => {
+    const val = field.value;
+    if (val === null || val === undefined || val === '') return;
     const d = el('div', 'classif-item');
-    d.innerHTML = `<div class="classif-label-txt">${label}</div><div class="classif-val-txt">${val}</div>`;
+    d.innerHTML = `<div class="classif-label-txt">${field.label}</div><div class="classif-val-txt">${val}</div>`;
     grid.appendChild(d);
   });
   parent.appendChild(grid);
 
-  const ds = caseData.data_sources;
-  if (ds) {
-    const sources = Array.isArray(ds) ? ds : String(ds).split(',').map(s => s.trim()).filter(Boolean);
+  const dsField = (section.fields || []).find(f => f.key === 'data_sources');
+  if (dsField && dsField.value) {
+    const sources = Array.isArray(dsField.value)
+      ? dsField.value
+      : String(dsField.value).split(',').map(s => s.trim()).filter(Boolean);
     const wrap = el('div');
     wrap.style.marginTop = '6px';
     sources.forEach(s => {
@@ -262,7 +259,7 @@ function renderSection(section, caseData) {
     renderFields(section.fields || [], div);
 
   } else if (section.type === 'classification') {
-    renderClassification(caseData, div);
+    renderClassification(section, div);
 
   } else if (section.type === 'section_group') {
     (section.subsections || []).forEach(sub => {

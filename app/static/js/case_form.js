@@ -193,23 +193,47 @@ function renderPlaybookHeader(section) {
 }
 
 // ---------------------------------------------------------------------------
-// Klasifikace (read-only MITRE + kategorie panel)
+// Klasifikace (MITRE panel – read-only info + editovatelná pole)
 // ---------------------------------------------------------------------------
 
 function renderClassification(section) {
     const wrap = el('div');
-    const row = el('div', 'row g-2 mb-2');
 
-    (section.fields || []).filter(f => f.key !== 'data_sources').forEach(field => {
-        const col = el('div', 'col-md-6 col-lg-4');
-        col.innerHTML = `
-            <div class="d-flex flex-column">
-                <span class="text-muted small">${field.label}</span>
-                <span class="fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-            </div>`;
-        row.appendChild(col);
-    });
-    wrap.appendChild(row);
+    const mainFields = (section.fields || []).filter(f => f.key !== 'data_sources');
+    const readonlyFields = mainFields.filter(f => !f.editable);
+    const editableFields = mainFields.filter(f => f.editable);
+
+    // Read-only pole jako kompaktní info grid
+    if (readonlyFields.length > 0) {
+        const row = el('div', 'row g-2 mb-2');
+        readonlyFields.forEach(field => {
+            const col = el('div', 'col-md-6 col-lg-4');
+            col.innerHTML = `
+                <div class="d-flex flex-column">
+                    <span class="text-muted small">${field.label}</span>
+                    <span class="fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
+                </div>`;
+            row.appendChild(col);
+        });
+        wrap.appendChild(row);
+    }
+
+    // Editovatelná pole (např. sub-technique select) jako standardní form řádky
+    if (editableFields.length > 0) {
+        const editRow = el('div', 'mt-2 pt-2 border-top');
+        editableFields.forEach(field => {
+            const row = el('div', 'row mb-2 align-items-center');
+            const labelCol = el('div', 'col-md-4');
+            labelCol.innerHTML = `<label class="form-label text-secondary small mb-0">${field.label}</label>
+                ${field.hint ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`;
+            const inputCol = el('div', 'col-md-8');
+            inputCol.appendChild(renderFieldInput(field));
+            row.appendChild(labelCol);
+            row.appendChild(inputCol);
+            editRow.appendChild(row);
+        });
+        wrap.appendChild(editRow);
+    }
 
     // Data sources jako badge seznam
     const dsField = (section.fields || []).find(f => f.key === 'data_sources');
