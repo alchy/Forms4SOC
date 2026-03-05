@@ -52,6 +52,30 @@ async def dashboard(request: Request):
     })
 
 
+@router.get("/cases", response_class=HTMLResponse)
+async def cases_list(request: Request):
+    user = _get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse("cases.html", {
+        "request": request,
+        "user": {"username": user.sub, "role": user.role},
+    })
+
+
+@router.get("/templates", response_class=HTMLResponse)
+async def templates_list(request: Request):
+    user = _get_user_from_cookie(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    soc_templates = load_all_templates()
+    return templates.TemplateResponse("templates_list.html", {
+        "request": request,
+        "user": {"username": user.sub, "role": user.role},
+        "templates": soc_templates,
+    })
+
+
 @router.get("/cases/{case_id}", response_class=HTMLResponse)
 async def case_detail(request: Request, case_id: str):
     user = _get_user_from_cookie(request)
