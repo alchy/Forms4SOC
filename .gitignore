@@ -1,0 +1,39 @@
+# Prostředí
+.venv/
+venv/
+env/
+
+# Konfigurace (obsahuje tajné klíče)
+.env
+
+# Databáze
+data/
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Build
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Testy
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
