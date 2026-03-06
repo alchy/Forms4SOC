@@ -169,7 +169,7 @@ Checklist je nejdůležitější část workbooku. Kroky jsou organizovány do s
 
 ## Jak přidat pole `is_example`
 
-Pole nebo kroky s `"is_example": true` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota stane placeholderem a analytik ji přepíše vlastní hodnotou.
+Pole nebo kroky s `"is_example": true` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota stane placeholderem vstupního pole a analytik ji přepíše vlastní hodnotou.
 
 ```json
 {
@@ -183,6 +183,8 @@ Pole nebo kroky s `"is_example": true` slouží jako **ukázka vyplnění**. Př
 ```
 
 Dobré pro: `root_cause`, `actions_taken`, kroky checklistu – všude, kde chceš ukázat, jak by správně vyplněné pole vypadalo.
+
+> **`is_example` v kontaktní tabulce nepoužívej.** Řádky `contact_table` jsou předvyplněné jako běžný editovatelný text. `"is_example": true` v řádcích kontaktní tabulky nemá efekt a nemělo by se používat.
 
 ---
 
