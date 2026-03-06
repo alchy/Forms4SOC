@@ -83,7 +83,7 @@
 
     {
       "id": "incident_context",
-      "title": "Informace o kontextu bezpečnostní události",
+      "title": "Informace o kontextu UIB",
       "type": "section_group",
       "subsections": [
 

@@ -66,7 +66,7 @@ ADMIN_PASSWORD=admin
 > Po prvním spuštění se admin účet uloží do databáze. Hodnoty `ADMIN_USERNAME`
 > a `ADMIN_PASSWORD` v `.env` se použijí znovu jen pokud databáze neexistuje.
 
-Adresáře pro ukládání bezpečnostních událostí a šablon lze nastavit přímo v GUI
+Adresáře pro ukládání UIB a šablon lze nastavit přímo v GUI
 (sekce **Nastavení** → Admin menu) – výchozí hodnoty jsou `data/events/` a `data/workbooks/`.
 
 ---
@@ -98,7 +98,7 @@ python start.py --reload
 Forms4SOC/
 ├── app/                  – zdrojový kód aplikace
 ├── data/
-│   ├── events/           – JSON soubory bezpečnostních událostí (vytvořeno automaticky)
+│   ├── events/           – JSON soubory UIB (vytvořeno automaticky)
 │   ├── workbooks/        – JSON šablony
 │   │   ├── phishing_v1.json
 │   │   └── phishing_v2.json

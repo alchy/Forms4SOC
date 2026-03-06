@@ -12,7 +12,7 @@
         </li>
         <li class="nav-item">
             <a href="/cases" class="nav-link">
-                <i class="bi bi-folder2-open me-2"></i>Bezpečnostní události
+                <i class="bi bi-folder2-open me-2"></i>Události informační bezpečnosti (UIB)
             </a>
         </li>
         <li class="nav-item">
@@ -60,11 +60,11 @@
     <div class="card-body">
         <form id="settings-form">
             <div class="mb-3">
-                <label class="form-label fw-semibold">Adresář bezpečnostních událostí</label>
+                <label class="form-label fw-semibold">Adresář UIB</label>
                 <input type="text" class="form-control" id="incidents_dir"
                        value="{{ settings.get('incidents_dir', 'data/events') }}"
                        placeholder="data/events">
-                <div class="form-text">Relativní nebo absolutní cesta kde se ukládají JSON soubory bezpečnostních událostí.</div>
+                <div class="form-text">Relativní nebo absolutní cesta kde se ukládají JSON soubory UIB.</div>
             </div>
             <div class="mb-4">
                 <label class="form-label fw-semibold">Adresář šablon</label>

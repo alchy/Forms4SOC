@@ -250,7 +250,7 @@ Kontejner sdružující více podsekce do jednoho bloku (zobrazeny jako accordio
 {
   "id": "incident_context",
   "type": "section_group",
-  "title": "Kontext bezpečnostní události",
+  "title": "Kontext UIB",
   "subsections": [
     {
       "id": "common_data",
