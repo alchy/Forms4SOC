@@ -12,13 +12,16 @@ data/forms4soc.db
 *.sqlite
 
 # Události (lokální data – nekompitovat)
-data/events/
+data/events/*
+!data/events/README.md
 
 # PDF exporty
-data/tisk/
+data/tisk/*
+!data/tisk/README.md
 
 # Incidents (local data – do not commit)
-data/incidents/
+data/incidents/*
+!data/incidents/README.md
 
 # Python
 __pycache__/
