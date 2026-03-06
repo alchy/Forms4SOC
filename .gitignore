@@ -17,8 +17,8 @@ data/events/
 # PDF exporty
 data/tisk/
 
-# Šablony jsou součástí repozitáře
-!data/playbooks/
+# Incidents (local data – do not commit)
+data/incidents/
 
 # Python
 __pycache__/
