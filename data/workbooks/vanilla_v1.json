@@ -67,6 +67,21 @@
           "auto_value": "template_version"
         },
         {
+          "key": "author",
+          "label": "Autor / vlastník šablony",
+          "type": "text",
+          "editable": false,
+          "value": "SOC Analytický tým"
+        },
+        {
+          "key": "incident_coordinator",
+          "label": "Koordinátor incidentu",
+          "type": "text",
+          "editable": true,
+          "value": null,
+          "hint": "SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít."
+        },
+        {
           "_doc": "Volitelné pole – přidej libovolná další pole relevantní pro tvůj typ incidentu. Například: priority, source_system, assigned_to...",
           "key": "source_alert",
           "label": "Zdrojový alert / ticket",

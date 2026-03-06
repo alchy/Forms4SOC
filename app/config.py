@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Aplikace
     app_name: str = "Forms4SOC"
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.0"
     debug: bool = False
 
     # JWT

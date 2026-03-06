@@ -28,8 +28,9 @@
         {"key": "workbook_id",     "label": "Workbook ID",                  "type": "text", "editable": false, "value": "2026-002"},
         {"key": "version",         "label": "Verze",                        "type": "text", "editable": false, "value": null, "auto_value": "template_version"},
         {"key": "last_updated",    "label": "Datum poslední aktualizace",   "type": "text", "editable": false, "value": "2026-03-05"},
-        {"key": "author",          "label": "Autor / vlastník",             "type": "text", "editable": false, "value": "SOC Analytický tým"},
-        {"key": "workbook_status", "label": "Status",                       "type": "text", "editable": false, "value": null, "auto_value": "template_status"}
+        {"key": "author",               "label": "Autor / vlastník šablony",    "type": "text", "editable": false, "value": "SOC Analytický tým"},
+        {"key": "incident_coordinator", "label": "Koordinátor incidentu",       "type": "text", "editable": true,  "value": null, "hint": "SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít."},
+        {"key": "workbook_status",      "label": "Status",                       "type": "text", "editable": false, "value": null, "auto_value": "template_status"}
       ]
     },
 

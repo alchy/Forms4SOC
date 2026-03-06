@@ -61,6 +61,9 @@
         <div id="save-indicator" class="text-success small d-none">
             <i class="bi bi-check-circle me-1"></i>Uloženo
         </div>
+        <button class="btn btn-outline-primary btn-sm" id="btn-takeover" onclick="takeover()" title="Převzít incident">
+            <i class="bi bi-person-check me-1"></i>Převzít
+        </button>
         <a href="/cases/{{ case_id }}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
             <i class="bi bi-printer me-1"></i>Tisk
         </a>
@@ -305,6 +308,20 @@
             });
         }
     });
+
+    async function takeover() {
+        if (!caseDocument) return;
+        const headerSec = caseDocument.data.sections.find(
+            s => s.type === 'workbook_header' || s.type === 'playbook_header'
+        );
+        if (!headerSec) return;
+        const field = (headerSec.fields || []).find(f => f.key === 'incident_coordinator');
+        if (!field) return;
+        field.value = CURRENT_USER;
+        const input = document.querySelector('[data-field-key="incident_coordinator"]');
+        if (input) input.value = CURRENT_USER;
+        await saveCase();
+    }
 
     loadCase();
     loadFilePath();
