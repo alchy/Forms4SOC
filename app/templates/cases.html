@@ -52,7 +52,7 @@
 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
         <h5 class="fw-bold mb-0">
-            <i class="bi bi-folder2-open me-2 text-primary"></i>Incidenty
+            <i class="bi bi-folder2-open me-2 text-primary"></i>Bezpečnostní události
         </h5>
         <small class="text-muted">Přehled všech bezpečnostních událostí</small>
     </div>
@@ -127,6 +127,12 @@
 {% block scripts %}
 <!-- jQuery + DataTables -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<style>
+  #cases-table_wrapper .dataTables_length,
+  #cases-table_wrapper .dataTables_filter { padding: 0.6rem 1rem 0.25rem; }
+  #cases-table_wrapper .dataTables_info,
+  #cases-table_wrapper .dataTables_paginate { padding: 0.25rem 1rem 0.6rem; }
+</style>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
