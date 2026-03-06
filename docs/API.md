@@ -37,8 +37,32 @@ Endpointy označené 🔒 vyžadují roli **admin**.
 
 | Metoda | Endpoint | Popis | Auth |
 |--------|----------|-------|------|
-| GET | `/` | Seznam všech SOC šablon | ✓ |
-| GET | `/{template_id}` | Detail konkrétní šablony | ✓ |
+| GET    | `/`                       | Seznam všech SOC šablon | ✓ |
+| POST   | `/`                       | Vytvoření nové šablony ze zadaného JSON obsahu 🔒 | admin |
+| GET    | `/{template_id}`          | Detail konkrétní šablony | ✓ |
+| GET    | `/{template_id}/source`   | Zdrojový JSON šablony (pro editor) 🔒 | admin |
+| PUT    | `/{template_id}`          | Uložení upraveného obsahu šablony 🔒 | admin |
+| DELETE | `/{template_id}`          | Smazání šablony 🔒 | admin |
+
+**POST /templates/ – vytvoření šablony**
+```json
+// Tělo požadavku
+{ "filename": "ransomware_v1.json", "content": "{...}" }
+
+// Odpověď 200
+{ "ok": true, "template_id": "ransomware-v1", "filename": "ransomware_v1.json" }
+// Odpověď 409 – soubor již existuje
+// Odpověď 400 – neplatný JSON
+```
+
+**PUT /templates/{template_id} – uložení šablony**
+```json
+// Tělo požadavku
+{ "content": "{...}" }
+
+// Odpověď 200
+{ "ok": true, "filename": "ransomware_v1.json" }
+```
 
 **GET /templates/ – příklad odpovědi**
 ```json

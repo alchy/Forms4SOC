@@ -103,6 +103,7 @@ Forms4SOC/
 │   │   ├── phishing_v2.json
 │   │   ├── ddos_vpn_v1.json
 │   │   └── vanilla_v1.json
+│   ├── tisk/             – PDF exporty (vytvořeno automaticky)
 │   └── forms4soc.db      – SQLite databáze (vytvořena automaticky)
 ├── docs/                 – dokumentace
 │   ├── API.md
