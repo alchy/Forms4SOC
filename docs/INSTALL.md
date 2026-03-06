@@ -126,6 +126,25 @@ Heslo:    admin   (nebo dle .env → ADMIN_PASSWORD)
 
 ---
 
+## Bezpečnostní opatření
+
+Aplikace obsahuje následující bezpečnostní vrstvy aktivní ve výchozím nastavení:
+
+| Opatření | Popis |
+|---|---|
+| JWT httpOnly cookie | Auth token je uložen v httpOnly cookie (nedostupná z JavaScriptu), `samesite=lax` |
+| SecurityMiddleware | Každý POST/PUT/PATCH na `/api/v1/*` musí mít `Content-Type: application/json` – blokuje CSRF útoky přes HTML formuláře (HTTP 415) |
+| Security response headers | `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` |
+| `X-Requested-With` | Všechna AJAX volání přes `apiFetch` odesílají `X-Requested-With: XMLHttpRequest` |
+| Role-based access | Adminové endpointy (`/api/v1/users`, `/api/v1/settings`, správa šablon) vyžadují roli `admin` |
+
+**Doporučení pro produkční nasazení:**
+- Nastavte silný `JWT_SECRET_KEY` (min. 32 znaků, generace: `openssl rand -hex 32`)
+- Provozujte za HTTPS reverse proxy (nginx) – viz sekce níže
+- Změňte výchozí heslo admina ihned po prvním přihlášení
+
+---
+
 ## Aktualizace
 
 ```bash
