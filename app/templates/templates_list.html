@@ -61,7 +61,7 @@
             {{ templates | length }} šablon
         </span>
         {% if user and user.role == 'admin' %}
-        <a href="/templates/new" class="btn btn-outline-primary btn-sm">
+        <a href="/templates/new" class="btn btn-outline-success btn-sm">
             <i class="bi bi-plus-circle me-1"></i>Nová šablona
         </a>
         {% endif %}
@@ -144,7 +144,7 @@
             </div>
             <div class="card-footer bg-white border-top d-flex flex-column gap-2">
                 <button
-                    class="btn btn-primary btn-sm w-100"
+                    class="btn btn-success btn-sm w-100"
                     onclick="startIncident('{{ tmpl.template_id }}', this)"
                     {% if tmpl.status != 'active' %}disabled{% endif %}
                 >
