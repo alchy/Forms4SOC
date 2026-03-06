@@ -19,10 +19,6 @@ data/events/*
 data/tisk/*
 !data/tisk/README.md
 
-# Incidents (local data – do not commit)
-data/incidents/*
-!data/incidents/README.md
-
 # Python
 __pycache__/
 *.py[cod]
