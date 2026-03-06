@@ -48,7 +48,7 @@ class FileStorageBackend(StorageBackend):
     async def list_cases(self) -> list[IncidentCase]:
         cases = []
         json_files = sorted(
-            self.incidents_dir.glob("SOC-IN-*.json"),
+            self.incidents_dir.glob("UIB-*.json"),
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )

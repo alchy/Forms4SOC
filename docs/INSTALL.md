@@ -100,8 +100,9 @@ Forms4SOC/
 ├── data/
 │   ├── events/           – JSON soubory UIB (vytvořeno automaticky)
 │   ├── workbooks/        – JSON šablony
-│   │   ├── phishing_v1.json
-│   │   └── phishing_v2.json
+│   │   ├── phishing_v2.json
+│   │   ├── ddos_vpn_v1.json
+│   │   └── vanilla_v1.json
 │   └── forms4soc.db      – SQLite databáze (vytvořena automaticky)
 ├── docs/                 – dokumentace
 │   ├── API.md
