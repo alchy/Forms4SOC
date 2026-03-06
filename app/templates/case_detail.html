@@ -284,6 +284,7 @@ body.print-mode .hint-classification { display: none !important; }
                     document.querySelectorAll('.accordion-collapse:not(.show)').forEach(el => {
                         el.classList.add('show');
                     });
+                    hideHints();
                 }, 150);
             } else {
                 await acquireLock();
@@ -415,6 +416,19 @@ body.print-mode .hint-classification { display: none !important; }
         if (input) input.value = CURRENT_USER;
         await saveCase();
     }
+
+    // ── Skrytí hintů při tisku ──────────────────────────────────────────────
+    const HINT_SEL = '#sections-container .form-text, #sections-container .alert-info, #sections-container .alert-warning, #sections-container .alert-secondary, #sections-container .hint-classification';
+
+    function hideHints() {
+        document.querySelectorAll(HINT_SEL).forEach(el => el.style.setProperty('display', 'none', 'important'));
+    }
+    function showHints() {
+        document.querySelectorAll(HINT_SEL).forEach(el => el.style.removeProperty('display'));
+    }
+
+    window.addEventListener('beforeprint', hideHints);
+    window.addEventListener('afterprint', showHints);
 
     loadCase();
     if (!PRINT_MODE) loadFilePath();
