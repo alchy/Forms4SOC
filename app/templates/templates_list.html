@@ -154,14 +154,14 @@
                 {% if user and user.role == 'admin' %}
                 <div class="d-flex gap-1">
                     <a href="/templates/{{ tmpl.template_id }}/edit"
-                       class="btn btn-outline-secondary btn-sm flex-fill" title="Editovat šablonu">
+                       class="btn btn-secondary btn-sm flex-fill" title="Editovat šablonu">
                         <i class="bi bi-pencil me-1"></i>Editovat
                     </a>
                     <a href="/templates/new?clone={{ tmpl.template_id }}"
-                       class="btn btn-outline-secondary btn-sm flex-fill" title="Klonovat šablonu">
+                       class="btn btn-secondary btn-sm flex-fill" title="Klonovat šablonu">
                         <i class="bi bi-copy me-1"></i>Klonovat
                     </a>
-                    <button class="btn btn-outline-danger btn-sm"
+                    <button class="btn btn-danger btn-sm"
                             onclick="deleteTemplate('{{ tmpl.template_id }}', '{{ tmpl.name }}')"
                             title="Smazat šablonu">
                         <i class="bi bi-trash"></i>

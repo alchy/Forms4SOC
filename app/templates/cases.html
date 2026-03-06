@@ -171,8 +171,8 @@
                 : '<span class="text-muted small">–</span>';
 
             const adminActions = IS_ADMIN ? `
-                ${c.locked_by ? `<button class="btn btn-outline-warning btn-sm" onclick="unlockCase('${c.case_id}')" title="Odemknout"><i class="bi bi-unlock"></i></button>` : ''}
-                <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete('${c.case_id}')" title="Smazat"><i class="bi bi-trash"></i></button>
+                ${c.locked_by ? `<button class="btn btn-warning btn-sm" onclick="unlockCase('${c.case_id}')" title="Odemknout"><i class="bi bi-unlock"></i></button>` : ''}
+                <button class="btn btn-danger btn-sm" onclick="confirmDelete('${c.case_id}')" title="Smazat"><i class="bi bi-trash"></i></button>
             ` : '';
 
             tr.innerHTML = `
@@ -188,10 +188,10 @@
                 <td class="align-middle text-end pe-3">
                     <div class="d-flex gap-1 justify-content-end">
                         ${adminActions}
-                        <a href="/cases/${c.case_id}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
+                        <a href="/cases/${c.case_id}/print" target="_blank" class="btn btn-secondary btn-sm" title="Tisk">
                             <i class="bi bi-printer me-1"></i>Tisk
                         </a>
-                        <a href="/cases/${c.case_id}" class="btn btn-outline-primary btn-sm">
+                        <a href="/cases/${c.case_id}" class="btn btn-primary btn-sm">
                             <i class="bi bi-arrow-right me-1"></i>Otevřít
                         </a>
                     </div>

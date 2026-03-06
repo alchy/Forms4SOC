@@ -191,10 +191,10 @@
                 <td class="align-middle small text-muted">${new Date(u.created_at).toLocaleString('cs-CZ')}</td>
                 <td class="align-middle text-end pe-3">
                     <div class="d-flex gap-1 justify-content-end">
-                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal('${u.username}')">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${u.username}')">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        ${!isSelf ? `<button class="btn btn-outline-danger btn-sm" onclick="deleteUser('${u.username}')">
+                        ${!isSelf ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">
                             <i class="bi bi-trash"></i>
                         </button>` : ''}
                     </div>
