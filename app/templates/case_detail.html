@@ -27,6 +27,19 @@
 
 {% block content %}
 
+{% if print_mode %}
+<div id="print-toolbar" class="d-flex align-items-center gap-2 mb-3 p-2 rounded"
+     style="background:#0d6efd;color:#fff;">
+    <span class="fw-bold flex-grow-1" id="print-tb-title">{{ case_id }}</span>
+    <button onclick="window.print()" class="btn btn-sm btn-light">
+        <i class="bi bi-printer me-1"></i>Tisk / Uložit PDF
+    </button>
+    <button onclick="window.close()" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);">
+        Zavřít
+    </button>
+</div>
+{% endif %}
+
 <!-- Lock warning banner -->
 <div id="lock-banner" class="alert alert-warning d-flex align-items-center gap-2 d-none mb-3">
     <i class="bi bi-lock-fill fs-5"></i>
@@ -57,7 +70,7 @@
             </button>
         </div>
     </div>
-    <div class="d-flex gap-2 align-items-center flex-wrap">
+    <div id="case-toolbar-buttons" class="d-flex gap-2 align-items-center flex-wrap">
         <div id="save-indicator" class="text-success small d-none">
             <i class="bi bi-check-circle me-1"></i>Uloženo
         </div>
@@ -108,11 +121,63 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* ── Print mode – screen (hide chrome) ────────────────────────────────── */
+body.print-mode nav.navbar,
+body.print-mode nav.sidebar,
+body.print-mode #case-toolbar-buttons,
+body.print-mode #lock-banner,
+body.print-mode #case-filepath-container { display: none !important; }
+
+body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
+
+/* ── @media print (applies to any Ctrl+P from case_detail too) ─────────── */
+@media print {
+    nav.navbar, nav.sidebar,
+    #print-toolbar, #case-toolbar-buttons,
+    #lock-banner, #case-filepath-container { display: none !important; }
+
+    main { flex: 0 0 100% !important; max-width: 100% !important;
+           padding: 0 !important; margin: 0 !important; }
+
+    /* Expand all accordions */
+    .accordion-collapse { display: block !important; }
+    .accordion-button::after { display: none; }
+    .accordion-button { cursor: default; background: #f8f9fa !important;
+                        color: inherit !important; }
+
+    /* Form elements rendered as plain text */
+    #sections-container input,
+    #sections-container select,
+    #sections-container textarea {
+        border: none !important;
+        background: transparent !important;
+        -webkit-appearance: none; appearance: none;
+        resize: none; padding: 0 !important;
+        font: inherit !important; color: inherit !important;
+        height: auto !important; min-height: 0 !important;
+    }
+    /* Select arrows hidden */
+    #sections-container select { pointer-events: none; }
+
+    /* Cards */
+    .card { box-shadow: none !important; page-break-inside: avoid; }
+
+    /* Smaller font for dense tables */
+    .data-table { font-size: 8pt !important; }
+    .raci-legend { font-size: 7.5pt !important; }
+
+    @page { margin: 20mm 15mm; }
+}
+</style>
 <script src="/static/js/case_form.js"></script>
 <script>
     const CASE_ID = '{{ case_id }}';
     const CURRENT_USER = '{{ user.username if user else "" }}';
     const IS_ADMIN = {{ 'true' if user and user.role == 'admin' else 'false' }};
+    const PRINT_MODE = {{ 'true' if print_mode else 'false' }};
+
+    if (PRINT_MODE) document.body.classList.add('print-mode');
 
     let caseDocument = null;
     let lockAcquired = false;
@@ -193,8 +258,20 @@
             renderSections(c.data.sections || [], document.getElementById('sections-container'));
             buildSectionNav(c.data.sections || []);
 
-            // Try to acquire lock
-            await acquireLock();
+            if (PRINT_MODE) {
+                // Update print toolbar title
+                const caseTitle = getCaseTitle(c);
+                const tbTitle = document.getElementById('print-tb-title');
+                if (tbTitle) tbTitle.textContent = CASE_ID + (caseTitle ? ' – ' + caseTitle : '');
+                // Expand all accordion sections after requestAnimationFrame callbacks settle
+                setTimeout(() => {
+                    document.querySelectorAll('.accordion-collapse:not(.show)').forEach(el => {
+                        el.classList.add('show');
+                    });
+                }, 150);
+            } else {
+                await acquireLock();
+            }
         } catch (e) {
             showPageAlert('Chyba při načítání incidentu: ' + e.message);
         }
@@ -324,6 +401,6 @@
     }
 
     loadCase();
-    loadFilePath();
+    if (!PRINT_MODE) loadFilePath();
 </script>
 {% endblock %}

@@ -136,9 +136,11 @@ async def case_print(
     case_id: str,
     user: TokenPayload = Depends(require_web_user),
 ):
-    return templates.TemplateResponse("print_case.html", {
+    return templates.TemplateResponse("case_detail.html", {
         "request": request,
+        "user": _user_ctx(user),
         "case_id": case_id,
+        "print_mode": True,
     })
 
 
