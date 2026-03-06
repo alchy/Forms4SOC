@@ -271,6 +271,7 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                         el.classList.add('show');
                     });
                     document.querySelectorAll('#sections-container .form-text, #sections-container .alert-info, #sections-container .alert-warning, #sections-container .alert-secondary, #sections-container .hint-classification').forEach(el => el.remove());
+                    document.querySelectorAll('#sections-container [placeholder]').forEach(el => el.removeAttribute('placeholder'));
                 }, 150);
             } else {
                 await acquireLock();
