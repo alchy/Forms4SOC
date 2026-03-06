@@ -131,6 +131,13 @@ body.print-mode #case-filepath-container { display: none !important; }
 
 body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
 
+/* ── Print mode – screen (hide hints) ─────────────────────────────────── */
+body.print-mode #sections-container .form-text,
+body.print-mode #sections-container .alert-info,
+body.print-mode #sections-container .alert-warning,
+body.print-mode #sections-container .alert-secondary,
+body.print-mode #sections-container .hint-classification { display: none !important; }
+
 /* ── @media print (applies to any Ctrl+P from case_detail too) ─────────── */
 @media print {
     nav.navbar, nav.sidebar,
@@ -168,7 +175,7 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
     .raci-legend { font-size: 7.5pt !important; }
 
     /* Hide all hints */
-    #sections-container .form-text,
+    .form-text,
     #sections-container .alert-info,
     #sections-container .alert-warning,
     #sections-container .alert-secondary,
