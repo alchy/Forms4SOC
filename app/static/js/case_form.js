@@ -40,8 +40,16 @@ function renderSection(section) {
         case 'classification':   body.appendChild(renderClassification(section)); break;
         case 'contact_table':    body.appendChild(renderContactTable(section)); break;
         case 'section_group':    body.appendChild(renderSectionGroup(section)); break;
-        case 'form':
-        case 'closure_form':     body.appendChild(renderForm(section.fields || [])); break;
+        case 'form':             body.appendChild(renderForm(section.fields || [])); break;
+        case 'closure_form': {
+            if (section.hint) {
+                const hintEl = el('div', 'alert alert-info py-2 small mb-3');
+                hintEl.innerHTML = `<i class="bi bi-info-circle me-1"></i>${section.hint}`;
+                body.appendChild(hintEl);
+            }
+            body.appendChild(renderForm(section.fields || []));
+            break;
+        }
         case 'assets_table':     body.appendChild(renderAssetsTable(section)); break;
         case 'checklist':        body.appendChild(renderChecklist(section)); break;
         case 'action_table':     body.appendChild(renderActionTable(section)); break;

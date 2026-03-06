@@ -313,28 +313,25 @@
       "title": "Klasifikace a uzavření",
       "type": "closure_form",
       "description": "Uzavření provádí SOC Analytický tým po dokončení Odezvy, nebo ihned po Posouzení, třídění a rozhodování u False Positive / Benign True Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.",
-      "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
+      "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.<br><br><b>Metodika klasifikace – Úroveň dopadu:</b><br><b>Nízká</b> – incidenty s omezeným nebo lokálním dopadem; žádný dopad na regulovanou službu.<br><b>Střední</b> – postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů; nezasahuje aktiva regulované služby.<br><b>Vysoká</b> – významný dopad na klíčové procesy nebo systémy; při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB; ohrožují kontinuitu činnosti nebo reputaci.<br><b>Kritická</b> – katastrofický dopad; vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost; jde vždy o KBI.",
       "fields": [
         {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "is_example": true, "value": "True Positive",
           "options": ["True Positive", "False Positive", "Benign True Positive"],
           "hint": "Klasifikace odráží celkový výsledek Posouzení, třídění a rozhodování a může se lišit od průběžného hodnocení."},
-        {"key": "impact_ki", "label": "Dopad na Regulovanou službu", "type": "select", "editable": true, "value": null,
-          "options": ["Ano – Regulovaná služba přímo zasažena", "Nepřímo – systémy nebo služby navazující na Regulovanou službu", "Ne", "Nelze určit"],
-          "hint": "Regulovaná služba = KI/KII dle zákona č. 181/2014 Sb. (ZOKB) a vyhl. č. 82/2018 Sb. Ověř v interním registru aktiv."},
-        {"key": "zavaznost", "label": "Závažnost incidentu", "type": "select", "editable": true, "is_example": true, "value": "P2 – Vysoký dopad",
-          "options": ["P1 – Kritický dopad", "P2 – Vysoký dopad", "P3 – Střední dopad", "P4 – Nízký dopad"],
+        {"key": "impact_level", "label": "Úroveň dopadu", "type": "select", "editable": true, "value": null,
+          "options": ["Nízká", "Střední", "Vysoká", "Kritická"],
           "option_hints": {
-            "P1 – Kritický dopad": "Závažný incident s přímým a významným narušením bezpečnosti Regulované služby. Napadení primárních i redundantních systémů, rozsáhlé narušení integrity/dostupnosti, nemožnost zajistit službu ani náhradními procesy. Povinné hlášení NÚKIB a ÚCL.",
-            "P2 – Vysoký dopad":   "Přímý dopad na systémy nebo komponenty podporující Regulovanou službu. Narušení integrity/dostupnosti, nutnost náhradních postupů. Ohrožení plynulosti Regulované služby. Povinné hlášení NÚKIB a ÚCL.",
-            "P3 – Střední dopad":  "Incident zasahující neregulované služby. Omezení dostupnosti nebo integrity nekritických systémů, případně prozrazení citlivých/osobních dat. Řešitelné v rámci standardní pracovní doby.",
-            "P4 – Nízký dopad":    "Omezený nebo lokální dopad. Žádný dopad na Regulovanou službu. Krátké narušení dostupnosti nekritického systému nebo omezené porušení důvěrnosti."
+            "Nízká":    "Incidenty s omezeným nebo lokálním dopadem. Žádný dopad na regulovanou službu.",
+            "Střední":  "Incidenty, které postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů. Nezasahuje aktiva regulované služby.",
+            "Vysoká":   "Incidenty s významným dopadem na klíčové procesy nebo systémy. Při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB. Ohrožují kontinuitu činnosti nebo reputaci.",
+            "Kritická": "Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI."
           },
-          "hint": "Kategorie P1/P2 zakládají povinnost hlášení NÚKIB a ÚCL."},
+          "hint": "Úroveň Vysoká a Kritická při zasažení regulované služby zakládají povinnost hlášení NÚKIB a ÚCL."},
         {"key": "nukib_notification_required", "label": "Povinnost hlášení NÚKIB", "type": "select", "editable": true, "value": null,
-          "options": ["Povinná – Regulovaná služba + P1/P2 (ZOKB §8, vyhl. 82/2018 Sb.)", "Zvážit – hraniční případ", "Není vyžadována"],
+          "options": ["Povinná – Regulovaná služba + Vysoká/Kritická (ZOKB §8, vyhl. 82/2018 Sb.)", "Zvážit – hraniční případ", "Není vyžadována"],
           "hint": "Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018 Sb."},
         {"key": "ucl_notification_required", "label": "Povinnost hlášení ÚCL", "type": "select", "editable": true, "value": null,
-          "options": ["Povinná – Regulovaná letecká služba + P1/P2", "Zvážit – hraniční případ", "Není vyžadována"],
+          "options": ["Povinná – Regulovaná letecká služba + Vysoká/Kritická", "Zvážit – hraniční případ", "Není vyžadována"],
           "hint": "ÚCL (Úřad pro civilní letectví) – hlášení povinné při Vysokém nebo Kritickém dopadu (P1/P2) na regulovanou leteckou službu."},
         {"key": "impact_primary_service", "label": "Dostupnost primárních služeb organizace", "type": "select", "editable": true, "value": null,
           "options": ["Zcela nedostupné", "Částečně nedostupné / degradované", "Dostupné bez omezení", "Netýká se"],
@@ -381,7 +378,7 @@
         {"activity": "Notifikace DPO (únik dat)",       "ki": "R",    "cirt": "C",   "r_dtech": "–",                   "r_dplr": "–", "garant": "I", "delegat": "–", "dpo": "A, I", "nukib": "–",                   "ucl": "–"},
         {"activity": "Eskalace na management",          "ki": "R",    "cirt": "–",   "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
         {"activity": "Hlášení NÚKIB / ÚCL",            "ki": "R",    "cirt": "C",   "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "dpo": "–",    "nukib": "I (Vysoká/Kritická)", "ucl": "I (Vysoká/Kritická)"},
-        {"activity": "Uzavření incidentu",              "ki": "R, A", "cirt": "C",   "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "I", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"}
+        {"activity": "Klasifikace a uzavření",           "ki": "R, A", "cirt": "C",   "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "I", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"}
       ]
     }
 

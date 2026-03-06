@@ -44,9 +44,9 @@ Endpointy označené 🔒 vyžadují roli **admin**.
 ```json
 [
   {
-    "template_id": "phishing-v1",
+    "template_id": "phishing-v2",
     "name": "Podezřelý e-mail / Phishing",
-    "version": "1.0",
+    "version": "2.0",
     "category": "Phishing",
     "status": "active",
     "description": "...",
@@ -55,19 +55,26 @@ Endpointy označené 🔒 vyžadují roli **admin**.
     "mitre_subtechnique": "T1566.001",
     "data_sources": ["Inbound SMTP Mail Gateway", "Proxy", "SIEM"],
     "sections": [...],
-    "filename": "phishing_v1.json"
+    "filename": "phishing_v2.json"
   },
   {
-    "template_id": "phishing-v2",
-    "name": "Podezřelý e-mail / Phishing v2",
-    "version": "2.0",
+    "template_id": "ddos-vpn-v1",
+    "name": "DDoS útok na VPN Cisco AnyConnect",
+    "version": "1.0",
     ...
-    "filename": "phishing_v2.json"
+    "filename": "ddos_vpn_v1.json"
+  },
+  {
+    "template_id": "vanilla-v1",
+    "name": "Výchozí kostra (Vanilla)",
+    "version": "1.0",
+    ...
+    "filename": "vanilla_v1.json"
   }
 ]
 ```
 
-Dostupné šablony: `phishing-v1` (původní), `phishing-v2` (sloučená Triage & Investigace, rozšířená tabulka aktiv).
+Dostupné šablony: `phishing-v2` (Phishing / podezřelý e-mail), `ddos-vpn-v1` (DDoS útok na VPN Cisco AnyConnect), `vanilla-v1` (výchozí kostra pro nové šablony).
 
 ---
 
@@ -86,9 +93,9 @@ Dostupné šablony: `phishing-v1` (původní), `phishing-v2` (sloučená Triage 
 ### Formát Case ID
 
 ```
-SOC-IN-DDMMYYYY-HHMMSS-{username}
+UIB-DDMMYYYY-HHMM-RRRR
 
-Příklad: SOC-IN-05032026-143022-admin
+Příklad: UIB-06032026-0954-3712
 ```
 
 ### Stavy incidentu (`status`)
@@ -103,12 +110,12 @@ Příklad: SOC-IN-05032026-143022-admin
 **POST /cases/ – vytvoření incidentu**
 ```json
 // Tělo požadavku
-{ "template_id": "phishing-v1" }
+{ "template_id": "phishing-v2" }
 
 // Odpověď 201
 {
-  "case_id": "SOC-IN-05032026-143022-admin",
-  "template_id": "phishing-v1",
+  "case_id": "UIB-05032026-1430-4281",
+  "template_id": "phishing-v2",
   "status": "open",
   "created_by": "admin",
   "created_at": "2026-03-05T14:30:22+00:00",

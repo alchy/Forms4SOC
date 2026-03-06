@@ -1,4 +1,5 @@
 import copy
+import random
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -7,10 +8,11 @@ from app.models.template import SOCTemplate
 from app.storage.base import StorageBackend
 
 
-def generate_case_id(username: str) -> str:
-    """Generuje unikátní ID incidentu ve formátu SOC-IN-DDMMYYYY-HHMMSS-{username}."""
+def generate_case_id(username: str = "") -> str:
+    """Generuje unikátní ID incidentu ve formátu UIB-DDMMYYYY-HHMM-RRRR."""
     now = datetime.now(timezone.utc)
-    return f"SOC-IN-{now.strftime('%d%m%Y-%H%M%S')}-{username}"
+    rnd = random.randint(0, 9999)
+    return f"UIB-{now.strftime('%d%m%Y-%H%M')}-{rnd:04d}"
 
 
 def _strip_examples(obj: object) -> None:

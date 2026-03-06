@@ -80,6 +80,10 @@
     padding: 2pt 6pt; margin: 3pt 0; border-radius: 2pt;
   }
 
+  /* ── RACI ── */
+  .raci-legend { font-size: 8pt; color: #555; font-style: italic; margin-bottom: 6px; }
+  .raci-r { font-weight: bold; color: #b91c1c; }
+
   /* ── MITRE ── */
   .classif-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 4px; }
   .classif-item .classif-label-txt { font-size: 8pt; color: #888; }
@@ -94,9 +98,10 @@
   @media print {
     #print-toolbar { display: none !important; }
     #doc-content { padding: 0; max-width: 100%; }
-    body { font-size: 10pt; margin: 22mm 18mm; }
+    body { font-size: 10pt; margin: 22mm 14mm; }
     .section { page-break-inside: avoid; }
     .doc-header { border-bottom: 1.5pt solid #0d6efd; }
+    .data-table { font-size: 8pt; }
     a { text-decoration: none; color: inherit; }
   }
 
@@ -158,6 +163,7 @@ function renderFields(fields, parent) {
 function renderTable(section, parent) {
   const cols = section.columns || [];
   const labels = section.column_labels || {};
+  const isRaci = section.type === 'raci_table';
   if (!cols.length) return;
 
   const tbl = el('table', 'data-table');
@@ -187,6 +193,9 @@ function renderTable(section, parent) {
         const example = row[c + '_example'];
         if (val !== null && val !== undefined && val !== '') {
           td.textContent = val;
+          if (isRaci && c !== 'activity' && /^R[\s,]|^R$/.test(String(val).trim())) {
+            td.className = 'raci-r';
+          }
         } else if (example !== null && example !== undefined && example !== '') {
           td.innerHTML = `<span class="field-empty">${example}</span>`;
         }
@@ -296,8 +305,12 @@ function renderSection(section, caseData) {
     case 'checklist':
       renderChecklist(section, div);
       break;
+    case 'raci_table':
+      if (section.legend) div.appendChild(el('div', 'raci-legend', section.legend));
+      renderTable(section, div);
+      break;
     default:
-      // contact_table, assets_table, action_table, notification_table, raci_table, …
+      // contact_table, assets_table, action_table, notification_table, …
       if (section.columns !== undefined) renderTable(section, div);
   }
 
