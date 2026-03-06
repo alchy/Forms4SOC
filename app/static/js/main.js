@@ -18,6 +18,7 @@ async function apiFetch(url, options = {}) {
         credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             ...options.headers,
         },
     };

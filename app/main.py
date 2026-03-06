@@ -8,6 +8,7 @@ from app.api.v1 import auth, cases, settings, templates, users
 from app.config import settings as app_settings
 from app.core.database import init_db
 from app.core.security import WebAdminRequired, WebLoginRequired
+from app.core.security_middleware import SecurityMiddleware
 from app.web import routes as web_routes
 
 
@@ -27,6 +28,8 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+app.add_middleware(SecurityMiddleware)
 
 
 @app.exception_handler(WebLoginRequired)
