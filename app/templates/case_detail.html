@@ -1,5 +1,70 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<style>
+/* ── Print mode – screen (hide chrome) ────────────────────────────────── */
+body.print-mode nav.navbar,
+body.print-mode nav.sidebar,
+body.print-mode #case-toolbar-buttons,
+body.print-mode #lock-banner,
+body.print-mode #case-filepath-container { display: none !important; }
+
+body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
+
+/* ── Print mode – screen (hide hints) ─────────────────────────────────── */
+body.print-mode .form-text,
+body.print-mode .alert-info,
+body.print-mode .alert-warning,
+body.print-mode .alert-secondary,
+body.print-mode .hint-classification { display: none !important; }
+
+/* ── @media print ─────────────────────────────────────────────────────── */
+@media print {
+    nav.navbar, nav.sidebar,
+    #print-toolbar, #case-toolbar-buttons,
+    #lock-banner, #case-filepath-container { display: none !important; }
+
+    main { flex: 0 0 100% !important; max-width: 100% !important;
+           padding: 0 !important; margin: 0 !important; }
+
+    /* Expand all accordions */
+    .accordion-collapse { display: block !important; }
+    .accordion-button::after { display: none; }
+    .accordion-button { cursor: default; background: #f8f9fa !important;
+                        color: inherit !important; }
+
+    /* Form elements rendered as plain text */
+    #sections-container input,
+    #sections-container select,
+    #sections-container textarea {
+        border: none !important;
+        background: transparent !important;
+        -webkit-appearance: none; appearance: none;
+        resize: none; padding: 0 !important;
+        font: inherit !important; color: inherit !important;
+        height: auto !important; min-height: 0 !important;
+    }
+    #sections-container select { pointer-events: none; }
+
+    /* Cards */
+    .card { box-shadow: none !important; page-break-inside: avoid; }
+
+    /* Smaller font for dense tables */
+    .data-table { font-size: 8pt !important; }
+    .raci-legend { font-size: 7.5pt !important; }
+
+    /* Hide all hints */
+    .form-text,
+    .alert-info,
+    .alert-warning,
+    .alert-secondary,
+    .hint-classification { display: none !important; }
+
+    @page { margin: 20mm 15mm; }
+}
+</style>
+{% endblock %}
+
 {% block title %}{{ case_id }} – Forms4SOC{% endblock %}
 
 {% block sidebar %}
@@ -121,69 +186,6 @@
 {% endblock %}
 
 {% block scripts %}
-<style>
-/* ── Print mode – screen (hide chrome) ────────────────────────────────── */
-body.print-mode nav.navbar,
-body.print-mode nav.sidebar,
-body.print-mode #case-toolbar-buttons,
-body.print-mode #lock-banner,
-body.print-mode #case-filepath-container { display: none !important; }
-
-body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
-
-/* ── Print mode – screen (hide hints) ─────────────────────────────────── */
-body.print-mode #sections-container .form-text,
-body.print-mode #sections-container .alert-info,
-body.print-mode #sections-container .alert-warning,
-body.print-mode #sections-container .alert-secondary,
-body.print-mode #sections-container .hint-classification { display: none !important; }
-
-/* ── @media print (applies to any Ctrl+P from case_detail too) ─────────── */
-@media print {
-    nav.navbar, nav.sidebar,
-    #print-toolbar, #case-toolbar-buttons,
-    #lock-banner, #case-filepath-container { display: none !important; }
-
-    main { flex: 0 0 100% !important; max-width: 100% !important;
-           padding: 0 !important; margin: 0 !important; }
-
-    /* Expand all accordions */
-    .accordion-collapse { display: block !important; }
-    .accordion-button::after { display: none; }
-    .accordion-button { cursor: default; background: #f8f9fa !important;
-                        color: inherit !important; }
-
-    /* Form elements rendered as plain text */
-    #sections-container input,
-    #sections-container select,
-    #sections-container textarea {
-        border: none !important;
-        background: transparent !important;
-        -webkit-appearance: none; appearance: none;
-        resize: none; padding: 0 !important;
-        font: inherit !important; color: inherit !important;
-        height: auto !important; min-height: 0 !important;
-    }
-    /* Select arrows hidden */
-    #sections-container select { pointer-events: none; }
-
-    /* Cards */
-    .card { box-shadow: none !important; page-break-inside: avoid; }
-
-    /* Smaller font for dense tables */
-    .data-table { font-size: 8pt !important; }
-    .raci-legend { font-size: 7.5pt !important; }
-
-    /* Hide all hints */
-    .form-text,
-    #sections-container .alert-info,
-    #sections-container .alert-warning,
-    #sections-container .alert-secondary,
-    #sections-container .hint-classification { display: none !important; }
-
-    @page { margin: 20mm 15mm; }
-}
-</style>
 <script src="/static/js/case_form.js"></script>
 <script>
     const CASE_ID = '{{ case_id }}';
