@@ -11,13 +11,6 @@ body.print-mode #case-filepath-container { display: none !important; }
 
 body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
 
-/* ── Print mode – screen (hide hints) ─────────────────────────────────── */
-body.print-mode .form-text,
-body.print-mode .alert-info,
-body.print-mode .alert-warning,
-body.print-mode .alert-secondary,
-body.print-mode .hint-classification { display: none !important; }
-
 /* ── @media print ─────────────────────────────────────────────────────── */
 @media print {
     nav.navbar, nav.sidebar,
@@ -52,13 +45,6 @@ body.print-mode .hint-classification { display: none !important; }
     /* Smaller font for dense tables */
     .data-table { font-size: 8pt !important; }
     .raci-legend { font-size: 7.5pt !important; }
-
-    /* Hide all hints */
-    .form-text,
-    .alert-info,
-    .alert-warning,
-    .alert-secondary,
-    .hint-classification { display: none !important; }
 
     @page { margin: 20mm 15mm; }
 }
@@ -284,7 +270,7 @@ body.print-mode .hint-classification { display: none !important; }
                     document.querySelectorAll('.accordion-collapse:not(.show)').forEach(el => {
                         el.classList.add('show');
                     });
-                    hideHints();
+                    document.querySelectorAll('#sections-container .form-text, #sections-container .alert-info, #sections-container .alert-warning, #sections-container .alert-secondary, #sections-container .hint-classification').forEach(el => el.remove());
                 }, 150);
             } else {
                 await acquireLock();
@@ -416,19 +402,6 @@ body.print-mode .hint-classification { display: none !important; }
         if (input) input.value = CURRENT_USER;
         await saveCase();
     }
-
-    // ── Skrytí hintů při tisku ──────────────────────────────────────────────
-    const HINT_SEL = '#sections-container .form-text, #sections-container .alert-info, #sections-container .alert-warning, #sections-container .alert-secondary, #sections-container .hint-classification';
-
-    function hideHints() {
-        document.querySelectorAll(HINT_SEL).forEach(el => el.style.setProperty('display', 'none', 'important'));
-    }
-    function showHints() {
-        document.querySelectorAll(HINT_SEL).forEach(el => el.style.removeProperty('display'));
-    }
-
-    window.addEventListener('beforeprint', hideHints);
-    window.addEventListener('afterprint', showHints);
 
     loadCase();
     if (!PRINT_MODE) loadFilePath();
