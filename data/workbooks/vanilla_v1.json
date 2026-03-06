@@ -120,7 +120,7 @@
     },
 
     {
-      "_doc": "SEKCE 3 – Kontakty. Volitelná, ale doporučená. Uprav role a doplň kontakty typické pro tvou organizaci. is_example: true na řádcích = hodnoty slouží jako placeholder, analytik je přepíše.",
+      "_doc": "SEKCE 3 – Kontakty. Volitelná, ale doporučená. Uprav role a doplň kontakty typické pro tvou organizaci.",
       "id": "contacts",
       "title": "Kontaktní matice",
       "type": "contact_table",
@@ -139,9 +139,9 @@
         "system_role": null, "name": null, "email": null, "phone": null, "when_to_contact": null
       },
       "rows": [
-        {"system_role": "Vlastník dotčeného aktiva", "name": "Jméno Příjmení",   "email": "vlastnik@firma.cz",  "phone": "+420 xxx xxx xxx", "when_to_contact": "Ihned po potvrzení incidentu", "is_example": true},
-        {"system_role": "CISO / Management",         "name": "Jméno Příjmení",   "email": "ciso@firma.cz",      "phone": "+420 xxx xxx xxx", "when_to_contact": "Závažnost Vysoká / Kritická",   "is_example": true},
-        {"system_role": "CERT / NÚKIB",              "name": "Podatelna NÚKIB",  "email": "podatelna@nukib.cz", "phone": "",                 "when_to_contact": "Dle ZOKB §8 (KI/KII, Závažnost Kritická/Vysoká)", "is_example": true}
+        {"system_role": "Vlastník dotčeného aktiva", "name": "Jméno Příjmení",   "email": "vlastnik@firma.cz",  "phone": "+420 xxx xxx xxx", "when_to_contact": "Ihned po potvrzení incidentu"},
+        {"system_role": "CISO / Management",         "name": "Jméno Příjmení",   "email": "ciso@firma.cz",      "phone": "+420 xxx xxx xxx", "when_to_contact": "Závažnost Vysoká / Kritická"},
+        {"system_role": "CERT / NÚKIB",              "name": "Podatelna NÚKIB",  "email": "podatelna@nukib.cz", "phone": "",                 "when_to_contact": "Dle ZOKB §8 (KI/KII, Závažnost Kritická/Vysoká)"}
       ]
     },
 

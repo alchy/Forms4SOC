@@ -72,13 +72,13 @@
       "allow_append": true,
       "append_row_template": {"system_role": null, "name": null, "email": null, "phone": null, "when_to_contact": null},
       "rows": [
-        {"system_role": "Správce sítě / hraničního FW",       "name": "Tomáš Novotný",      "email": "tomas.novotny@firma.cz",      "phone": "+420 123 456 781", "when_to_contact": "Blokace CIDR bloků, rate limiting, geo-blocking, BGP blackhole", "is_example": true},
-        {"system_role": "Správce VPN (Cisco ASA / AnyConnect)","name": "Petr Marek",          "email": "petr.marek@firma.cz",         "phone": "+420 123 456 782", "when_to_contact": "Logy ASA/FTD, SYN proxy, úprava session limitů, whitelist zdrojových IP bloků", "is_example": true},
-        {"system_role": "Správce IPS / IDS",                   "name": "Lucie Horáková",      "email": "lucie.horakova@firma.cz",     "phone": "+420 123 456 783", "when_to_contact": "Analýza provozu, aktivace pravidel rate limit / geo-blocking na IPS", "is_example": true},
-        {"system_role": "ISP NOC",                             "name": "NOC Operátor",         "email": "noc@isp-provider.cz",         "phone": "+420 800 000 001", "when_to_contact": "Upstream mitigation, BGP blackhole routing – volumetrický útok přesahující kapacitu linky", "is_example": true},
+        {"system_role": "Správce sítě / hraničního FW",       "name": "Tomáš Novotný",      "email": "tomas.novotny@firma.cz",      "phone": "+420 123 456 781", "when_to_contact": "Blokace CIDR bloků, rate limiting, geo-blocking, BGP blackhole"},
+        {"system_role": "Správce VPN (Cisco ASA / AnyConnect)","name": "Petr Marek",          "email": "petr.marek@firma.cz",         "phone": "+420 123 456 782", "when_to_contact": "Logy ASA/FTD, SYN proxy, úprava session limitů, whitelist zdrojových IP bloků"},
+        {"system_role": "Správce IPS / IDS",                   "name": "Lucie Horáková",      "email": "lucie.horakova@firma.cz",     "phone": "+420 123 456 783", "when_to_contact": "Analýza provozu, aktivace pravidel rate limit / geo-blocking na IPS"},
+        {"system_role": "ISP NOC",                             "name": "NOC Operátor",         "email": "noc@isp-provider.cz",         "phone": "+420 800 000 001", "when_to_contact": "Upstream mitigation, BGP blackhole routing – volumetrický útok přesahující kapacitu linky"},
         {"system_role": "SOC Analytický tým",                  "name": "SOC L2",               "email": "soc@firma.cz",                "phone": "+420 123 456 792", "when_to_contact": "Interní koordinace"},
-        {"system_role": "CISO",                                "name": "Ing. Martin Kovář",    "email": "ciso@firma.cz",               "phone": "+420 123 456 793", "when_to_contact": "Závažnost Vysoká / Kritická nebo výpadek VPN > 30 min", "is_example": true},
-        {"system_role": "ISO",                                 "name": "Mgr. Eva Horáčková",  "email": "iso@firma.cz",                "phone": "+420 123 456 794", "when_to_contact": "Závažnost Kritická / dle interní politiky", "is_example": true},
+        {"system_role": "CISO",                                "name": "Ing. Martin Kovář",    "email": "ciso@firma.cz",               "phone": "+420 123 456 793", "when_to_contact": "Závažnost Vysoká / Kritická nebo výpadek VPN > 30 min"},
+        {"system_role": "ISO",                                 "name": "Mgr. Eva Horáčková",  "email": "iso@firma.cz",                "phone": "+420 123 456 794", "when_to_contact": "Závažnost Kritická / dle interní politiky"},
         {"system_role": "CERT / NÚKIB",                        "name": "NÚKIB",                "email": "podatelna@nukib.cz",          "phone": "+420 222 362 888", "when_to_contact": "Dle regulatorní povinnosti (NIS2 apod.)"}
       ]
     },

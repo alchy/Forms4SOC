@@ -71,12 +71,12 @@
       "allow_append": true,
       "append_row_template": {"system_role": null, "name": null, "email": null, "phone": null, "when_to_contact": null},
       "rows": [
-        {"system_role": "Správce Exchange / Mail GW", "name": "Jan Novák",         "email": "jan.novak@firma.cz",        "phone": "+420 123 456 789", "when_to_contact": "Získání e-mailových logů, blokace odesílatele, počet příjemců", "is_example": true},
-        {"system_role": "Správce Proxy",              "name": "Petra Svobodová",   "email": "petra.svobodova@firma.cz",  "phone": "+420 123 456 790", "when_to_contact": "Proxy logy, blokace URL / domény",                           "is_example": true},
-        {"system_role": "Správce AV / EDR",           "name": "Tomáš Blažek",     "email": "tomas.blazek@firma.cz",     "phone": "+420 123 456 791", "when_to_contact": "Hash vyhledání, AV scan, izolace endpointu",                  "is_example": true},
-        {"system_role": "SOC Analytický tým",         "name": "SOC L2",            "email": "soc@firma.cz",              "phone": "+420 123 456 792", "when_to_contact": "Interní koordinace",                                          "is_example": true},
-        {"system_role": "CISO",                       "name": "Ing. Martin Kovář", "email": "ciso@firma.cz",             "phone": "+420 123 456 793", "when_to_contact": "Závažnost Vysoká / Kritická",                                    "is_example": true},
-        {"system_role": "ISO",                        "name": "Mgr. Eva Horáčková","email": "iso@firma.cz",              "phone": "+420 123 456 794", "when_to_contact": "Závažnost Kritická / dle interní politiky",                   "is_example": true},
+        {"system_role": "Správce Exchange / Mail GW", "name": "Jan Novák",         "email": "jan.novak@firma.cz",        "phone": "+420 123 456 789", "when_to_contact": "Získání e-mailových logů, blokace odesílatele, počet příjemců"},
+        {"system_role": "Správce Proxy",              "name": "Petra Svobodová",   "email": "petra.svobodova@firma.cz",  "phone": "+420 123 456 790", "when_to_contact": "Proxy logy, blokace URL / domény"},
+        {"system_role": "Správce AV / EDR",           "name": "Tomáš Blažek",     "email": "tomas.blazek@firma.cz",     "phone": "+420 123 456 791", "when_to_contact": "Hash vyhledání, AV scan, izolace endpointu"},
+        {"system_role": "SOC Analytický tým",         "name": "SOC L2",            "email": "soc@firma.cz",              "phone": "+420 123 456 792", "when_to_contact": "Interní koordinace"},
+        {"system_role": "CISO",                       "name": "Ing. Martin Kovář", "email": "ciso@firma.cz",             "phone": "+420 123 456 793", "when_to_contact": "Závažnost Vysoká / Kritická"},
+        {"system_role": "ISO",                        "name": "Mgr. Eva Horáčková","email": "iso@firma.cz",              "phone": "+420 123 456 794", "when_to_contact": "Závažnost Kritická / dle interní politiky"},
         {"system_role": "CERT / NÚKIB",               "name": "NÚKIB",             "email": "podatelna@nukib.cz",        "phone": "+420 222 362 888", "when_to_contact": "Dle regulatorní povinnosti (NIS2 apod.)"}
       ]
     },

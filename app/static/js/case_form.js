@@ -84,7 +84,7 @@ function renderFieldInput(field) {
         case 'textarea': {
             const ta = el('textarea', 'form-control form-control-sm bg-light');
             ta.rows = 3;
-            ta.placeholder = field.example || field.hint || '';
+            ta.placeholder = field.example || '';
             ta.value = field.value || '';
             ta.dataset.fieldKey = field.key;
             ta.addEventListener('change', () => { field.value = ta.value; });
@@ -132,7 +132,7 @@ function renderFieldInput(field) {
         default: {
             const inp = el('input', 'form-control form-control-sm');
             inp.type = 'text';
-            inp.placeholder = field.example || field.hint || '';
+            inp.placeholder = field.example || '';
             inp.dataset.fieldKey = field.key;
             inp.value = field.value || '';
             inp.addEventListener('change', () => { field.value = inp.value || null; });
