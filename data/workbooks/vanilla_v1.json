@@ -247,9 +247,9 @@
     },
 
     {
-      "_doc": "SEKCE 6 – Uzavření incidentu. Povinná. Standardní pole NEMĚŇ (klíče, options, hinty). Šablonově specifická pole (např. attack_type_final, affected_service) přidej ZA nukib_notification_required a PŘED root_cause.",
+      "_doc": "SEKCE 6 – Klasifikace a uzavření. Povinná. Standardní pole NEMĚŇ (klíče, options, hinty). Šablonově specifická pole (např. attack_type_final, affected_service) přidej ZA nukib_notification_required a PŘED root_cause.",
       "id": "closure",
-      "title": "Uzavření incidentu",
+      "title": "Klasifikace a uzavření",
       "type": "closure_form",
       "description": "Uzavření provádí SOC Analytický tým po dokončení Containment & Remediation, nebo ihned po Triage u False Positive / Benign True Positive.",
       "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
@@ -307,24 +307,28 @@
       "id": "raci",
       "title": "RACI matice",
       "type": "raci_table",
-      "legend": "R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I = Informed (je informován o výsledku)",
-      "columns": ["activity", "soc_team", "system_owners", "is_owner", "ciso_management", "external"],
+      "legend": "R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I = Informed (je informován) · (Vysoká/Kritická) = podmínka pro aktivaci role",
+      "_doc": "RACI používá standardní sadu rolí dle metodiky. DPO: zařaď sloupec jen pokud hrozí únik osobních dat (phishing, data breach). Delegát = technická role provádějící zásahy (správce systému, sítě, aplikace). NÚKIB a ÚCL: povinné hlášení při Vysoká/Kritická.",
+      "columns": ["activity", "ki", "cirt", "r_dtech", "r_dplr", "garant", "delegat", "nukib", "ucl"],
       "column_labels": {
-        "activity":        "Aktivita",
-        "soc_team":        "SOC Analytický tým",
-        "system_owners":   "Správci systémů",
-        "is_owner":        "Vlastník dotčeného aktiva",
-        "ciso_management": "CISO / Management",
-        "external":        "NÚKIB"
+        "activity": "Aktivita",
+        "ki":       "Koordinátor",
+        "cirt":     "CIRT",
+        "r_dtech":  "Ř-DTECH",
+        "r_dplr":   "Ř-DPLR",
+        "garant":   "Garant",
+        "delegat":  "Delegát",
+        "nukib":    "NÚKIB",
+        "ucl":      "ÚCL"
       },
       "rows": [
-        {"activity": "Příjem a zaevidování události",    "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "–",                  "external": "–"},
-        {"activity": "Triage & Investigace",             "soc_team": "R, A", "system_owners": "C",              "is_owner": "C",    "ciso_management": "–",                  "external": "–"},
-        {"activity": "Containment & Remediation",        "soc_team": "R, A", "system_owners": "C",              "is_owner": "C",    "ciso_management": "I (Vysoká/Kritická)", "external": "–"},
-        {"activity": "Notifikace uživatelů",             "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "I",                  "external": "–"},
-        {"activity": "Eskalace na CISO / Management",   "soc_team": "R",    "system_owners": "–",              "is_owner": "–",    "ciso_management": "A",                  "external": "–"},
-        {"activity": "Notifikace CERT / NÚKIB",         "soc_team": "R",    "system_owners": "–",              "is_owner": "–",    "ciso_management": "A",                  "external": "I (Kritická)"},
-        {"activity": "Uzavření incidentu",               "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "I (Vysoká/Kritická)", "external": "–"}
+        {"activity": "Příjem a zaevidování události",   "ki": "R, A", "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Triage & Investigace",            "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Containment & Remediation",       "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Notifikace dotčených stran",      "ki": "R, A", "cirt": "–",  "r_dtech": "I",                   "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Eskalace na management",          "ki": "R",    "cirt": "–",  "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Hlášení NÚKIB / ÚCL",            "ki": "R",    "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "I (Vysoká/Kritická)", "ucl": "I (Vysoká/Kritická)"},
+        {"activity": "Uzavření incidentu",              "ki": "R, A", "cirt": "C",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"}
       ]
     }
 

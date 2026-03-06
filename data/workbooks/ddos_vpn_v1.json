@@ -334,7 +334,7 @@
 
     {
       "id": "closure",
-      "title": "Uzavření incidentu",
+      "title": "Klasifikace a uzavření",
       "type": "closure_form",
       "description": "Uzavření provádí SOC Analytický tým po obnově dostupnosti VPN a dokončení Containment & Remediation, nebo ihned po Triage u False Positive. Klasifikace a Severity vyjadřují finální stav po celé Triage & Investigaci.",
       "hint": "Před uzavřením ověř, že VPN je plně dostupná pro legitimní uživatele a všechna zavedená containment opatření jsou zdokumentována.",
@@ -394,26 +394,28 @@
       "id": "raci",
       "title": "RACI matice",
       "type": "raci_table",
-      "legend": "R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I = Informed (je informován o výsledku)",
-      "columns": ["activity", "soc_team", "network_admin", "vpn_admin", "isp_noc", "ciso_management", "external"],
+      "legend": "R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I = Informed (je informován) · (Vysoká/Kritická) = podmínka pro aktivaci role",
+      "columns": ["activity", "ki", "cirt", "r_dtech", "r_dplr", "garant", "delegat", "nukib", "ucl"],
       "column_labels": {
-        "activity":        "Aktivita",
-        "soc_team":        "SOC Analytický tým",
-        "network_admin":   "Správce sítě / FW",
-        "vpn_admin":       "Správce VPN (ASA)",
-        "isp_noc":         "ISP NOC",
-        "ciso_management": "CISO / Management",
-        "external":        "NÚKIB"
+        "activity": "Aktivita",
+        "ki":       "Koordinátor",
+        "cirt":     "CIRT",
+        "r_dtech":  "Ř-DTECH",
+        "r_dplr":   "Ř-DPLR",
+        "garant":   "Garant",
+        "delegat":  "Delegát",
+        "nukib":    "NÚKIB",
+        "ucl":      "ÚCL"
       },
       "rows": [
-        {"activity": "Příjem a zaevidování události",              "soc_team": "R, A", "network_admin": "–",  "vpn_admin": "–",  "isp_noc": "–",    "ciso_management": "–",                "external": "–"},
-        {"activity": "Triage & Investigace",                       "soc_team": "R, A", "network_admin": "C",  "vpn_admin": "C",  "isp_noc": "–",    "ciso_management": "–",                "external": "–"},
-        {"activity": "Containment – lokální (FW, ASA, rate limit)","soc_team": "R, A", "network_admin": "C",  "vpn_admin": "C",  "isp_noc": "–",    "ciso_management": "I (Vysoká/Kritická)","external": "–"},
-        {"activity": "Containment – ISP upstream mitigation",      "soc_team": "R",    "network_admin": "C",  "vpn_admin": "–",  "isp_noc": "R, A", "ciso_management": "I (Kritická)",     "external": "–"},
-        {"activity": "Notifikace VPN uživatelů",                   "soc_team": "R, A", "network_admin": "–",  "vpn_admin": "–",  "isp_noc": "–",    "ciso_management": "I",                "external": "–"},
-        {"activity": "Eskalace na CISO / Management",              "soc_team": "R",    "network_admin": "–",  "vpn_admin": "–",  "isp_noc": "–",    "ciso_management": "A",                "external": "–"},
-        {"activity": "Notifikace CERT / NÚKIB",                    "soc_team": "R",    "network_admin": "–",  "vpn_admin": "–",  "isp_noc": "–",    "ciso_management": "A",                "external": "I (Kritická)"},
-        {"activity": "Uzavření incidentu",                         "soc_team": "R, A", "network_admin": "–",  "vpn_admin": "I",  "isp_noc": "–",    "ciso_management": "I (Vysoká/Kritická)","external": "–"}
+        {"activity": "Příjem a zaevidování události",              "ki": "R, A", "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Triage & Investigace",                       "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Containment – lokální (FW/ASA/rate-limit)",  "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Containment – ISP upstream mitigation",      "ki": "A",    "cirt": "–",  "r_dtech": "I (Kritická)",        "r_dplr": "–", "garant": "–", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Notifikace uživatelů VPN",                   "ki": "R, A", "cirt": "–",  "r_dtech": "I",                   "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Eskalace na management",                     "ki": "R",    "cirt": "–",  "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Hlášení NÚKIB / ÚCL",                       "ki": "R",    "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "I (Vysoká/Kritická)", "ucl": "I (Vysoká/Kritická)"},
+        {"activity": "Uzavření incidentu",                         "ki": "R, A", "cirt": "C",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"}
       ]
     }
 
