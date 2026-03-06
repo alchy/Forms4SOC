@@ -4,7 +4,7 @@
   "version": "1.0",
   "category": "DDoS",
   "status": "active",
-  "description": "Playbook pro řešení incidentů typu DDoS zaměřených na VPN službu organizace (Cisco AnyConnect / Cisco ASA). Pokrývá volumetrické útoky (SYN/UDP/ICMP flood), reflection/amplification útoky i aplikační útoky (SSL/TLS exhaustion). Kroky Containment jsou podmíněné – závisí na dostupnosti ochranných opatření v prostředí organizace. Blokace zdrojových adres je povolena výhradně na úrovni CIDR bloků (/24 nebo větší).",
+  "description": "Playbook pro řešení incidentů typu DDoS zaměřených na VPN službu organizace (Cisco AnyConnect / Cisco ASA). Pokrývá volumetrické útoky (SYN/UDP/ICMP flood), reflection/amplification útoky i aplikační útoky (SSL/TLS exhaustion). Kroky Odezvy jsou podmíněné – závisí na dostupnosti ochranných opatření v prostředí organizace. Blokace zdrojových adres je povolena výhradně na úrovni CIDR bloků (/24 nebo větší).",
   "mitre_tactic": "Impact",
   "mitre_technique": "T1498 – Network Denial of Service",
   "mitre_subtechnique": "T1498.001",
@@ -50,7 +50,7 @@
             "Kombinace typů",
             "Nelze určit"
           ],
-          "hint": "Vyplň po Triage & Investigaci, kdy je znám konkrétní typ útoku. Pokud jde o kombinaci typů (např. volumetrický + SSL exhaustion), vyber 'Kombinace typů'."},
+          "hint": "Vyplň po Posouzení, třídění a rozhodování, kdy je znám konkrétní typ útoku. Pokud jde o kombinaci typů (např. volumetrický + SSL exhaustion), vyber 'Kombinace typů'."},
         {"key": "data_sources",       "label": "Doporučené zdroje dat pro investigaci",     "type": "text",   "editable": false, "value": null, "auto_value": "template_data_sources"}
       ]
     },
@@ -150,9 +150,9 @@
 
     {
       "id": "triage_investigation",
-      "title": "Triage & Investigace",
+      "title": "Posouzení, třídění a rozhodování",
       "type": "checklist",
-      "description": "Cílem je potvrdit DDoS útok, identifikovat jeho typ a rozsah, zmapovat zdrojové adresní bloky a připravit podklady pro Containment & Remediation. Klasifikace (True/False Positive, Severity) se v průběhu může upřesňovat — finální klasifikace se zaznamenává v bloku Uzavření incidentu.",
+      "description": "Cílem je potvrdit DDoS útok, identifikovat jeho typ a rozsah, zmapovat zdrojové adresní bloky a připravit podklady pro Odezva. Klasifikace (True/False Positive, Severity) se v průběhu může upřesňovat — finální klasifikace se zaznamenává v bloku Uzavření incidentu.",
       "step_groups": [
 
         {
@@ -177,7 +177,7 @@
             {"id": "at_02", "action": "Ověř, zda zdrojové IP adresy jsou různorodé a geograficky rozptýlené – zjisti počet unikátních zdrojových IP v časovém okně útoku (5 min)", "analyst_note": "~120 000 unikátních zdrojových IP · geolokace: CN, RU, BR, UA", "is_example": true, "done": false},
             {"id": "at_03", "action": "Na ASA/FTD ověř počet half-open TCP spojení (indikátor SYN flood) – příkaz: show conn | grep SYN", "analyst_note": "Half-open TCP: 42 180 (normál: < 100) → SYN flood indikátor potvrzen", "is_example": true, "done": false},
             {"id": "at_04", "action": "Ověř počet SSL/TLS handshake pokusů za sekundu na ASA (indikátor SSL/TLS exhaustion) – příkaz: show ssl statistics | grep Handshake", "analyst_note": "SSL handshake pokusy: 320/s (normál: < 10/s) → SSL exhaustion složka přítomna", "is_example": true, "done": false},
-            {"id": "at_05", "action": "Dle výsledků výše urči typ útoku a pokračuj příslušnou větví Triage. Zaznamenej zjištění – typ bude finálně potvrzen v bloku Uzavření incidentu.", "analyst_note": "Typ útoku: Volumetrický – UDP flood (primární) + SSL exhaustion složka (sekundární) → kombinace typů", "is_example": true, "done": false}
+            {"id": "at_05", "action": "Dle výsledků výše urči typ útoku a pokračuj příslušnou větví Posouzení. Zaznamenej zjištění – typ bude finálně potvrzen v bloku Uzavření incidentu.", "analyst_note": "Typ útoku: Volumetrický – UDP flood (primární) + SSL exhaustion složka (sekundární) → kombinace typů", "is_example": true, "done": false}
           ],
           "hints": [
             "Volumetrický (L3/L4): vysoký objem Gbps/Mpps, různorodé zdrojové IP, UDP/ICMP flood nebo SYN flood.",
@@ -248,7 +248,7 @@
             {"id": "sa_01", "action": "Sestav konsolidovaný seznam zdrojových CIDR bloků (/24 nebo větší) ze všech identifikovaných typů útoku – seřaď dle objemu provozu sestupně", "analyst_note": "Celkem 24 zdrojových /24 bloků – top 5 zodpovědných za 70 % celkového objemu útoku", "is_example": true, "done": false},
             {"id": "sa_02", "action": "Ověř, zda blokace těchto CIDR bloků nezpůsobí kolaterální výpadek – zkontroluj přítomnost legitimního provozu z těchto rozsahů (zaměstnanci v zahraničí, partneři, SaaS služby)", "analyst_note": "Rozsah 1.2.3.0/24 – ověřeno v NetFlow za posledních 30 dní: žádný legitimní provoz · ostatní bloky rovněž bez legitimního provozu", "is_example": true, "done": false},
             {"id": "sa_03", "action": "Ověř ASN vlastníky a geolokaci zdrojových CIDR bloků – zvaž geo-blocking celých zemí / regionů, pokud organizace v těchto regionech nemá uživatele", "analyst_note": "CN, RU, UA, BR – organizace nemá uživatele ani obchodní partnery v těchto regionech → geo-blocking vhodný", "is_example": true, "done": false},
-            {"id": "sa_04", "action": "Zaznamenej finální seznam CIDR bloků a zemí schválených k blokaci jako podklad pro Containment – ulož odkaz na soubor", "analyst_note": "Seznam uložen: /evidence/INC-DDOS-2026-001/cidr_blocklist.txt · 24 bloků /24 · geo-blocking: CN, RU, UA, BR", "is_example": true, "done": false}
+            {"id": "sa_04", "action": "Zaznamenej finální seznam CIDR bloků a zemí schválených k blokaci jako podklad pro Odezvu – ulož odkaz na soubor", "analyst_note": "Seznam uložen: /evidence/INC-DDOS-2026-001/cidr_blocklist.txt · 24 bloků /24 · geo-blocking: CN, RU, UA, BR", "is_example": true, "done": false}
           ],
           "hints": [
             "POZOR: Blokace je povolena výhradně na úrovni súvislých CIDR bloků (/24 nebo větší). Blokace jednotlivých per-IP adres není povolena – generuje nekontrolovatelný počet pravidel na firewallu."
@@ -284,7 +284,7 @@
 
     {
       "id": "containment_remediation",
-      "title": "Containment & Remediation",
+      "title": "Odezva",
       "type": "action_table",
       "description": "Akce jsou seřazeny dle priority. Položky označené '[Pokud dostupné]' jsou podmíněny existencí příslušné technologie nebo smluvního vztahu v prostředí organizace. Blokace zdrojových adres je povolena výhradně na úrovni CIDR bloků (/24 nebo větší) – blokace per-IP není povolena.",
       "columns": ["action", "responsible_role", "cooperation", "status"],
@@ -300,8 +300,8 @@
       ],
       "rows": [
         {"action": "Aktivace SYN proxy / TCP intercept a session rate limitingu na Cisco ASA/FTD – omezení počtu nových TCP/UDP spojení za sekundu na VPN porty (UDP/443, TCP/443)", "responsible_role": "Správce VPN", "cooperation": "SOC Analytický tým", "status": null},
-        {"action": "Blokace zdrojových CIDR bloků (/24 nebo větší) na hraničním firewallu – dle seznamu připraveného v Triage. Blokace per-IP adres není povolena.", "responsible_role": "Správce sítě / FW", "cooperation": "SOC Analytický tým", "status": null},
-        {"action": "[Pokud dostupné] Geo-blocking zdrojových zemí / regionů na hraničním FW nebo IPS – aktivuj pro regiony bez legitimního provozu organizace, dle výsledků Triage", "responsible_role": "Správce sítě / FW", "cooperation": "Správce IPS · SOC Analytický tým", "status": null},
+        {"action": "Blokace zdrojových CIDR bloků (/24 nebo větší) na hraničním firewallu – dle seznamu připraveného v Posouzení. Blokace per-IP adres není povolena.", "responsible_role": "Správce sítě / FW", "cooperation": "SOC Analytický tým", "status": null},
+        {"action": "[Pokud dostupné] Geo-blocking zdrojových zemí / regionů na hraničním FW nebo IPS – aktivuj pro regiony bez legitimního provozu organizace, dle výsledků Posouzení", "responsible_role": "Správce sítě / FW", "cooperation": "Správce IPS · SOC Analytický tým", "status": null},
         {"action": "[Pokud dostupné] Upstream ISP mitigation – kontaktuj ISP NOC (viz Kontaktní matice), předej seznam zdrojových CIDR bloků, typ a objem útoku. Požaduj filtraci provozu před vstupem do sítě organizace.", "responsible_role": "SOC Analytický tým", "cooperation": "ISP NOC · Správce sítě", "status": null},
         {"action": "[Pokud dostupné] BGP blackhole routing – koordinuj s ISP pro null routing zdrojových CIDR bloků na úrovni ISP routerů. Podmínkou je smluvní podpora BGP blackhole u ISP.", "responsible_role": "Správce sítě", "cooperation": "ISP NOC", "status": null},
         {"action": "[Pokud dostupné] Přesměrování VPN provozu přes scrubbing centrum (anti-DDoS cloud, Cloudflare / Akamai / ISP scrubbing) – aktivuj dle smluvní dohody s poskytovatelem", "responsible_role": "Správce sítě", "cooperation": "ISP NOC · SOC Analytický tým", "status": null},
@@ -336,7 +336,7 @@
       "id": "closure",
       "title": "Klasifikace a uzavření",
       "type": "closure_form",
-      "description": "Uzavření provádí SOC Analytický tým po obnově dostupnosti VPN a dokončení Containment & Remediation, nebo ihned po Triage u False Positive. Klasifikace a Severity vyjadřují finální stav po celé Triage & Investigaci.",
+      "description": "Uzavření provádí SOC Analytický tým po obnově dostupnosti VPN a dokončení Odezvy, nebo ihned po Posouzení u False Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.",
       "hint": "Před uzavřením ověř, že VPN je plně dostupná pro legitimní uživatele a všechna zavedená containment opatření jsou zdokumentována.",
       "fields": [
         {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "is_example": true, "value": "True Positive",
@@ -410,9 +410,9 @@
       },
       "rows": [
         {"activity": "Příjem a zaevidování události",              "ki": "R, A", "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
-        {"activity": "Triage & Investigace",                       "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
-        {"activity": "Containment – lokální (FW/ASA/rate-limit)",  "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
-        {"activity": "Containment – ISP upstream mitigation",      "ki": "A",    "cirt": "–",  "r_dtech": "I (Kritická)",        "r_dplr": "–", "garant": "–", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Posouzení, třídění a rozhodování",                       "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Odezva – lokální (FW/ASA/rate-limit)",  "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Odezva – ISP upstream mitigation",      "ki": "A",    "cirt": "–",  "r_dtech": "I (Kritická)",        "r_dplr": "–", "garant": "–", "delegat": "R", "nukib": "–",                   "ucl": "–"},
         {"activity": "Notifikace uživatelů VPN",                   "ki": "R, A", "cirt": "–",  "r_dtech": "I",                   "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"},
         {"activity": "Eskalace na management",                     "ki": "R",    "cirt": "–",  "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
         {"activity": "Hlášení NÚKIB / ÚCL",                       "ki": "R",    "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "I (Vysoká/Kritická)", "ucl": "I (Vysoká/Kritická)"},

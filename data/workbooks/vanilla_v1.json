@@ -102,7 +102,7 @@
         {"key": "mitre_tactic",       "label": "MITRE Tactic",       "type": "text",   "editable": false, "value": null, "auto_value": "template_mitre_tactic"},
         {"key": "mitre_technique",    "label": "MITRE Technique",    "type": "text",   "editable": false, "value": null, "auto_value": "template_mitre_technique"},
         {
-          "_doc": "Sub-technika: vyplní analytik po Triage & Investigaci. Uprav options dle typických variant pro tvůj typ incidentu.",
+          "_doc": "Sub-technika: vyplní analytik po Posouzení, třídění a rozhodování. Uprav options dle typických variant pro tvůj typ incidentu.",
           "key": "mitre_subtechnique",
           "label": "MITRE Sub-technique",
           "type": "select",
@@ -113,7 +113,7 @@
             "Doplň variantu B",
             "Nelze určit"
           ],
-          "hint": "Vyplň po Triage & Investigaci, kdy je zřejmý konkrétní vektor útoku."
+          "hint": "Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku."
         },
         {"key": "data_sources",       "label": "Doporučené zdroje dat pro investigaci", "type": "text", "editable": false, "value": null, "auto_value": "template_data_sources"}
       ]
@@ -146,17 +146,17 @@
     },
 
     {
-      "_doc": "SEKCE 4 – Triage & Investigace (checklist). Jádro workbooku. Uprav krok po kroku dle svého typu incidentu. Přidávej step_groups pro logické bloky (Triage, Analýza, Scope). Každý krok má 'action' (instrukce) a 'analyst_note' (kam analytik zapíše výsledek). Použij 'hints' pro vodítka a 'classification_hints' pro pomoc s klasifikací True/False Positive a Závažností.",
+      "_doc": "SEKCE 4 – Posouzení, třídění a rozhodování (checklist). Jádro workbooku. Uprav krok po kroku dle svého typu incidentu. Přidávej step_groups pro logické bloky (Posouzení, Analýza, Scope). Každý krok má 'action' (instrukce) a 'analyst_note' (kam analytik zapíše výsledek). Použij 'hints' pro vodítka a 'classification_hints' pro pomoc s klasifikací True/False Positive a Závažností.",
       "id": "triage_investigation",
-      "title": "Triage & Investigace",
+      "title": "Posouzení, třídění a rozhodování",
       "type": "checklist",
       "description": "Postupuj krok za krokem. Zaznamenej výsledky do pole Poznámka analytika u každého kroku.",
       "step_groups": [
 
         {
-          "_doc": "Skupina 1 – Triage: rychlá verifikace alertu a první odhad závažnosti. Uprav kroky dle svého prostředí.",
+          "_doc": "Skupina 1 – Posouzení: rychlá verifikace alertu a první odhad závažnosti. Uprav kroky dle svého prostředí.",
           "id": "triage",
-          "title": "Triage – ověření alertu",
+          "title": "Posouzení – ověření alertu",
           "steps": [
             {
               "id": "t_01",
@@ -219,9 +219,9 @@
     },
 
     {
-      "_doc": "SEKCE 5 – Containment & Remediation (action_table). Uprav seznam akcí dle svého typu incidentu. Akce formuluj jako oznamovací tvrzení – co bylo provedeno (ne imperativ). Přidej řádky pro specifická opatření svého scénáře.",
+      "_doc": "SEKCE 5 – Odezva (action_table). Uprav seznam akcí dle svého typu incidentu. Akce formuluj jako oznamovací tvrzení – co bylo provedeno (ne imperativ). Přidej řádky pro specifická opatření svého scénáře.",
       "id": "containment_remediation",
-      "title": "Containment & Remediation",
+      "title": "Odezva",
       "type": "action_table",
       "description": "U každé akce zaznamenej stav. Pokud akce není relevantní, použij stav 'N/A'.",
       "columns": ["action", "responsible_role", "cooperation", "status"],
@@ -251,7 +251,7 @@
       "id": "closure",
       "title": "Klasifikace a uzavření",
       "type": "closure_form",
-      "description": "Uzavření provádí SOC Analytický tým po dokončení Containment & Remediation, nebo ihned po Triage u False Positive / Benign True Positive.",
+      "description": "Uzavření provádí SOC Analytický tým po dokončení Odezva, nebo ihned po Posouzení u False Positive / Benign True Positive.",
       "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
       "fields": [
         {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "is_example": true, "value": "True Positive",
@@ -324,8 +324,8 @@
       },
       "rows": [
         {"activity": "Příjem a zaevidování události",   "ki": "R, A", "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
-        {"activity": "Triage & Investigace",            "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
-        {"activity": "Containment & Remediation",       "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Posouzení, třídění a rozhodování",            "ki": "A",    "cirt": "R",  "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",                   "ucl": "–"},
+        {"activity": "Odezva",       "ki": "A",    "cirt": "R",  "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "nukib": "–",                   "ucl": "–"},
         {"activity": "Notifikace dotčených stran",      "ki": "R, A", "cirt": "–",  "r_dtech": "I",                   "r_dplr": "–", "garant": "I", "delegat": "–", "nukib": "–",                   "ucl": "–"},
         {"activity": "Eskalace na management",          "ki": "R",    "cirt": "–",  "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "nukib": "–",                   "ucl": "–"},
         {"activity": "Hlášení NÚKIB / ÚCL",            "ki": "R",    "cirt": "C",  "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "nukib": "I (Vysoká/Kritická)", "ucl": "I (Vysoká/Kritická)"},

@@ -4,7 +4,7 @@
   "version": "2.0",
   "category": "Phishing",
   "status": "active",
-  "description": "Workbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL). Triage a Investigace jsou sloučeny do jednoho bloku.",
+  "description": "Workbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL). Posouzení, třídění a rozhodování jsou sloučeny do jednoho bloku.",
   "mitre_tactic": "Initial Access",
   "mitre_technique": "T1566 – Phishing",
   "mitre_subtechnique": "T1566.001",
@@ -49,7 +49,7 @@
             "T1566.004 – Spearphishing Voice",
             "Nelze určit"
           ],
-          "hint": "Vyplň po Triage & Investigaci, kdy je zřejmý konkrétní vektor útoku."},
+          "hint": "Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku."},
         {"key": "data_sources",        "label": "Doporučené zdroje dat pro investigaci", "type": "text", "editable": false, "value": null, "auto_value": "template_data_sources"}
       ]
     },
@@ -156,9 +156,9 @@
 
     {
       "id": "triage_investigation",
-      "title": "Triage & Investigace",
+      "title": "Posouzení, třídění a rozhodování",
       "type": "checklist",
-      "description": "Cílem je potvrdit nebo vyvrátit bezpečnostní incident, stanovit rozsah kompromitace a připravit podklady pro Containment & Remediation. Klasifikace (True/False Positive, Severity) se v průběhu Triage & Investigace může měnit — finální klasifikace se zaznamenává v bloku Uzavření incidentu.",
+      "description": "Cílem je potvrdit nebo vyvrátit bezpečnostní incident, stanovit rozsah kompromitace a připravit podklady pro Odezva. Klasifikace (True/False Positive, Severity) se v průběhu Posouzení, třídění a rozhodování může měnit — finální klasifikace se zaznamenává v bloku Uzavření incidentu.",
       "step_groups": [
 
         {
@@ -244,7 +244,7 @@
             {"id": "sc_05", "action": "Sestav timeline události — od doručení e-mailu po aktuální stav", "analyst_note": "Timeline přiložena k ticketu", "is_example": true, "done": false}
           ],
           "hints": [
-            "Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v Containment)."
+            "Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v sekci Odezva)."
           ]
         },
 
@@ -265,7 +265,7 @@
 
     {
       "id": "containment_remediation",
-      "title": "Containment & Remediation",
+      "title": "Odezva",
       "type": "action_table",
       "description": "Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní, napiš N/A.",
       "columns": ["action", "responsible_role", "cooperation", "status"],
@@ -300,7 +300,7 @@
         "Oznamovatele informuj vždy — bez ohledu na výsledek klasifikace."
       ],
       "rows": [
-        {"recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon", "sla": "Do 30 min od Triage",         "note": null},
+        {"recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon", "sla": "Do 30 min od Posouzení",         "note": null},
         {"recipient": "CISO / Management",               "communication_method": "E-mail / telefon", "sla": "Do 1 h (High / Critical)",    "note": null},
         {"recipient": "Postižení uživatelé",             "communication_method": "Hromadný e-mail",  "sla": "Do 2 h",                      "note": null},
         {"recipient": "Oznamovatel události",            "communication_method": "E-mail / telefon", "sla": "Po uzavření incidentu",       "note": null},
@@ -312,12 +312,12 @@
       "id": "closure",
       "title": "Klasifikace a uzavření",
       "type": "closure_form",
-      "description": "Uzavření provádí SOC Analytický tým po dokončení Containment & Remediation, nebo ihned po Triage & Investigaci u False Positive / Benign True Positive. Klasifikace a Severity vyjadřují finální stav po celé Triage & Investigaci.",
+      "description": "Uzavření provádí SOC Analytický tým po dokončení Odezvy, nebo ihned po Posouzení, třídění a rozhodování u False Positive / Benign True Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.",
       "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
       "fields": [
         {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "is_example": true, "value": "True Positive",
           "options": ["True Positive", "False Positive", "Benign True Positive"],
-          "hint": "Klasifikace odráží celkový výsledek Triage & Investigace a může se lišit od průběžného hodnocení."},
+          "hint": "Klasifikace odráží celkový výsledek Posouzení, třídění a rozhodování a může se lišit od průběžného hodnocení."},
         {"key": "impact_ki", "label": "Dopad na Regulovanou službu", "type": "select", "editable": true, "value": null,
           "options": ["Ano – Regulovaná služba přímo zasažena", "Nepřímo – systémy nebo služby navazující na Regulovanou službu", "Ne", "Nelze určit"],
           "hint": "Regulovaná služba = KI/KII dle zákona č. 181/2014 Sb. (ZOKB) a vyhl. č. 82/2018 Sb. Ověř v interním registru aktiv."},
@@ -375,8 +375,8 @@
       },
       "rows": [
         {"activity": "Příjem a zaevidování události",   "ki": "R, A", "cirt": "C",   "r_dtech": "–",                   "r_dplr": "–", "garant": "–", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
-        {"activity": "Triage & Investigace",            "ki": "A",    "cirt": "R",   "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
-        {"activity": "Containment & Remediation",       "ki": "A",    "cirt": "R",   "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
+        {"activity": "Posouzení, třídění a rozhodování",            "ki": "A",    "cirt": "R",   "r_dtech": "–",                   "r_dplr": "–", "garant": "C", "delegat": "C", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
+        {"activity": "Odezva",       "ki": "A",    "cirt": "R",   "r_dtech": "I (Vysoká/Kritická)", "r_dplr": "–", "garant": "A", "delegat": "R", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
         {"activity": "Notifikace dotčených stran",      "ki": "R, A", "cirt": "–",   "r_dtech": "I",                   "r_dplr": "–", "garant": "I", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
         {"activity": "Notifikace DPO (únik dat)",       "ki": "R",    "cirt": "C",   "r_dtech": "–",                   "r_dplr": "–", "garant": "I", "delegat": "–", "dpo": "A, I", "nukib": "–",                   "ucl": "–"},
         {"activity": "Eskalace na management",          "ki": "R",    "cirt": "–",   "r_dtech": "A",                   "r_dplr": "I", "garant": "–", "delegat": "–", "dpo": "–",    "nukib": "–",                   "ucl": "–"},
