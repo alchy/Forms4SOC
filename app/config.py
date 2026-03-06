@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # Výchozí adresáře (lze přepsat v GUI Settings)
     default_incidents_dir: str = "data/events"
-    default_templates_dir: str = "data/playbooks"
+    default_templates_dir: str = "data/workbooks"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

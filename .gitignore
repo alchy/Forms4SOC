@@ -46,3 +46,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+# Ace Editor (stazeno pres scripts/download_ace.py)
+app/static/vendor/

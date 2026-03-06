@@ -35,7 +35,8 @@ function renderSection(section) {
     body.className = 'card-body';
 
     switch (section.type) {
-        case 'playbook_header':  body.appendChild(renderPlaybookHeader(section)); break;
+        case 'workbook_header':
+        case 'playbook_header':  body.appendChild(renderWorkbookHeader(section)); break;
         case 'classification':   body.appendChild(renderClassification(section)); break;
         case 'contact_table':    body.appendChild(renderContactTable(section)); break;
         case 'section_group':    body.appendChild(renderSectionGroup(section)); break;
@@ -153,10 +154,10 @@ function renderForm(fields) {
 }
 
 // ---------------------------------------------------------------------------
-// Hlavička playbooku (read-only metadata panel)
+// Hlavička workbooku (read-only metadata panel)
 // ---------------------------------------------------------------------------
 
-function renderPlaybookHeader(section) {
+function renderWorkbookHeader(section) {
     const wrap = el('div');
 
     // Editovatelná pole (case_title apod.) zobrazit prominentně nahoře

@@ -165,3 +165,32 @@ async def admin_users_page(
         "request": request,
         "user": _user_ctx(user),
     })
+
+
+@router.get("/templates/new", response_class=HTMLResponse)
+async def template_editor_new(
+    request: Request,
+    user: TokenPayload = Depends(require_web_admin),
+    clone: str | None = None,
+):
+    return templates.TemplateResponse("template_editor.html", {
+        "request": request,
+        "user": _user_ctx(user),
+        "mode": "new",
+        "template_id": None,
+        "clone_from": clone,
+    })
+
+
+@router.get("/templates/{template_id}/edit", response_class=HTMLResponse)
+async def template_editor_edit(
+    request: Request,
+    template_id: str,
+    user: TokenPayload = Depends(require_web_admin),
+):
+    return templates.TemplateResponse("template_editor.html", {
+        "request": request,
+        "user": _user_ctx(user),
+        "mode": "edit",
+        "template_id": template_id,
+    })

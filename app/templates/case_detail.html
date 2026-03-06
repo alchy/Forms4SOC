@@ -198,7 +198,7 @@
     }
 
     function getCaseTitle(c) {
-        const headerSec = (c.data?.sections || []).find(s => s.type === 'playbook_header');
+        const headerSec = (c.data?.sections || []).find(s => s.type === 'workbook_header' || s.type === 'playbook_header');
         const f = (headerSec?.fields || []).find(f => f.key === 'case_title');
         return f?.value || null;
     }

@@ -4,7 +4,7 @@
   "version": "2.0",
   "category": "Phishing",
   "status": "active",
-  "description": "Playbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL). Triage a Investigace jsou sloučeny do jednoho bloku.",
+  "description": "Workbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL). Triage a Investigace jsou sloučeny do jednoho bloku.",
   "mitre_tactic": "Initial Access",
   "mitre_technique": "T1566 – Phishing",
   "mitre_subtechnique": "T1566.001",
@@ -19,17 +19,17 @@
 
     {
       "id": "header",
-      "type": "playbook_header",
+      "type": "workbook_header",
       "title": "Hlavička",
       "fields": [
         {"key": "case_title",      "label": "Stručný popis události",       "type": "text", "editable": true,  "is_example": true, "value": "Stručný popis pro vyhledání události", "hint": "Výstižný popis pro odlišení od ostatních případů stejné šablony"},
         {"key": "ticket_id",       "label": "Ticket ID",                    "type": "text", "editable": false, "value": null, "auto_value": "case_id"},
-        {"key": "playbook_name",   "label": "Název playbooku",              "type": "text", "editable": false, "value": null, "auto_value": "template_name"},
-        {"key": "playbook_id",     "label": "Playbook ID",                  "type": "text", "editable": false, "value": "2026-002"},
+        {"key": "workbook_name",   "label": "Název workbooku",              "type": "text", "editable": false, "value": null, "auto_value": "template_name"},
+        {"key": "workbook_id",     "label": "Workbook ID",                  "type": "text", "editable": false, "value": "2026-002"},
         {"key": "version",         "label": "Verze",                        "type": "text", "editable": false, "value": null, "auto_value": "template_version"},
         {"key": "last_updated",    "label": "Datum poslední aktualizace",   "type": "text", "editable": false, "value": "2026-03-05"},
         {"key": "author",          "label": "Autor / vlastník",             "type": "text", "editable": false, "value": "SOC Analytický tým"},
-        {"key": "playbook_status", "label": "Status",                       "type": "text", "editable": false, "value": null, "auto_value": "template_status"}
+        {"key": "workbook_status", "label": "Status",                       "type": "text", "editable": false, "value": null, "auto_value": "template_status"}
       ]
     },
 
@@ -74,8 +74,8 @@
         {"system_role": "Správce Proxy",              "name": "Petra Svobodová",   "email": "petra.svobodova@firma.cz",  "phone": "+420 123 456 790", "when_to_contact": "Proxy logy, blokace URL / domény",                           "is_example": true},
         {"system_role": "Správce AV / EDR",           "name": "Tomáš Blažek",     "email": "tomas.blazek@firma.cz",     "phone": "+420 123 456 791", "when_to_contact": "Hash vyhledání, AV scan, izolace endpointu",                  "is_example": true},
         {"system_role": "SOC Analytický tým",         "name": "SOC L2",            "email": "soc@firma.cz",              "phone": "+420 123 456 792", "when_to_contact": "Interní koordinace",                                          "is_example": true},
-        {"system_role": "CISO",                       "name": "Ing. Martin Kovář", "email": "ciso@firma.cz",             "phone": "+420 123 456 793", "when_to_contact": "Severity High / Critical",                                    "is_example": true},
-        {"system_role": "ISO",                        "name": "Mgr. Eva Horáčková","email": "iso@firma.cz",              "phone": "+420 123 456 794", "when_to_contact": "Severity Critical / dle interní politiky",                   "is_example": true},
+        {"system_role": "CISO",                       "name": "Ing. Martin Kovář", "email": "ciso@firma.cz",             "phone": "+420 123 456 793", "when_to_contact": "Závažnost Vysoká / Kritická",                                    "is_example": true},
+        {"system_role": "ISO",                        "name": "Mgr. Eva Horáčková","email": "iso@firma.cz",              "phone": "+420 123 456 794", "when_to_contact": "Závažnost Kritická / dle interní politiky",                   "is_example": true},
         {"system_role": "CERT / NÚKIB",               "name": "NÚKIB",             "email": "podatelna@nukib.cz",        "phone": "+420 222 362 888", "when_to_contact": "Dle regulatorní povinnosti (NIS2 apod.)"}
       ]
     },
@@ -314,12 +314,33 @@
       "description": "Uzavření provádí SOC Analytický tým po dokončení Containment & Remediation, nebo ihned po Triage & Investigaci u False Positive / Benign True Positive. Klasifikace a Severity vyjadřují finální stav po celé Triage & Investigaci.",
       "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
       "fields": [
-        {"key": "final_classification",  "label": "Klasifikace výsledku",           "type": "select",   "editable": true, "is_example": true, "value": "True Positive",
+        {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "is_example": true, "value": "True Positive",
           "options": ["True Positive", "False Positive", "Benign True Positive"],
           "hint": "Klasifikace odráží celkový výsledek Triage & Investigace a může se lišit od průběžného hodnocení."},
-        {"key": "final_severity",        "label": "Finální Severity",               "type": "select",   "editable": true, "is_example": true, "value": "high",
-          "options": ["critical", "high", "medium", "low"],
-          "option_hints": {"critical": "Okamžité ohrožení provozu nebo kritické infrastruktury", "high": "Závažný incident s potvrzeným dopadem", "medium": "Incident s omezeným nebo neprokázaným dopadem", "low": "Nízké riziko, žádný aktuální dopad"}},
+        {"key": "impact_ki", "label": "Dotčena KI / KII", "type": "select", "editable": true, "value": null,
+          "options": ["Ano – KI/KII přímo zasažena", "Nepřímo – systémy nebo služby navazující na KI/KII", "Ne", "Nelze určit"],
+          "hint": "Ověř v interním registru aktiv. KI/KII dle zákona č. 181/2014 Sb. (ZOKB) a prováděcí vyhlášky č. 82/2018 Sb."},
+        {"key": "impact_primary_service", "label": "Dostupnost primárních služeb organizace", "type": "select", "editable": true, "value": null,
+          "options": ["Zcela nedostupné", "Částečně nedostupné / degradované", "Dostupné bez omezení", "Netýká se"],
+          "hint": "Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy organizace."},
+        {"key": "impact_scope", "label": "Rozsah zasažených uživatelů / systémů", "type": "select", "editable": true, "value": null,
+          "options": ["Celoplošný (> 50 % uživatelů nebo klíčových systémů)", "Významný (10–50 %)", "Omezený (< 10 %)", "Individuální (1 uživatel / 1 systém)"]},
+        {"key": "impact_duration", "label": "Doba výpadku / narušení (dostupnost)", "type": "select", "editable": true, "value": null,
+          "options": ["> 4 hodiny", "1–4 hodiny", "15 min – 1 hodina", "< 15 min", "Žádný výpadek / narušení"]},
+        {"key": "impact_data", "label": "Dopad na data (důvěrnost / integrita)", "type": "select", "editable": true, "value": null,
+          "options": ["Exfiltrace dat potvrzena", "Neoprávněný přístup k datům potvrzen", "Integrita dat narušena", "Žádný dopad na data", "Nelze určit"]},
+        {"key": "zavaznost", "label": "Závažnost incidentu", "type": "select", "editable": true, "is_example": true, "value": "Vysoká",
+          "options": ["Kritická", "Vysoká", "Střední", "Nízká"],
+          "option_hints": {
+            "Kritická": "KI/KII přímo zasažena + výpadek primárních služeb, NEBO celoplošný výpadek > 4 hod, NEBO exfiltrace dat s KI kontextem – povinná notifikace NÚKIB (ZOKB §8).",
+            "Vysoká":   "Primární služby organizace narušeny (bez KI dopadu), NEBO výpadek 1–4 hod pro > 30 % uživatelů, NEBO neoprávněný přístup k datům.",
+            "Střední":  "Sekundární systémy zasaženy, omezený rozsah nebo krátký výpadek (15 min – 1 hod), bez dopadu na primární služby a zákazníky.",
+            "Nízká":    "Minimální nebo žádný provozní dopad. Typicky False Positive nebo Benign True Positive."
+          },
+          "hint": "Závažnost urči dle impact faktorů výše. U KI/KII nebo VIS zakládá závažnost Kritická a Vysoká povinnost hlásit incident NÚKIB dle ZOKB (zák. č. 181/2014 Sb., vyhl. č. 82/2018 Sb.) a NIS2."},
+        {"key": "nukib_notification_required", "label": "Povinnost hlášení NÚKIB", "type": "select", "editable": true, "value": null,
+          "options": ["Povinná – KI/KII nebo VIS + Kritická/Vysoká závažnost (ZOKB §8, vyhl. 82/2018 Sb.)", "Zvážit – hraniční případ", "Není vyžadována"],
+          "hint": "Správci KII a VIS jsou povinni hlásit kybernetické bezpečnostní incidenty NÚKIB. Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018 Sb."},
         {"key": "root_cause",            "label": "Root Cause",                     "type": "textarea", "editable": true, "is_example": true, "value": "Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem"},
         {"key": "actions_taken",         "label": "Popis přijatých opatření",       "type": "textarea", "editable": true, "is_example": true, "value": "Izolace 3 zařízení, blokace domény na mail serveru, AV scan"},
         {"key": "recommendations",       "label": "Doporučení pro zlepšení",        "type": "textarea", "editable": true, "is_example": true, "value": "Zvážit implementaci sandboxingu příloh na inbound mail gateway"},
@@ -345,11 +366,11 @@
       "rows": [
         {"activity": "Příjem a zaevidování události",     "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "–",               "external": "–"},
         {"activity": "Triage & Investigace",              "soc_team": "R, A", "system_owners": "C",              "is_owner": "C",    "ciso_management": "–",               "external": "–"},
-        {"activity": "Containment & Remediation",         "soc_team": "R, A", "system_owners": "C",              "is_owner": "C",    "ciso_management": "I (High/Critical)","external": "–"},
+        {"activity": "Containment & Remediation",         "soc_team": "R, A", "system_owners": "C",              "is_owner": "C",    "ciso_management": "I (Vysoká/Kritická)","external": "–"},
         {"activity": "Notifikace uživatelů / organizace", "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "I",               "external": "–"},
         {"activity": "Eskalace na CISO / Management",     "soc_team": "R",    "system_owners": "–",              "is_owner": "–",    "ciso_management": "A",               "external": "–"},
-        {"activity": "Notifikace CERT / NÚKIB",           "soc_team": "R",    "system_owners": "–",              "is_owner": "–",    "ciso_management": "A",               "external": "I (Critical)"},
-        {"activity": "Uzavření incidentu",                "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "I (High/Critical)","external": "–"}
+        {"activity": "Notifikace CERT / NÚKIB",           "soc_team": "R",    "system_owners": "–",              "is_owner": "–",    "ciso_management": "A",               "external": "I (Kritická)"},
+        {"activity": "Uzavření incidentu",                "soc_team": "R, A", "system_owners": "–",              "is_owner": "I",    "ciso_management": "I (Vysoká/Kritická)","external": "–"}
       ]
     }
 

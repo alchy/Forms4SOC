@@ -1,9 +1,9 @@
 # Forms4SOC – Průvodce tvorbou JSON šablon
 
-Šablony jsou JSON soubory uložené v adresáři `data/playbooks/` (konfigurovatelné v sekci Nastavení).
-Každý soubor definuje jeden SOC playbook – strukturu dokumentu incidentu, instrukce a kontrolní seznamy.
+Šablony jsou JSON soubory uložené v adresáři `data/workbooks/` (konfigurovatelné v sekci Nastavení).
+Každý soubor definuje jeden SOC workbook – strukturu dokumentu incidentu, instrukce a kontrolní seznamy.
 
-Dostupné šablony: `phishing_v1.json` (původní), `phishing_v2.json` (sloučená Triage & Investigace, rozšířená tabulka aktiv).
+Dostupné šablony: `phishing_v1.json` (původní), `phishing_v2.json` (sloučená Triage & Investigace, rozšířená tabulka aktiv), `ddos_vpn_v1.json` (DDoS útok na VPN Cisco AnyConnect).
 
 ---
 
@@ -65,7 +65,7 @@ Každá sekce má `id`, `title` a `type`. Typ určuje způsob renderování.
 
 | `type` | Popis |
 |---|---|
-| `playbook_header` | Hlavička incidentu – editovatelná pole + read-only metadata playbooku |
+| `workbook_header` | Hlavička incidentu – editovatelná pole + read-only metadata workbooku |
 | `classification` | Panel s MITRE informacemi a zdroji dat. Tactic a Technique jsou read-only (primární indikátory dané šablonou); Sub-technique je editovatelný `select` – analytik vyplní po Triage & Investigaci, kdy je znám konkrétní vektor útoku |
 | `contact_table` | Tabulka kontaktů pro investigaci a eskalaci |
 | `section_group` | Kontejner pro více podsekce zobrazených jako accordion |
@@ -81,7 +81,7 @@ Každá sekce má `id`, `title` a `type`. Typ určuje způsob renderování.
 
 ## Formulářová pole (`fields`)
 
-Pole se používají v sekcích `playbook_header`, `form`, `closure_form`, podsekci `form` uvnitř `section_group` a ve výsledkovém bloku `result` uvnitř `checklist`.
+Pole se používají v sekcích `workbook_header`, `form`, `closure_form`, podsekci `form` uvnitř `section_group` a ve výsledkovém bloku `result` uvnitř `checklist`.
 
 ```json
 {
@@ -151,15 +151,15 @@ Při vytvoření nového incidentu se hodnota automaticky přesune do klíče `e
 
 ---
 
-## Typ `playbook_header`
+## Typ `workbook_header`
 
 Speciální sekce zobrazená na začátku každého incidentu.
-Editovatelná pole (zejména `case_title`) vyplňuje analytik; read-only pole zobrazují metadata playbooku v kompaktní mřížce.
+Editovatelná pole (zejména `case_title`) vyplňuje analytik; read-only pole zobrazují metadata workbooku v kompaktní mřížce.
 
 ```json
 {
   "id": "header",
-  "type": "playbook_header",
+  "type": "workbook_header",
   "title": "Hlavička",
   "fields": [
     {
@@ -244,7 +244,7 @@ Tabulka kontaktů pro investigaci a eskalaci. Analytik může editovat vybrané 
 
 ## Typ `section_group`
 
-Kontejner sdružující více podsekce do jednoho bloku (zobrazeny jako accordion). Podporované typy podsekce: `form`, `closure_form`, `assets_table`.
+Kontejner sdružující více podsekce do jednoho bloku (zobrazeny jako accordion). Podporované typy podsekce: `form`, `closure_form`, `assets_table`, `checklist` a všechny typy tabulek (`contact_table`, `action_table`, `notification_table`, `raci_table`).
 
 ```json
 {
@@ -561,6 +561,105 @@ Read-only RACI matice. Buňky obsahující `R` jsou zvýrazněny tučně červen
 | `I (Critical)` | Informován pouze při Severity Critical |
 | `I (High/Critical)` | Informován při Severity High nebo Critical |
 | `–` | Není zapojen |
+
+---
+
+## Typ `closure_form` – uzavření incidentu
+
+Sekce uzavření incidentu. Shodná struktura renderování s `form`, ale sémanticky odlišena jako finální krok workbooku.
+
+### Standardní struktura polí
+
+Všechny workbooky by měly obsahovat closure sekci s níže uvedenými poli **v tomto pořadí**. Šablony specifické pro daný typ útoku mohou vložit vlastní pole (např. `attack_type_final`, `vpn_outage_duration`) **za pole `nukib_notification_required`** a **před `root_cause`**.
+
+| `key` | `label` | `type` | Popis |
+|---|---|---|---|
+| `final_classification` | Klasifikace výsledku | `select` | True Positive / False Positive / Benign True Positive |
+| `impact_ki` | Dotčena KI / KII | `select` | Dopad na kritickou infrastrukturu dle ZOKB č. 181/2014 Sb. |
+| `impact_primary_service` | Dostupnost primárních služeb organizace | `select` | Dostupnost (CIA: A) klíčových služeb pro klienty / interní provoz |
+| `impact_scope` | Rozsah zasažených uživatelů / systémů | `select` | Celoplošný / Významný / Omezený / Individuální |
+| `impact_duration` | Doba výpadku / narušení **(dostupnost)** | `select` | Délka narušení dostupnosti (CIA: Availability) |
+| `impact_data` | Dopad na data (důvěrnost / integrita) | `select` | Exfiltrace, neoprávněný přístup, narušení integrity (CIA: C, I) |
+| `zavaznost` | Závažnost incidentu | `select` | Kritická / Vysoká / Střední / Nízká – dle ZOKB a NIS2 |
+| `nukib_notification_required` | Povinnost hlášení NÚKIB | `select` | Povinná / Zvážit / Není vyžadována (ZOKB §8, vyhl. 82/2018 Sb.) |
+| *(volitelná šablon. pole)* | | | Pole specifická pro daný typ incidentu |
+| `root_cause` | Root Cause | `textarea` | Kořenová příčina incidentu |
+| `actions_taken` | Popis přijatých opatření | `textarea` | Souhrn provedených containment a remediation kroků |
+| `recommendations` | Doporučení pro zlepšení | `textarea` | Doporučení pro snížení rizika opakování |
+| `lessons_learned` | Lessons Learned | `textarea` | Poznatky pro zlepšení detekce, response nebo procesů |
+| `related_service_requests` | Související servisní požadavky | `textarea` | Čísla/odkazy na servisní požadavky z průběhu řešení |
+| `reporter_notified` | Oznamovatel informován | `select` | Ano / Ne |
+| `closed_at` | Datum uzavření | `datetime` | Datum a čas uzavření |
+| `closed_by` | Uzavřel | `text` | Jméno analytika, který incident uzavřel |
+
+### CIA anotace v popisech polí
+
+Pole hodnotící specifický aspekt bezpečnostní triády CIA jsou v `label` označena závorkou:
+- `(dostupnost)` – vztahuje se k CIA pilíři **Availability** (dostupnost)
+- `(důvěrnost / integrita)` – vztahuje se k CIA pilíři **Confidentiality** a **Integrity**
+
+Ostatní pole (rozsah, KI/KII, klasifikace) CIA pilíř explicitně neuvádějí, protože jejich název sám o sobě dostatečně určuje kontext.
+
+### Závažnost – škála a podmínky notifikace NÚKIB
+
+| Závažnost | Typický scénář | Povinnost hlášení |
+|---|---|---|
+| **Kritická** | KI/KII přímo zasažena + výpadek primárních služeb, NEBO celoplošný výpadek > 4 hod, NEBO exfiltrace dat s KI kontextem | Povinná (ZOKB §8) |
+| **Vysoká** | Primární služby narušeny (bez KI dopadu), NEBO výpadek 1–4 hod pro > 30 % uživatelů, NEBO neoprávněný přístup k datům | Zvážit |
+| **Střední** | Sekundární systémy zasaženy, omezený rozsah nebo krátký výpadek (15 min – 1 hod) | Není vyžadována |
+| **Nízká** | Minimální nebo žádný provozní dopad. Typicky False Positive nebo Benign True Positive | Není vyžadována |
+
+Lhůty hlášení NÚKIB dle vyhlášky č. 82/2018 Sb.: **do 24 h** (první hlášení) · **do 72 h** (detailní hlášení) · **do 30 dní** (závěrečná zpráva).
+
+### Příklad minimální closure sekce
+
+```json
+{
+  "id": "closure",
+  "title": "Uzavření incidentu",
+  "type": "closure_form",
+  "description": "Uzavření provádí SOC Analytický tým po dokončení Containment & Remediation, nebo ihned po Triage u False Positive / Benign True Positive.",
+  "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
+  "fields": [
+    {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true,
+      "is_example": true, "value": "True Positive",
+      "options": ["True Positive", "False Positive", "Benign True Positive"]},
+    {"key": "impact_ki", "label": "Dotčena KI / KII", "type": "select", "editable": true, "value": null,
+      "options": ["Ano – KI/KII přímo zasažena", "Nepřímo – systémy nebo služby navazující na KI/KII", "Ne", "Nelze určit"],
+      "hint": "Ověř v interním registru aktiv. KI/KII dle zákona č. 181/2014 Sb. (ZOKB) a prováděcí vyhlášky č. 82/2018 Sb."},
+    {"key": "impact_primary_service", "label": "Dostupnost primárních služeb organizace", "type": "select", "editable": true, "value": null,
+      "options": ["Zcela nedostupné", "Částečně nedostupné / degradované", "Dostupné bez omezení", "Netýká se"],
+      "hint": "Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy organizace."},
+    {"key": "impact_scope", "label": "Rozsah zasažených uživatelů / systémů", "type": "select", "editable": true, "value": null,
+      "options": ["Celoplošný (> 50 % uživatelů nebo klíčových systémů)", "Významný (10–50 %)", "Omezený (< 10 %)", "Individuální (1 uživatel / 1 systém)"]},
+    {"key": "impact_duration", "label": "Doba výpadku / narušení (dostupnost)", "type": "select", "editable": true, "value": null,
+      "options": ["> 4 hodiny", "1–4 hodiny", "15 min – 1 hodina", "< 15 min", "Žádný výpadek / narušení"]},
+    {"key": "impact_data", "label": "Dopad na data (důvěrnost / integrita)", "type": "select", "editable": true, "value": null,
+      "options": ["Exfiltrace dat potvrzena", "Neoprávněný přístup k datům potvrzen", "Integrita dat narušena", "Žádný dopad na data", "Nelze určit"]},
+    {"key": "zavaznost", "label": "Závažnost incidentu", "type": "select", "editable": true, "is_example": true, "value": "Vysoká",
+      "options": ["Kritická", "Vysoká", "Střední", "Nízká"],
+      "option_hints": {
+        "Kritická": "KI/KII přímo zasažena + výpadek primárních služeb, NEBO celoplošný výpadek > 4 hod, NEBO exfiltrace dat s KI kontextem – povinná notifikace NÚKIB (ZOKB §8).",
+        "Vysoká":   "Primární služby organizace narušeny (bez KI dopadu), NEBO výpadek 1–4 hod pro > 30 % uživatelů, NEBO neoprávněný přístup k datům.",
+        "Střední":  "Sekundární systémy zasaženy, omezený rozsah nebo krátký výpadek (15 min – 1 hod), bez dopadu na primární služby a zákazníky.",
+        "Nízká":    "Minimální nebo žádný provozní dopad. Typicky False Positive nebo Benign True Positive."
+      },
+      "hint": "Závažnost urči dle impact faktorů výše. U KI/KII nebo VIS zakládá závažnost Kritická a Vysoká povinnost hlásit incident NÚKIB dle ZOKB (zák. č. 181/2014 Sb., vyhl. č. 82/2018 Sb.) a NIS2."},
+    {"key": "nukib_notification_required", "label": "Povinnost hlášení NÚKIB", "type": "select", "editable": true, "value": null,
+      "options": ["Povinná – KI/KII nebo VIS + Kritická/Vysoká závažnost (ZOKB §8, vyhl. 82/2018 Sb.)", "Zvážit – hraniční případ", "Není vyžadována"],
+      "hint": "Správci KII a VIS jsou povinni hlásit kybernetické bezpečnostní incidenty NÚKIB. Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018 Sb."},
+    {"key": "root_cause",           "label": "Root Cause",                     "type": "textarea", "editable": true, "value": null},
+    {"key": "actions_taken",        "label": "Popis přijatých opatření",       "type": "textarea", "editable": true, "value": null},
+    {"key": "recommendations",      "label": "Doporučení pro zlepšení",        "type": "textarea", "editable": true, "value": null},
+    {"key": "lessons_learned",      "label": "Lessons Learned",                "type": "textarea", "editable": true, "value": null},
+    {"key": "related_service_requests", "label": "Související servisní požadavky", "type": "textarea", "editable": true, "value": null,
+      "hint": "Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení."},
+    {"key": "reporter_notified",    "label": "Oznamovatel informován",         "type": "select",   "editable": true, "value": null, "options": ["Ano", "Ne"]},
+    {"key": "closed_at",            "label": "Datum uzavření",                 "type": "datetime", "editable": true, "value": null},
+    {"key": "closed_by",            "label": "Uzavřel",                        "type": "text",     "editable": true, "value": null}
+  ]
+}
+```
 
 ---
 

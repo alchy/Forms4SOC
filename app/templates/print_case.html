@@ -278,6 +278,7 @@ function renderSection(section, caseData) {
   div.appendChild(el('div', 'section-title', section.title));
 
   switch (section.type) {
+    case 'workbook_header':
     case 'playbook_header':
     case 'form':
     case 'closure_form':
@@ -318,7 +319,7 @@ async function loadAndRender() {
 
   // Záhlaví dokumentu
   const caseTitle = (c.data?.sections || [])
-    .find(s => s.type === 'playbook_header')
+    .find(s => s.type === 'workbook_header' || s.type === 'playbook_header')
     ?.fields?.find(f => f.key === 'case_title')?.value || null;
 
   document.title = `Tisk – ${CASE_ID}`;

@@ -172,20 +172,20 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
 | Klíč | Popis | Výchozí hodnota |
 |---|---|---|
 | `incidents_dir` | Adresář pro ukládání JSON souborů incidentů | `data/events` |
-| `templates_dir` | Adresář pro načítání JSON šablon | `data/playbooks` |
+| `templates_dir` | Adresář pro načítání JSON šablon | `data/workbooks` |
 
 **PATCH /settings/**
 ```json
 // Tělo požadavku
 {
   "incidents_dir": "C:/SOC/incidents",
-  "templates_dir": "C:/SOC/playbooks"
+  "templates_dir": "C:/SOC/workbooks"
 }
 
 // Odpověď 200 – vrátí aktuální nastavení
 {
   "incidents_dir": "C:/SOC/incidents",
-  "templates_dir": "C:/SOC/playbooks"
+  "templates_dir": "C:/SOC/workbooks"
 }
 ```
 

@@ -54,11 +54,40 @@
         <h5 class="fw-bold mb-0">
             <i class="bi bi-file-earmark-text me-2 text-primary"></i>Šablony
         </h5>
-        <small class="text-muted">Dostupné SOC playbook šablony</small>
+        <small class="text-muted">Dostupné SOC workbook šablony</small>
     </div>
-    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-        {{ templates | length }} šablon
-    </span>
+    <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+            {{ templates | length }} šablon
+        </span>
+        {% if user and user.role == 'admin' %}
+        <a href="/templates/new" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Nová šablona
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{# Modál pro potvrzení smazání #}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title text-danger"><i class="bi bi-trash me-2"></i>Smazat šablonu</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small mb-1">Opravdu smazat šablonu <strong id="delete-template-name"></strong>?</p>
+                <p class="text-danger small mb-0">Tuto operaci nelze vrátit zpět.</p>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zrušit</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-confirm-delete">
+                    <i class="bi bi-trash me-1"></i>Smazat
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if templates %}
@@ -113,7 +142,7 @@
                 </div>
                 {% endif %}
             </div>
-            <div class="card-footer bg-white border-top">
+            <div class="card-footer bg-white border-top d-flex flex-column gap-2">
                 <button
                     class="btn btn-primary btn-sm w-100"
                     onclick="startIncident('{{ tmpl.template_id }}', this)"
@@ -122,6 +151,23 @@
                     <span class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
                     <i class="bi bi-plus-circle me-1"></i>Otevřít novou bezpečnostní událost
                 </button>
+                {% if user and user.role == 'admin' %}
+                <div class="d-flex gap-1">
+                    <a href="/templates/{{ tmpl.template_id }}/edit"
+                       class="btn btn-outline-secondary btn-sm flex-fill" title="Editovat šablonu">
+                        <i class="bi bi-pencil me-1"></i>Editovat
+                    </a>
+                    <a href="/templates/new?clone={{ tmpl.template_id }}"
+                       class="btn btn-outline-secondary btn-sm flex-fill" title="Klonovat šablonu">
+                        <i class="bi bi-copy me-1"></i>Klonovat
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm"
+                            onclick="deleteTemplate('{{ tmpl.template_id }}', '{{ tmpl.name }}')"
+                            title="Smazat šablonu">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -133,7 +179,7 @@
     <div class="card-body text-center py-5 text-muted">
         <i class="bi bi-folder2 fs-1 mb-3 d-block opacity-50"></i>
         <p class="mb-1">Žádné šablony nebyly nalezeny</p>
-        <small>Přidejte JSON soubory do adresáře <code>playbooks/</code></small>
+        <small>Přidejte JSON soubory do adresáře <code>workbooks/</code></small>
     </div>
 </div>
 {% endif %}
@@ -164,6 +210,31 @@
             alert('Chyba připojení k serveru');
             btn.disabled = false;
             spinner.classList.add('d-none');
+        }
+    }
+
+    let _deleteId = null;
+    const _deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    function deleteTemplate(templateId, templateName) {
+        _deleteId = templateId;
+        document.getElementById('delete-template-name').textContent = templateName;
+        document.getElementById('btn-confirm-delete').onclick = doDeleteTemplate;
+        _deleteModal.show();
+    }
+
+    async function doDeleteTemplate() {
+        _deleteModal.hide();
+        try {
+            const resp = await apiFetch(`/api/v1/templates/${_deleteId}`, {method: 'DELETE'});
+            if (resp.ok || resp.status === 204) {
+                window.location.reload();
+            } else {
+                const data = await resp.json();
+                alert(data.detail || 'Chyba při mazání šablony.');
+            }
+        } catch {
+            alert('Chyba připojení k serveru.');
         }
     }
 </script>

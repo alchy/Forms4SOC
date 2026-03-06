@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class TemplateService:
     """
-    Přístup k read-only JSON šablonám ze souborového systému.
-    Odděleno od StorageBackend – šablony nemají CRUD ani zámky.
+    Přístup k JSON šablonám ze souborového systému.
+    Odděleno od StorageBackend – šablony mají vlastní CRUD bez zámků.
     """
 
     def __init__(self, templates_dir: Path) -> None:
@@ -39,6 +39,52 @@ class TemplateService:
             if template.template_id == template_id:
                 return template
         return None
+
+    def _find_file(self, template_id: str) -> Optional[Path]:
+        """Najde soubor šablony dle template_id."""
+        for json_file in self.templates_dir.glob("*.json"):
+            try:
+                data = json.loads(json_file.read_text(encoding="utf-8"))
+                if data.get("template_id") == template_id:
+                    return json_file
+            except Exception:
+                pass
+        return None
+
+    async def get_source(self, template_id: str) -> Optional[dict]:
+        """Vrátí {'content': str, 'filename': str} nebo None."""
+        path = self._find_file(template_id)
+        if not path:
+            return None
+        return {"content": path.read_text(encoding="utf-8"), "filename": path.name}
+
+    async def save(self, template_id: str, content: str) -> str:
+        """Validuje JSON a přepíše existující soubor. Vrátí filename."""
+        json.loads(content)  # vyvolá ValueError pokud není validní JSON
+        path = self._find_file(template_id)
+        if not path:
+            raise FileNotFoundError(f"Šablona '{template_id}' nebyla nalezena")
+        path.write_text(content, encoding="utf-8")
+        return path.name
+
+    async def create(self, filename: str, content: str) -> str:
+        """Validuje JSON a vytvoří nový soubor. Vrátí template_id z obsahu."""
+        json.loads(content)  # vyvolá ValueError pokud není validní JSON
+        if not filename.endswith(".json"):
+            filename += ".json"
+        target = self.templates_dir / filename
+        if target.exists():
+            raise FileExistsError(f"Soubor '{filename}' již existuje")
+        target.write_text(content, encoding="utf-8")
+        data = json.loads(content)
+        return data.get("template_id", filename.replace(".json", ""))
+
+    async def delete(self, template_id: str) -> None:
+        """Smaže soubor šablony."""
+        path = self._find_file(template_id)
+        if not path:
+            raise FileNotFoundError(f"Šablona '{template_id}' nebyla nalezena")
+        path.unlink()
 
 
 async def get_template_service(db: aiosqlite.Connection = Depends(get_db)) -> TemplateService:
