@@ -324,7 +324,14 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                 body: JSON.stringify({data: caseDocument.data}),
             });
             if (resp.ok) {
-                caseDocument = await resp.json();
+                // Aktualizujeme pouze metadata – caseDocument.data NENAHRAZUJEME,
+                // aby zůstaly platné live bindings DOM inputů na field objekty.
+                // Nahrazení celého caseDocument by přerušilo vazby a způsobilo ztrátu
+                // změn provedených po předchozím uložení.
+                const updated = await resp.json();
+                caseDocument.updated_at = updated.updated_at;
+                caseDocument.status = updated.status;
+                renderCaseHeader(caseDocument);
                 const ind = document.getElementById('save-indicator');
                 ind.classList.remove('d-none');
                 setTimeout(() => ind.classList.add('d-none'), 3000);
@@ -345,7 +352,9 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
             body: JSON.stringify({status: newStatus}),
         });
         if (resp.ok) {
-            caseDocument = await resp.json();
+            const updated = await resp.json();
+            caseDocument.status = updated.status;
+            caseDocument.updated_at = updated.updated_at;
             renderCaseHeader(caseDocument);
         }
     }
