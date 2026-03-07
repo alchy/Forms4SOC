@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(.venv/Scripts/uvicorn app.main:app:*)",
+      "Bash(taskkill:*)",
+      "Bash(python:*)",
+      "Bash(where uvicorn:*)",
+      "Read(//c/Users/jindr/AppData/Local/Programs/Python/**)",
+      "Read(//c/Users/jindr/**)",
+      "Bash(pip3.13 install:*)",
+      "Bash(\"C:/Users/jindr/AppData/Local/Programs/Python/Python313/python.exe\":*)",
+      "Bash(find:*)",
+      "Bash(dir C:\\\\Users\\\\jindr\\\\PycharmProjects\\\\Forms4SOC\\\\app\\\\storage:*)",
+      "Bash(dir C:\\\\Users\\\\jindr\\\\PycharmProjects\\\\Forms4SOC:*)",
+      "Bash(netstat:*)",
+      "Bash(powershell:*)",
+      "Bash(\"C:/Users/jindr/AppData/Local/Programs/Python/Python313/Scripts/uvicorn.exe\" app.main:app:*)",
+      "Bash(dir C:\\\\Users\\\\jindr\\\\PycharmProjects\\\\Forms4SOC\\\\docs:*)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/pip show:*)",
+      "Bash(.venv/Scripts/pip:*)",
+      "Bash(Get-Process:*)",
+      "Bash(C:/Users/jindr/AppData/Local/Programs/Python/Python313/Scripts/uvicorn.exe app.main:app:*)",
+      "Bash(C:/Users/jindr/AppData/Local/Programs/Python/Python313/Scripts/pip.exe show:*)",
+      "Bash(C:/Users/jindr/AppData/Local/Programs/Python/Python313/python.exe:*)",
+      "Bash(tasklist:*)",
+      "Bash(cmd:*)",
+      "Bash(git:*)",
+      "Bash(python3:*)",
+      "Bash(echo exit: $?:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)"
+    ]
+  }
+}

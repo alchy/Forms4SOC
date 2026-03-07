@@ -19,7 +19,7 @@ data/workbooks/phishing_v2.json      – šablona (commitována v gitu)
     ▼
 data/events/UIB-DDMMYYYY-HHMM-RRRR.json  – incident (mimo git)
     │
-    │  Frontend: CaseForm.render(sections, container)
+    │  Frontend: Forms4SOC.render(sections, container)
     ▼
 Prohlížeč – interaktivní formulář
 ```

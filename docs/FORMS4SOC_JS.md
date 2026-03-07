@@ -1,12 +1,12 @@
-# case_form.js – Průvodce pro nové uživatele
+# forms4soc.js – Průvodce pro nové uživatele
 
-Tento dokument provede prvním setkáním s `case_form.js` – od toho, k čemu knihovna slouží, přes rychlý start, až po tvorbu vlastních formulářů a jejich rozšiřování.
+Tento dokument provede prvním setkáním s `forms4soc.js` – od toho, k čemu knihovna slouží, přes rychlý start, až po tvorbu vlastních formulářů a jejich rozšiřování.
 
 ---
 
-## Co je case_form.js a k čemu slouží?
+## Co je forms4soc.js a k čemu slouží?
 
-`case_form.js` je klientský renderer, který ze strukturovaného JSON dokumentu sestaví interaktivní HTML formulář přímo v prohlížeči. Nevyžaduje žádný server-side templating – dostane JSON, vykreslí formulář, a po vyplnění vrátí zpět upravený JSON.
+`forms4soc.js` je klientský renderer, který ze strukturovaného JSON dokumentu sestaví interaktivní HTML formulář přímo v prohlížeči. Nevyžaduje žádný server-side templating – dostane JSON, vykreslí formulář, a po vyplnění vrátí zpět upravený JSON.
 
 Vznikl pro potřeby **Forms4SOC** – webové aplikace pro správu SOC incidentů – kde každý incident je popsán JSON dokumentem s pevnou strukturou (šablonou). Analytik otevře incident v prohlížeči, formulář se automaticky vykreslí podle šablony, analytik data doplní, a uloží. Knihovna se ale neváže na SOC doménu a lze ji použít kdekoli, kde potřebujete renderovat strukturované datové formuláře z JSON.
 
@@ -22,7 +22,7 @@ Princip je záměrně jednoduchý:
 JSON dokument (sekce s poli)
         │
         ▼
-CaseForm.render(sections, container)
+Forms4SOC.render(sections, container)
         │  pro každou sekci zavolá odpovídající render* funkci
         ▼
 DOM elementy (karty, tabulky, inputy, checkboxy...)
@@ -57,7 +57,7 @@ Minimální stránka, která vykreslí formulář z JSON:
     <button id="save-btn" class="btn btn-primary mt-3">Uložit</button>
 
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="case_form.js"></script>
+    <script src="forms4soc.js"></script>
     <script>
         // Dokument přijde z API – zde simulujeme jednoduchý příklad
         const doc = {
@@ -76,7 +76,7 @@ Minimální stránka, která vykreslí formulář z JSON:
         };
 
         // Vyrenderuj formulář
-        CaseForm.render(doc.sections, document.getElementById('form-container'));
+        Forms4SOC.render(doc.sections, document.getElementById('form-container'));
 
         // Po kliknutí Uložit máme aktuální data přímo v doc
         document.getElementById('save-btn').addEventListener('click', () => {
@@ -117,11 +117,11 @@ Dokument má seznam `sections`. Každá sekce má `id`, `type` a `title`, plus d
 }
 ```
 
-### 2. Zavolejte `CaseForm.render`
+### 2. Zavolejte `Forms4SOC.render`
 
 ```javascript
 const container = document.getElementById('form-container');
-CaseForm.render(document.sections, container);
+Forms4SOC.render(document.sections, container);
 ```
 
 Výsledek: karta s nadpisem „Incident – základní data". Pole `case_id` je zobrazeno jako read-only text (šedě, bez inputu), `case_title` jako textový input s placeholderem, `severity` jako dropdown s nápovědou pod selectem.
@@ -720,10 +720,10 @@ function renderTimelineSection(section) {
 }
 ```
 
-**2. Zaregistrujte ji přes `CaseForm.registerRenderer`:**
+**2. Zaregistrujte ji přes `Forms4SOC.registerRenderer`:**
 
 ```javascript
-CaseForm.registerRenderer('timeline', renderTimelineSection);
+Forms4SOC.registerRenderer('timeline', renderTimelineSection);
 ```
 
 **3. Použijte v JSON šabloně:**
@@ -756,23 +756,23 @@ Hodnoty zadané analytikem (obsah inputů a textarea) **nikdy nevstupují do `in
 
 ## Portabilita a použití jako knihovna
 
-`case_form.js` je zabalený do IIFE a vystavuje jediný globální objekt `CaseForm`. Žádné interní funkce nejsou viditelné z okolního kódu.
+`forms4soc.js` je zabalený do IIFE a vystavuje jediný globální objekt `Forms4SOC`. Žádné interní funkce nejsou viditelné z okolního kódu.
 
 **Veřejné API:**
 
 ```javascript
 // Vykreslí formulář do kontejneru
-CaseForm.render(sections, container);
+Forms4SOC.render(sections, container);
 
-// Registruje vlastní typ sekce – bez úpravy case_form.js
-CaseForm.registerRenderer('timeline', function(section) {
+// Registruje vlastní typ sekce – bez úpravy forms4soc.js
+Forms4SOC.registerRenderer('timeline', function(section) {
     const wrap = el('div'); // el() není dostupné zvenčí – viz níže
     // ...
     return wrap;
 });
 ```
 
-> **Poznámka k interním helperům:** Funkce jako `el()`, `setHTML()`, `makeDeleteBtn()` jsou interní a nejsou součástí veřejného API. Pokud je potřebuješ ve vlastním rendereru, přidej je do `registerRenderer` callback jako closure, nebo si je definuj mimo `case_form.js`. Alternativně lze přidat `helpers` do veřejného API – stačí rozšířit `return { ... }` na konci souboru.
+> **Poznámka k interním helperům:** Funkce jako `el()`, `setHTML()`, `makeDeleteBtn()` jsou interní a nejsou součástí veřejného API. Pokud je potřebuješ ve vlastním rendereru, přidej je do `registerRenderer` callback jako closure, nebo si je definuj mimo `forms4soc.js`. Alternativně lze přidat `helpers` do veřejného API – stačí rozšířit `return { ... }` na konci souboru.
 
 Pokud bys v budoucnu chtěl přejít na ES modul (pro npm nebo bundler), stačí nahradit IIFE za `export`:
 
@@ -785,16 +785,16 @@ export function registerRenderer(type, fn) { ... }
 
 ## Přehled funkcí
 
-### Veřejné API (`CaseForm.*`)
+### Veřejné API (`Forms4SOC.*`)
 
 | Funkce | Popis |
 |--------|-------|
-| `CaseForm.render(sections, container)` | Hlavní vstupní bod – vykreslí sekce do kontejneru |
-| `CaseForm.registerRenderer(type, fn)` | Registruje vlastní renderer pro nový typ sekce |
+| `Forms4SOC.render(sections, container)` | Hlavní vstupní bod – vykreslí sekce do kontejneru |
+| `Forms4SOC.registerRenderer(type, fn)` | Registruje vlastní renderer pro nový typ sekce |
 
 ### Interní renderery (volané přes registr)
 
-Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle `section.type`. Lze je přepsat přes `CaseForm.registerRenderer`.
+Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle `section.type`. Lze je přepsat přes `Forms4SOC.registerRenderer`.
 
 | Interní funkce | Typ sekce |
 |----------------|-----------|

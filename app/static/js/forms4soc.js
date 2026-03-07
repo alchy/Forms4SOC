@@ -24,12 +24,12 @@
  *   section.rows            pole JS objektů; splice()/push() přímo mění zdrojová data
  *
  * Namespace:
- *   Vše je zabaleno v IIFE a vystaveno přes globální objekt CaseForm:
- *   CaseForm.render(sections, container)        – vyrenderuje formulář
- *   CaseForm.registerRenderer(type, fn)         – registruje vlastní typ sekce
+ *   Vše je zabaleno v IIFE a vystaveno přes globální objekt Forms4SOC:
+ *   Forms4SOC.render(sections, container)        – vyrenderuje formulář
+ *   Forms4SOC.registerRenderer(type, fn)         – registruje vlastní typ sekce
  */
 
-const CaseForm = (() => {
+const Forms4SOC = (() => {
 
 // ---------------------------------------------------------------------------
 // Sanitizace HTML – ochrana proti XSS
@@ -95,7 +95,7 @@ function renderFormSection(section) {
 
 // ---------------------------------------------------------------------------
 // Registr rendererů – mapuje section.type na render funkci.
-// Nový typ lze zaregistrovat zvenčí přes CaseForm.registerRenderer(type, fn)
+// Nový typ lze zaregistrovat zvenčí přes Forms4SOC.registerRenderer(type, fn)
 // bez úpravy tohoto souboru.
 // Analogie v Pythonu: dict dispatch { 'form': render_form, ... }
 // ---------------------------------------------------------------------------
@@ -857,4 +857,4 @@ return {
     registerRenderer: (type, fn) => { renderers[type] = fn; },
 };
 
-})(); // konec CaseForm IIFE
+})(); // konec Forms4SOC IIFE

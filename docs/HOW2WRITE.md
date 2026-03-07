@@ -1,7 +1,7 @@
 # HOW2WRITE – Průvodce tvorbou technické dokumentace
 
 Tento dokument popisuje styl a strukturu technické dokumentace používané v projektu Forms4SOC.
-Vzorový příklad ke studiu: [`docs/CASE_FORM_JS.md`](CASE_FORM_JS.md) – dokumentace klientské knihovny pro renderování formulářů.
+Vzorový příklad ke studiu: [`docs/FORMS4SOC_JS.md`](FORMS4SOC_JS.md) – dokumentace klientské knihovny pro renderování formulářů.
 
 Dokumentace je **návodná** – vede čtenáře od „co to je" přes „jak to funguje" až po „jak to konkrétně použiji".
 Není to jen reference. Čtenář by po přečtení dokumentu měl být schopen samostatně vytvořit funkční výstup.
@@ -130,7 +130,7 @@ JSON šablona
 Backend: klon šablony → přiřaď case_id → ulož
     │
     ▼
-Frontend: CaseForm.render(sections, container)
+Frontend: Forms4SOC.render(sections, container)
     │
     ▼
 Analytik edituje → field.value se aktualizuje živě
@@ -210,10 +210,10 @@ Minimální stránka, která vykreslí formulář z JSON:
 ```html
 <!DOCTYPE html>
 ...
-<script src="case_form.js"></script>
+<script src="forms4soc.js"></script>
 <script>
     const doc = { sections: [{ id: "info", type: "form", ... }] };
-    CaseForm.render(doc.sections, document.getElementById('form-container'));
+    Forms4SOC.render(doc.sections, document.getElementById('form-container'));
 </script>
 ```‌
 

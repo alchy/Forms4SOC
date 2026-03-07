@@ -22,7 +22,7 @@ data/forms4soc.db       – SQLite databáze (users + settings)
        └────────┬────────┘
                 │
        ┌────────▼────────┐
-       │   Prohlížeč     │  Bootstrap 5, case_form.js renderer
+       │   Prohlížeč     │  Bootstrap 5, forms4soc.js renderer
        └─────────────────┘
 ```
 
