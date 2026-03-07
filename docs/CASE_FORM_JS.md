@@ -22,7 +22,7 @@ Princip je záměrně jednoduchý:
 JSON dokument (sekce s poli)
         │
         ▼
-renderSections(sections, container)
+CaseForm.render(sections, container)
         │  pro každou sekci zavolá odpovídající render* funkci
         ▼
 DOM elementy (karty, tabulky, inputy, checkboxy...)
@@ -76,7 +76,7 @@ Minimální stránka, která vykreslí formulář z JSON:
         };
 
         // Vyrenderuj formulář
-        renderSections(doc.sections, document.getElementById('form-container'));
+        CaseForm.render(doc.sections, document.getElementById('form-container'));
 
         // Po kliknutí Uložit máme aktuální data přímo v doc
         document.getElementById('save-btn').addEventListener('click', () => {
@@ -117,11 +117,11 @@ Dokument má seznam `sections`. Každá sekce má `id`, `type` a `title`, plus d
 }
 ```
 
-### 2. Zavolejte `renderSections`
+### 2. Zavolejte `CaseForm.render`
 
 ```javascript
 const container = document.getElementById('form-container');
-renderSections(document.sections, container);
+CaseForm.render(document.sections, container);
 ```
 
 Výsledek: karta s nadpisem „Incident – základní data". Pole `case_id` je zobrazeno jako read-only text (šedě, bez inputu), `case_title` jako textový input s placeholderem, `severity` jako dropdown s nápovědou pod selectem.
@@ -466,80 +466,69 @@ Hodnoty zadané analytikem (obsah inputů a textarea) **nikdy nevstupují do `in
 
 ## Portabilita a použití jako knihovna
 
-V současné podobě jsou všechny funkce `case_form.js` globální (v `window`). Pro použití jako přenositelná knihovna ve více projektech existují dvě snadné cesty:
+`case_form.js` je zabalený do IIFE a vystavuje jediný globální objekt `CaseForm`. Žádné interní funkce nejsou viditelné z okolního kódu.
 
-**Varianta A – namespace objekt (minimální změna):**
-
-Celý soubor se zabalí do IIFE a vystaví jediný globální objekt:
+**Veřejné API:**
 
 ```javascript
-const CaseForm = (() => {
-    // ... všechny interní funkce ...
+// Vykreslí formulář do kontejneru
+CaseForm.render(sections, container);
 
-    // Veřejné API
-    return {
-        render: renderSections,
-        registerRenderer: (type, fn) => { renderers[type] = fn; }
-    };
-})();
-
-// Použití:
-CaseForm.render(doc.sections, container);
-CaseForm.registerRenderer('timeline', renderTimelineSection);
+// Registruje vlastní typ sekce – bez úpravy case_form.js
+CaseForm.registerRenderer('timeline', function(section) {
+    const wrap = el('div'); // el() není dostupné zvenčí – viz níže
+    // ...
+    return wrap;
+});
 ```
 
-**Varianta B – ES modul (moderní přístup):**
+> **Poznámka k interním helperům:** Funkce jako `el()`, `setHTML()`, `makeDeleteBtn()` jsou interní a nejsou součástí veřejného API. Pokud je potřebuješ ve vlastním rendereru, přidej je do `registerRenderer` callback jako closure, nebo si je definuj mimo `case_form.js`. Alternativně lze přidat `helpers` do veřejného API – stačí rozšířit `return { ... }` na konci souboru.
+
+Pokud bys v budoucnu chtěl přejít na ES modul (pro npm nebo bundler), stačí nahradit IIFE za `export`:
 
 ```javascript
-// case_form.js
 export function render(sections, container) { ... }
 export function registerRenderer(type, fn) { ... }
-
-// Použití v jiném projektu:
-import { render } from './case_form.js';
-render(doc.sections, container);
 ```
-
-Klíčová změna pro oba přístupy: nahrazení `switch(section.type)` v `renderSection()` slovníkem rendererů (`Map` nebo prostý objekt), do kterého lze přidávat externí renderery bez úpravy souboru knihovny:
-
-```javascript
-const renderers = {
-    form:          renderForm,
-    workbook_header: renderWorkbookHeader,
-    // ... ostatní built-in renderery ...
-};
-
-function renderSection(section) {
-    const renderFn = renderers[section.type];
-    body.appendChild(renderFn ? renderFn(section) : renderFallback(section));
-}
-
-function registerRenderer(type, fn) {
-    renderers[type] = fn;
-}
-```
-
-Tato změna je malá (cca 10 řádků), zpětně kompatibilní, a výrazně usnadňuje rozšiřování bez zásahu do kódu knihovny.
 
 ---
 
-## Přehled veřejných funkcí
+## Přehled funkcí
+
+### Veřejné API (`CaseForm.*`)
 
 | Funkce | Popis |
 |--------|-------|
-| `renderSections(sections, container)` | Hlavní vstupní bod – vykreslí sekce do kontejneru |
-| `renderSection(section)` | Vykreslí jednu sekci jako kartu |
-| `renderForm(fields)` | Formulář z pole polí |
-| `renderWorkbookHeader(section)` | Hlavička s info gridem |
-| `renderClassification(section)` | MITRE ATT&CK panel |
-| `renderContactTable(section)` | Kontaktní tabulka |
-| `renderAssetsTable(section)` | Tabulka aktiv |
-| `renderActionTable(section)` | Tabulka akcí / notifikací |
-| `renderChecklist(section)` | Checklist s kroky |
-| `renderSectionGroup(section)` | Accordion podsekci |
-| `renderRaciTable(section)` | Read-only RACI tabulka |
-| `renderFieldInput(field)` | DOM widget pro jedno pole |
+| `CaseForm.render(sections, container)` | Hlavní vstupní bod – vykreslí sekce do kontejneru |
+| `CaseForm.registerRenderer(type, fn)` | Registruje vlastní renderer pro nový typ sekce |
+
+### Interní renderery (volané přes registr)
+
+Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle `section.type`. Lze je přepsat přes `CaseForm.registerRenderer`.
+
+| Interní funkce | Typ sekce |
+|----------------|-----------|
+| `renderWorkbookHeader(section)` | `workbook_header`, `playbook_header` |
+| `renderClassification(section)` | `classification` |
+| `renderContactTable(section)` | `contact_table` |
+| `renderSectionGroup(section)` | `section_group` |
+| `renderForm(fields)` | `form` |
+| `renderClosureForm(section)` | `closure_form` |
+| `renderAssetsTable(section)` | `assets_table` |
+| `renderChecklist(section)` | `checklist` |
+| `renderActionTable(section)` | `action_table`, `notification_table` |
+| `renderRaciTable(section)` | `raci_table` |
+
+### Interní helpery
+
+| Funkce | Popis |
+|--------|-------|
+| `el(tag, cls?, html?)` | Factory pro DOM element; `html` je sanitizováno |
+| `setHTML(element, html)` | Bezpečné přiřazení innerHTML |
+| `sanitizeHTML(html)` | DOMParser sandbox – odstraní nebezpečné elementy a atributy |
+| `buildTableHead(columns, labels?, extraCol?)` | Sestaví `<thead>` tabulky |
+| `makeDeleteBtn(onClick)` | Tlačítko smazat s callbackem |
 | `renderFieldRow(field, labelCls?, rowMb?)` | Grid řádek label + input |
 | `renderInfoGrid(fields, colCls?, gridCls?)` | Grid read-only hodnot |
-| `buildOptions(sel, options, currentValue)` | Naplnění `<select>` options |
-| `sanitizeHTML(html)` | XSS-bezpečná sanitizace HTML stringu |
+| `buildOptions(sel, options, currentValue)` | Naplní `<select>` options |
+| `renderFieldInput(field)` | DOM widget pro jedno pole |

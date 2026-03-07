@@ -22,7 +22,14 @@
  *   addEventListener(ev, fn) registrace callbacku na událost (obdoba signal/slot)
  *   field.value             atribut JS objektu; mutace zde = mutace v caseDocument
  *   section.rows            pole JS objektů; splice()/push() přímo mění zdrojová data
+ *
+ * Namespace:
+ *   Vše je zabaleno v IIFE a vystaveno přes globální objekt CaseForm:
+ *   CaseForm.render(sections, container)        – vyrenderuje formulář
+ *   CaseForm.registerRenderer(type, fn)         – registruje vlastní typ sekce
  */
+
+const CaseForm = (() => {
 
 // ---------------------------------------------------------------------------
 // Sanitizace HTML – ochrana proti XSS
@@ -73,8 +80,43 @@ function renderSections(sections, container) {
     });
 }
 
-// Obalí obsah sekce do karty (card) a rozhodne, jakou render* funkci zavolat
-// podle section.type – obdoba dispatch slovníku { 'form': renderForm, ... }
+// closure_form je sémanticky odlišena od form, ale renderuje se stejně;
+// navíc zobrazí volitelný hint (upozornění) nad formulářem.
+function renderClosureForm(section) {
+    const wrap = el('div');
+    if (section.hint) {
+        const hintEl = el('div', 'alert alert-info py-2 small mb-3');
+        setHTML(hintEl, `<i class="bi bi-info-circle me-1"></i>${section.hint}`);
+        wrap.appendChild(hintEl);
+    }
+    wrap.appendChild(renderForm(section.fields || []));
+    return wrap;
+}
+
+// ---------------------------------------------------------------------------
+// Registr rendererů – mapuje section.type na render funkci.
+// Nový typ lze zaregistrovat zvenčí přes CaseForm.registerRenderer(type, fn)
+// bez úpravy tohoto souboru.
+// Analogie v Pythonu: dict dispatch { 'form': render_form, ... }
+// ---------------------------------------------------------------------------
+
+const renderers = {
+    workbook_header:    renderWorkbookHeader,
+    playbook_header:    renderWorkbookHeader,
+    classification:     renderClassification,
+    contact_table:      renderContactTable,
+    section_group:      renderSectionGroup,
+    form:               s => renderForm(s.fields || []),
+    closure_form:       renderClosureForm,
+    assets_table:       renderAssetsTable,
+    checklist:          renderChecklist,
+    action_table:       renderActionTable,
+    notification_table: renderNotificationTable,
+    raci_table:         renderRaciTable,
+};
+
+// Obalí obsah sekce do karty (card) a zavolá příslušný renderer z registru.
+// Neznámý typ → zobrazí surový JSON jako ladící výpis.
 function renderSection(section) {
     const wrapper = document.createElement('div');
     wrapper.className = 'case-section card border shadow-sm mb-3';
@@ -91,36 +133,15 @@ function renderSection(section) {
     const body = document.createElement('div');
     body.className = 'card-body';
 
-    switch (section.type) {
-        case 'workbook_header':
-        case 'playbook_header':  body.appendChild(renderWorkbookHeader(section)); break;
-        case 'classification':   body.appendChild(renderClassification(section)); break;
-        case 'contact_table':    body.appendChild(renderContactTable(section)); break;
-        case 'section_group':    body.appendChild(renderSectionGroup(section)); break;
-        case 'form':             body.appendChild(renderForm(section.fields || [])); break;
-        case 'closure_form': {
-            // closure_form je sémanticky odlišena od form, ale renderuje se stejně;
-            // navíc zobrazí volitelný hint (upozornění) nad formulářem
-            if (section.hint) {
-                const hintEl = el('div', 'alert alert-info py-2 small mb-3');
-                setHTML(hintEl, `<i class="bi bi-info-circle me-1"></i>${section.hint}`);
-                body.appendChild(hintEl);
-            }
-            body.appendChild(renderForm(section.fields || []));
-            break;
-        }
-        case 'assets_table':       body.appendChild(renderAssetsTable(section)); break;
-        case 'checklist':          body.appendChild(renderChecklist(section)); break;
-        case 'action_table':       body.appendChild(renderActionTable(section)); break;
-        case 'notification_table': body.appendChild(renderNotificationTable(section)); break;
-        case 'raci_table':         body.appendChild(renderRaciTable(section)); break;
-        default: {
-            // Neznámý typ sekce – zobraz surový JSON jako ladící výpis
-            // textContent (ne innerHTML) zaručuje, že se JSON nevyinterpretuje jako HTML
-            const pre = el('pre', 'text-secondary small mb-0');
-            pre.textContent = JSON.stringify(section, null, 2);
-            body.appendChild(pre);
-        }
+    const renderFn = renderers[section.type];
+    if (renderFn) {
+        body.appendChild(renderFn(section));
+    } else {
+        // Neznámý typ sekce – zobraz surový JSON jako ladící výpis
+        // textContent (ne innerHTML) zaručuje, že se JSON nevyinterpretuje jako HTML
+        const pre = el('pre', 'text-secondary small mb-0');
+        pre.textContent = JSON.stringify(section, null, 2);
+        body.appendChild(pre);
     }
 
     wrapper.appendChild(body);
@@ -837,3 +858,14 @@ function renderRaciTable(section) {
     wrap.appendChild(tableWrap);
     return wrap;
 }
+
+// ---------------------------------------------------------------------------
+// Veřejné API – jediné symboly viditelné z okolního kódu
+// ---------------------------------------------------------------------------
+
+return {
+    render:           renderSections,
+    registerRenderer: (type, fn) => { renderers[type] = fn; },
+};
+
+})(); // konec CaseForm IIFE

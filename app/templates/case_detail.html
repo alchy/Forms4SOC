@@ -257,7 +257,7 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
             const c = await resp.json();
             caseDocument = c;
             renderCaseHeader(c);
-            renderSections(c.data.sections || [], document.getElementById('sections-container'));
+            CaseForm.render(c.data.sections || [], document.getElementById('sections-container'));
             buildSectionNav(c.data.sections || []);
 
             if (PRINT_MODE) {
