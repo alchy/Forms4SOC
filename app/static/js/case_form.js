@@ -158,6 +158,49 @@ function makeDeleteBtn(onClick) {
     return btn;
 }
 
+// Sestaví řádek: label vlevo (col-md-4) + input vpravo (col-md-8).
+// Používá se v renderForm, renderWorkbookHeader, renderClassification.
+function renderFieldRow(field, labelCls = 'form-label text-secondary small mb-0', rowMb = 'mb-2') {
+    const row = el('div', `row ${rowMb} align-items-center`);
+    const labelCol = el('div', 'col-md-4');
+    const hintHtml = field.hint
+        ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : '';
+    setHTML(labelCol, `<label class="${labelCls}">${field.label}</label>${hintHtml}`);
+    const inputCol = el('div', 'col-md-8');
+    inputCol.appendChild(renderFieldInput(field));
+    row.appendChild(labelCol);
+    row.appendChild(inputCol);
+    return row;
+}
+
+// Zobrazí read-only pole jako kompaktní info grid (label + hodnota pod sebou).
+// Používá se v renderWorkbookHeader a renderClassification.
+function renderInfoGrid(fields, colCls = 'col-md-4 col-lg-3', gridCls = 'row g-2') {
+    const grid = el('div', gridCls);
+    fields.forEach(field => {
+        const col = el('div', colCls);
+        const val = field.value !== null && field.value !== undefined ? field.value : '–';
+        setHTML(col, `<div class="d-flex flex-column">
+            <span class="text-muted small">${field.label}</span>
+            <span class="small fw-semibold">${val}</span>
+        </div>`);
+        grid.appendChild(col);
+    });
+    return grid;
+}
+
+// Přidá options do existujícího <select> elementu a označí aktuálně vybranou hodnotu.
+// Používá se v renderFieldInput (select), renderAssetsTable, renderActionTable.
+function buildOptions(sel, options, currentValue) {
+    options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        if (currentValue === opt) o.selected = true;
+        sel.appendChild(o);
+    });
+}
+
 // ---------------------------------------------------------------------------
 // Widget factory pro jednotlivá formulářová pole
 //
@@ -196,13 +239,7 @@ function renderFieldInput(field) {
             emptyOpt.value = '';
             emptyOpt.textContent = '– vyberte –';
             sel.appendChild(emptyOpt);
-            (field.options || []).forEach(opt => {
-                const o = document.createElement('option');
-                o.value = opt;
-                o.textContent = opt;
-                if (field.value === opt) o.selected = true;
-                sel.appendChild(o);
-            });
+            buildOptions(sel, field.options || [], field.value);
             sel.addEventListener('change', () => { field.value = sel.value || null; });
 
             // Volitelná nápověda pod selectem: zobrazí hint pro aktuálně vybranou možnost
@@ -252,18 +289,7 @@ function renderFieldInput(field) {
 function renderForm(fields) {
     const wrap = el('div');
     fields.forEach(field => {
-        const row = el('div', 'row mb-2 align-items-center');
-
-        const labelCol = el('div', 'col-md-4');
-        setHTML(labelCol, `<label class="form-label text-secondary small mb-0">${field.label}</label>
-            ${field.hint && field.type !== 'select' ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
-
-        const inputCol = el('div', 'col-md-8');
-        inputCol.appendChild(renderFieldInput(field));
-
-        row.appendChild(labelCol);
-        row.appendChild(inputCol);
-        wrap.appendChild(row);
+        wrap.appendChild(renderFieldRow(field));
     });
     return wrap;
 }
@@ -284,30 +310,12 @@ function renderWorkbookHeader(section) {
     const readonlyFields = (section.fields || []).filter(f => !f.editable);
 
     editableFields.forEach(field => {
-        const row = el('div', 'row mb-3 align-items-center');
-        const labelCol = el('div', 'col-md-4');
-        setHTML(labelCol, `<label class="form-label fw-semibold small mb-0">${field.label}</label>
-            ${field.hint ? `<div class="form-text text-muted" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
-        const inputCol = el('div', 'col-md-8');
-        inputCol.appendChild(renderFieldInput(field));
-        row.appendChild(labelCol);
-        row.appendChild(inputCol);
-        wrap.appendChild(row);
+        wrap.appendChild(renderFieldRow(field, 'form-label fw-semibold small mb-0', 'mb-3'));
     });
 
     // Read-only metadata (case_id, verze ...) jako kompaktní info grid pod čarou
     if (readonlyFields.length > 0) {
-        const infoGrid = el('div', 'row g-2 mt-1 pt-2 border-top');
-        readonlyFields.forEach(field => {
-            const col = el('div', 'col-md-4 col-lg-3');
-            setHTML(col, `
-                <div class="d-flex flex-column">
-                    <span class="text-muted small">${field.label}</span>
-                    <span class="small fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-                </div>`);
-            infoGrid.appendChild(col);
-        });
-        wrap.appendChild(infoGrid);
+        wrap.appendChild(renderInfoGrid(readonlyFields, 'col-md-4 col-lg-3', 'row g-2 mt-1 pt-2 border-top'));
     }
 
     return wrap;
@@ -332,33 +340,13 @@ function renderClassification(section) {
 
     // Read-only MITRE pole jako kompaktní info grid
     if (readonlyFields.length > 0) {
-        const row = el('div', 'row g-2 mb-2');
-        readonlyFields.forEach(field => {
-            const col = el('div', 'col-md-6 col-lg-4');
-            setHTML(col, `
-                <div class="d-flex flex-column">
-                    <span class="text-muted small">${field.label}</span>
-                    <span class="fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-                </div>`);
-            row.appendChild(col);
-        });
-        wrap.appendChild(row);
+        wrap.appendChild(renderInfoGrid(readonlyFields, 'col-md-6 col-lg-4', 'row g-2 mb-2'));
     }
 
     // Editovatelná pole (sub-technique select) jako standardní form řádky
     if (editableFields.length > 0) {
         const editRow = el('div', 'mt-2 pt-2 border-top');
-        editableFields.forEach(field => {
-            const row = el('div', 'row mb-2 align-items-center');
-            const labelCol = el('div', 'col-md-4');
-            setHTML(labelCol, `<label class="form-label text-secondary small mb-0">${field.label}</label>
-                ${field.hint ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
-            const inputCol = el('div', 'col-md-8');
-            inputCol.appendChild(renderFieldInput(field));
-            row.appendChild(labelCol);
-            row.appendChild(inputCol);
-            editRow.appendChild(row);
-        });
+        editableFields.forEach(field => editRow.appendChild(renderFieldRow(field)));
         wrap.appendChild(editRow);
     }
 
@@ -563,12 +551,7 @@ function renderAssetsTable(section) {
             if (opts) {
                 // Sloupec s předdefinovanými hodnotami → <select>
                 const sel = el('select', 'form-select form-select-sm border-0');
-                opts.forEach(o => {
-                    const opt = document.createElement('option');
-                    opt.value = o; opt.textContent = o;
-                    if (row[col] === o) opt.selected = true;
-                    sel.appendChild(opt);
-                });
+                buildOptions(sel, opts, row[col]);
                 sel.addEventListener('change', () => { row[col] = sel.value; });
                 td.appendChild(sel);
             } else {
@@ -746,12 +729,7 @@ function renderActionTable(section) {
                 const emptyOpt = document.createElement('option');
                 emptyOpt.value = ''; emptyOpt.textContent = '–';
                 sel.appendChild(emptyOpt);
-                section.status_options.forEach(opt => {
-                    const o = document.createElement('option');
-                    o.value = opt; o.textContent = opt;
-                    if (row[col] === opt) o.selected = true;
-                    sel.appendChild(o);
-                });
+                buildOptions(sel, section.status_options, row[col]);
                 sel.addEventListener('change', () => { row[col] = sel.value || null; });
                 td.appendChild(sel);
             } else if (row.analyst_added) {
