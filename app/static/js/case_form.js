@@ -80,9 +80,9 @@ function renderSections(sections, container) {
     });
 }
 
-// closure_form je sémanticky odlišena od form, ale renderuje se stejně;
-// navíc zobrazí volitelný hint (upozornění) nad formulářem.
-function renderClosureForm(section) {
+// renderFormSection je univerzální renderer pro type: form.
+// Volitelný klíč section.hint zobrazí modrý informační box nad formulářem.
+function renderFormSection(section) {
     const wrap = el('div');
     if (section.hint) {
         const hintEl = el('div', 'alert alert-info py-2 small mb-3');
@@ -106,12 +106,10 @@ const renderers = {
     classification:     renderClassification,
     contact_table:      renderContactTable,
     section_group:      renderSectionGroup,
-    form:               s => renderForm(s.fields || []),
-    closure_form:       renderClosureForm,
+    form:               renderFormSection,
     assets_table:       renderAssetsTable,
     checklist:          renderChecklist,
     action_table:       renderActionTable,
-    notification_table: renderNotificationTable,
     raci_table:         renderRaciTable,
 };
 
@@ -301,9 +299,10 @@ function renderFieldInput(field) {
 }
 
 // ---------------------------------------------------------------------------
-// Formulář (type: form, closure_form)
+// Formulář (type: form)
 //
 // Renderuje seznam polí jako dvousloupcový grid: label vlevo, input vpravo.
+// Volitelný klíč section.hint zobrazí modrý informační box nad formulářem.
 // Používá renderFieldInput() pro každé pole.
 // ---------------------------------------------------------------------------
 
@@ -725,7 +724,7 @@ function renderChecklist(section) {
 // Tabulka s předdefinovanými akcemi. Analytik edituje stav každé akce
 // (sloupec status) z dropdown seznamu status_options.
 // Analytik může přidávat vlastní akce (allow_append) a mazat řádky (allow_delete).
-// Sdílí stejnou strukturu s notification_table – viz renderNotificationTable níže.
+// Komunikační tabulky (dříve notification_table) se také renderují tímto rendererem.
 // ---------------------------------------------------------------------------
 
 function renderActionTable(section) {
@@ -808,16 +807,6 @@ function renderActionTable(section) {
     }
 
     return wrap;
-}
-
-// ---------------------------------------------------------------------------
-// Tabulka komunikace a notifikací (type: notification_table)
-//
-// Shodná struktura s action_table – pouze jiná data v JSON šabloně.
-// ---------------------------------------------------------------------------
-
-function renderNotificationTable(section) {
-    return renderActionTable(section);
 }
 
 // ---------------------------------------------------------------------------

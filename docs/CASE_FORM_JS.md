@@ -157,7 +157,7 @@ Sekce se přidávají jednoduše do pole `sections`. Každá se vykreslí jako s
 
 ### Formulář (`form`)
 
-Nejjednodušší sekce. Pole jsou zobrazena jako dvousloupcový grid – label vlevo, input vpravo.
+Nejjednodušší sekce. Pole jsou zobrazena jako dvousloupcový grid – label vlevo, input vpravo. Volitelný klíč `hint` zobrazí modrý informační box nad formulářem (vhodné pro uzavírací sekce, varování nebo regulatorní upozornění).
 
 ```jsonc
 {
@@ -174,23 +174,12 @@ Nejjednodušší sekce. Pole jsou zobrazena jako dvousloupcový grid – label v
 }
 ```
 
-| Klíč | ✓ | Popis |
-|------|:-:|-------|
-| `id` | ✓ | Unikátní identifikátor sekce |
-| `type` | ✓ | `"form"` |
-| `title` | ✓ | Nadpis karty |
-| `fields[]` | ✓ | Formulářová pole – viz tabulka klíčů polí níže |
-| `description` | | Podnadpis v pravé části hlavičky karty |
-| `note` | | Metadata (ukládají se do dat; v kartě se nezobrazují – zobrazuje je accordion v `section_group`) |
-
-### Uzavření incidentu (`closure_form`)
-
-Sémanticky odlišená forma uzavření – renderuje se stejně jako `form`, ale volitelně zobrazí modrý informační box nad formulářem (klíč `hint`). Pole `hint` může obsahovat HTML.
+Příklad uzavírací sekce s `hint`:
 
 ```jsonc
 {
   "id": "closure",
-  "type": "closure_form",
+  "type": "form",
   "title": "Klasifikace a uzavření",
   "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
   "fields": [
@@ -213,10 +202,11 @@ Sémanticky odlišená forma uzavření – renderuje se stejně jako `form`, al
 | Klíč | ✓ | Popis |
 |------|:-:|-------|
 | `id` | ✓ | Unikátní identifikátor sekce |
-| `type` | ✓ | `"closure_form"` |
+| `type` | ✓ | `"form"` |
 | `title` | ✓ | Nadpis karty |
 | `fields[]` | ✓ | Formulářová pole – viz tabulka klíčů polí níže |
 | `description` | | Podnadpis v pravé části hlavičky karty |
+| `note` | | Metadata (ukládají se do dat; v kartě se nezobrazují – zobrazuje je accordion v `section_group`) |
 | `hint` | | HTML text zobrazený jako modrý informační box nad formulářem |
 
 ### Hlavička (`workbook_header`)
@@ -312,7 +302,9 @@ Tabulka dotčených systémů a zařízení. Všechny buňky jsou editovatelné.
 
 ### Tabulka akcí (`action_table`)
 
-Předdefinovaný seznam akcí odezvy. Analytik mění stav každé akce z dropdown seznamu (`status_options`). Může přidávat vlastní akce (`allow_append`) a mazat řádky (`allow_delete`).
+Univerzální tabulka pro akce odezvy i komunikační matice. Analytik mění stav každé akce z dropdown seznamu (`status_options`), nebo edituje sloupce volným textem (bez `status_options`). Může přidávat vlastní řádky (`allow_append`) a mazat řádky (`allow_delete`).
+
+Příklad tabulky akcí odezvy (se stavovým dropdownem):
 
 ```jsonc
 {
@@ -334,30 +326,12 @@ Předdefinovaný seznam akcí odezvy. Analytik mění stav každé akce z dropdo
 }
 ```
 
-| Klíč | ✓ | Popis |
-|------|:-:|-------|
-| `id` | ✓ | Unikátní identifikátor sekce |
-| `type` | ✓ | `"action_table"` |
-| `title` | ✓ | Nadpis karty |
-| `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
-| `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
-| `rows[]` | ✓ | Řádky tabulky |
-| `editable_columns[]` | ✓ | Sloupce renderované jako stavový `<select>` |
-| `status_options[]` | ✓ | Možnosti stavového dropdownu |
-| `description` | | Podnadpis v pravé části hlavičky karty |
-| `allow_append` | | `true` → tlačítko „Přidat akci" |
-| `allow_delete` | | `true` → tlačítko Smazat u všech řádků (nejen analytikových) |
-| `append_row_template{}` | ◐ | Povinný pokud `allow_append: true`; vzor prázdného řádku |
-| `hints[]` | | Informační texty zobrazené pod tabulkou |
-
-### Komunikace a notifikace (`notification_table`)
-
-Stejný renderer jako `action_table`, ale typicky **bez** `status_options`. Místo stavového dropdownu slouží `editable_columns` pro volný textový vstup (např. poznámka nebo stav notifikace). Pomocí `hints[]` lze přidat regulatorní připomínky.
+Příklad komunikační matice (bez stavového dropdownu – volný textový vstup):
 
 ```jsonc
 {
   "id": "communication",
-  "type": "notification_table",
+  "type": "action_table",
   "title": "Komunikace a notifikace",
   "columns": ["recipient", "communication_method", "sla", "note"],
   "column_labels": { "recipient": "Příjemce", "communication_method": "Způsob", "sla": "SLA", "note": "Poznámka / stav" },
@@ -374,20 +348,23 @@ Stejný renderer jako `action_table`, ale typicky **bez** `status_options`. Mís
 }
 ```
 
+> Pokud `status_options` není definováno, sloupce v `editable_columns` se renderují jako volný textový vstup místo dropdownu.
+
 | Klíč | ✓ | Popis |
 |------|:-:|-------|
 | `id` | ✓ | Unikátní identifikátor sekce |
-| `type` | ✓ | `"notification_table"` |
+| `type` | ✓ | `"action_table"` |
 | `title` | ✓ | Nadpis karty |
 | `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
 | `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
 | `rows[]` | ✓ | Řádky tabulky |
-| `editable_columns[]` | ✓ | Sloupce pro volný textový vstup (typicky `["note"]`) |
+| `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
 | `description` | | Podnadpis v pravé části hlavičky karty |
-| `hints[]` | | Informační texty pod tabulkou (regulatorní připomínky apod.) |
-| `status_options[]` | | Pokud definováno, sloupce v `editable_columns` se renderují jako dropdown místo volného textu |
-| `allow_append` | | `true` → tlačítko „Přidat řádek" |
-| `append_row_template{}` | ◐ | Povinný pokud `allow_append: true` |
+| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; jinak volný textový vstup |
+| `allow_append` | | `true` → tlačítko „Přidat akci" |
+| `allow_delete` | | `true` → tlačítko Smazat u všech řádků (nejen analytikových) |
+| `append_row_template{}` | ◐ | Povinný pokud `allow_append: true`; vzor prázdného řádku |
+| `hints[]` | | Informační texty zobrazené pod tabulkou |
 
 ### Checklist (`checklist`)
 
@@ -596,13 +573,7 @@ Rychlá reference pro tvorbu JSON šablon. ✓ = povinné, prázdno = volitelné
 |------|:-:|-------|
 | `fields[]` | ✓ | Pole formulářových polí (může být `[]`) |
 | `note` | | Šedý text za nadpisem (např. „přeskoč pokud...") – ukládá se do dat, renderer ho nezobrazuje v kartě, ale může ho zobrazit podsekce v `section_group` |
-
-### `closure_form`
-
-| Klíč | ✓ | Popis |
-|------|:-:|-------|
-| `fields[]` | ✓ | Pole formulářových polí |
-| `hint` | | HTML text zobrazený jako modrý informační box nad formulářem |
+| `hint` | | HTML text zobrazený jako modrý informační box nad formulářem (`form` only) |
 
 ### Klíče každého pole (`fields[]`)
 
@@ -689,16 +660,12 @@ Klíče každého kroku (`steps[]`):
 | `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
 | `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
 | `rows[]` | ✓ | Řádky tabulky |
-| `editable_columns[]` | ✓ | Sloupce renderované jako stavový `<select>` |
-| `status_options[]` | ✓ | Možnosti stavového dropdownu |
+| `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
+| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; jinak volný textový vstup |
 | `allow_append` | | `true` → tlačítko „Přidat akci" |
 | `allow_delete` | | `true` → tlačítko Smazat u všech řádků |
 | `append_row_template{}` | (pokud `allow_append`) | Vzor pro nový řádek |
 | `hints[]` | | Informační texty pod tabulkou |
-
-### `notification_table`
-
-Stejná struktura jako `action_table`, ale typicky **bez** `status_options`. Místo stavového dropdownu slouží `editable_columns` pro volný textový vstup.
 
 ### `raci_table`
 
@@ -753,10 +720,10 @@ function renderTimelineSection(section) {
 }
 ```
 
-**2. Zaregistrujte ji v `renderSection()` (v souboru `case_form.js`):**
+**2. Zaregistrujte ji přes `CaseForm.registerRenderer`:**
 
 ```javascript
-case 'timeline': body.appendChild(renderTimelineSection(section)); break;
+CaseForm.registerRenderer('timeline', renderTimelineSection);
 ```
 
 **3. Použijte v JSON šabloně:**
@@ -835,11 +802,10 @@ Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle 
 | `renderClassification(section)` | `classification` |
 | `renderContactTable(section)` | `contact_table` |
 | `renderSectionGroup(section)` | `section_group` |
-| `renderForm(fields)` | `form` |
-| `renderClosureForm(section)` | `closure_form` |
+| `renderFormSection(section)` | `form` |
 | `renderAssetsTable(section)` | `assets_table` |
 | `renderChecklist(section)` | `checklist` |
-| `renderActionTable(section)` | `action_table`, `notification_table` |
+| `renderActionTable(section)` | `action_table` |
 | `renderRaciTable(section)` | `raci_table` |
 
 ### Interní helpery

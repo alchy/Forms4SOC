@@ -250,7 +250,7 @@
       "_doc": "SEKCE 6 – Klasifikace a uzavření. Povinná. Standardní pole NEMĚŇ (klíče, options, hinty). Šablonově specifická pole (např. attack_type_final, affected_service) přidej ZA nukib_notification_required a PŘED root_cause.",
       "id": "closure",
       "title": "Klasifikace a uzavření",
-      "type": "closure_form",
+      "type": "form",
       "description": "Uzavření provádí SOC Analytický tým po dokončení Odezvy, nebo ihned po Posouzení, třídění a rozhodování u False Positive / Benign True Positive.",
       "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.<br><br><b>Metodika klasifikace – Úroveň dopadu:</b><br><b>Nízká</b> – incidenty s omezeným nebo lokálním dopadem; žádný dopad na regulovanou službu.<br><b>Střední</b> – postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů; nezasahuje aktiva regulované služby.<br><b>Vysoká</b> – významný dopad na klíčové procesy nebo systémy; při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB; ohrožují kontinuitu činnosti nebo reputaci.<br><b>Kritická</b> – katastrofický dopad; vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost; jde vždy o KBI.",
       "fields": [

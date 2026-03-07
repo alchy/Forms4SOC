@@ -315,7 +315,7 @@
     {
       "id": "communication",
       "title": "Komunikace a notifikace",
-      "type": "notification_table",
+      "type": "action_table",
       "columns": ["recipient", "communication_method", "sla", "note"],
       "column_labels": {"recipient": "Příjemce", "communication_method": "Způsob komunikace", "sla": "SLA pro notifikaci", "note": "Poznámka / stav"},
       "editable_columns": ["note"],
@@ -335,7 +335,7 @@
     {
       "id": "closure",
       "title": "Klasifikace a uzavření",
-      "type": "closure_form",
+      "type": "form",
       "description": "Uzavření provádí SOC Analytický tým po obnově dostupnosti VPN a dokončení Odezvy, nebo ihned po Posouzení, třídění a rozhodování u False Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.",
       "hint": "Před uzavřením ověř, že VPN je plně dostupná pro legitimní uživatele a všechna zavedená opatření Odezvy jsou zdokumentována.<br><br><b>Metodika klasifikace – Úroveň dopadu:</b><br><b>Nízká</b> – incidenty s omezeným nebo lokálním dopadem; žádný dopad na regulovanou službu.<br><b>Střední</b> – postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů; nezasahuje aktiva regulované služby.<br><b>Vysoká</b> – významný dopad na klíčové procesy nebo systémy; při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB; ohrožují kontinuitu činnosti nebo reputaci.<br><b>Kritická</b> – katastrofický dopad; vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost; jde vždy o KBI.",
       "fields": [
