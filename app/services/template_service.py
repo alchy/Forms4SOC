@@ -84,6 +84,10 @@ def _norm_section(section: dict, idx: int) -> dict:
             _norm_group(g, i, section_id)
             for i, g in enumerate(section["step_groups"])
         ]
+    if "subsections" in section:
+        section["subsections"] = [
+            _norm_section(sub, i) for i, sub in enumerate(section["subsections"])
+        ]
     return section
 
 
