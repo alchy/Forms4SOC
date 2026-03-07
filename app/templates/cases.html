@@ -126,16 +126,16 @@
 
 {% block scripts %}
 <!-- jQuery + DataTables -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="/static/vendor/datatables/css/dataTables.bootstrap5.min.css">
 <style>
   #cases-table_wrapper .dataTables_length,
   #cases-table_wrapper .dataTables_filter { padding: 0.6rem 1rem 0.25rem; }
   #cases-table_wrapper .dataTables_info,
   #cases-table_wrapper .dataTables_paginate { padding: 0.25rem 1rem 0.6rem; }
 </style>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/datatables/js/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/datatables/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
     const IS_ADMIN = {{ 'true' if user and user.role == 'admin' else 'false' }};

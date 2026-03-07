@@ -23,7 +23,10 @@ pip install -r requirements.txt
 cp .env.example .env
 # Upravte .env – zejména JWT_SECRET_KEY a ADMIN_PASSWORD
 
-# 4. Spuštění serveru (lokálně)
+# 4. Stažení vendor knihoven (Bootstrap, DataTables, jQuery, Ace Editor)
+python scripts/download_vendors.py
+
+# 5. Spuštění serveru (lokálně)
 python start.py
 ```
 
@@ -36,6 +39,7 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
+python scripts\download_vendors.py
 python start.py
 ```
 
