@@ -7,6 +7,26 @@
  */
 
 // ---------------------------------------------------------------------------
+// Sanitizace HTML – ochrana proti XSS
+// ---------------------------------------------------------------------------
+
+function sanitizeHTML(html) {
+    const doc = new DOMParser().parseFromString(String(html), 'text/html');
+    doc.querySelectorAll('script, iframe, object, embed, link, meta').forEach(e => e.remove());
+    doc.querySelectorAll('*').forEach(e => {
+        [...e.attributes].forEach(a => {
+            if (/^on/i.test(a.name)) e.removeAttribute(a.name);
+            if (a.name === 'href' && /^javascript:/i.test(a.value)) e.removeAttribute(a.name);
+        });
+    });
+    return doc.body.innerHTML;
+}
+
+function setHTML(element, html) {
+    element.innerHTML = sanitizeHTML(html);
+}
+
+// ---------------------------------------------------------------------------
 // Hlavní dispatcher
 // ---------------------------------------------------------------------------
 
@@ -25,10 +45,10 @@ function renderSection(section) {
 
     const header = document.createElement('div');
     header.className = 'card-header d-flex align-items-center justify-content-between';
-    header.innerHTML = `
+    setHTML(header, `
         <span class="fw-semibold">${section.title}</span>
         ${section.description ? `<small class="text-muted ms-3 d-none d-md-block" style="max-width:60%">${section.description}</small>` : ''}
-    `;
+    `);
     wrapper.appendChild(header);
 
     const body = document.createElement('div');
@@ -44,7 +64,7 @@ function renderSection(section) {
         case 'closure_form': {
             if (section.hint) {
                 const hintEl = el('div', 'alert alert-info py-2 small mb-3');
-                hintEl.innerHTML = `<i class="bi bi-info-circle me-1"></i>${section.hint}`;
+                setHTML(hintEl, `<i class="bi bi-info-circle me-1"></i>${section.hint}`);
                 body.appendChild(hintEl);
             }
             body.appendChild(renderForm(section.fields || []));
@@ -55,8 +75,11 @@ function renderSection(section) {
         case 'action_table':     body.appendChild(renderActionTable(section)); break;
         case 'notification_table': body.appendChild(renderNotificationTable(section)); break;
         case 'raci_table':       body.appendChild(renderRaciTable(section)); break;
-        default:
-            body.innerHTML = `<pre class="text-secondary small mb-0">${JSON.stringify(section, null, 2)}</pre>`;
+        default: {
+            const pre = el('pre', 'text-secondary small mb-0');
+            pre.textContent = JSON.stringify(section, null, 2);
+            body.appendChild(pre);
+        }
     }
 
     wrapper.appendChild(body);
@@ -70,7 +93,7 @@ function renderSection(section) {
 function el(tag, cls, html) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
-    if (html !== undefined) e.innerHTML = html;
+    if (html !== undefined) e.innerHTML = sanitizeHTML(html);
     return e;
 }
 
@@ -150,8 +173,8 @@ function renderForm(fields) {
     fields.forEach(field => {
         const row = el('div', 'row mb-2 align-items-center');
         const labelCol = el('div', 'col-md-4');
-        labelCol.innerHTML = `<label class="form-label text-secondary small mb-0">${field.label}${field.editable ? '' : ''}</label>
-            ${field.hint && field.type !== 'select' ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`;
+        setHTML(labelCol, `<label class="form-label text-secondary small mb-0">${field.label}${field.editable ? '' : ''}</label>
+            ${field.hint && field.type !== 'select' ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
         const inputCol = el('div', 'col-md-8');
         inputCol.appendChild(renderFieldInput(field));
         row.appendChild(labelCol);
@@ -175,8 +198,8 @@ function renderWorkbookHeader(section) {
     editableFields.forEach(field => {
         const row = el('div', 'row mb-3 align-items-center');
         const labelCol = el('div', 'col-md-4');
-        labelCol.innerHTML = `<label class="form-label fw-semibold small mb-0">${field.label}</label>
-            ${field.hint ? `<div class="form-text text-muted" style="font-size:0.75rem">${field.hint}</div>` : ''}`;
+        setHTML(labelCol, `<label class="form-label fw-semibold small mb-0">${field.label}</label>
+            ${field.hint ? `<div class="form-text text-muted" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
         const inputCol = el('div', 'col-md-8');
         inputCol.appendChild(renderFieldInput(field));
         row.appendChild(labelCol);
@@ -188,11 +211,11 @@ function renderWorkbookHeader(section) {
         const infoGrid = el('div', 'row g-2 mt-1 pt-2 border-top');
         readonlyFields.forEach(field => {
             const col = el('div', 'col-md-4 col-lg-3');
-            col.innerHTML = `
+            setHTML(col, `
                 <div class="d-flex flex-column">
                     <span class="text-muted small">${field.label}</span>
                     <span class="small fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-                </div>`;
+                </div>`);
             infoGrid.appendChild(col);
         });
         wrap.appendChild(infoGrid);
@@ -217,11 +240,11 @@ function renderClassification(section) {
         const row = el('div', 'row g-2 mb-2');
         readonlyFields.forEach(field => {
             const col = el('div', 'col-md-6 col-lg-4');
-            col.innerHTML = `
+            setHTML(col, `
                 <div class="d-flex flex-column">
                     <span class="text-muted small">${field.label}</span>
                     <span class="fw-semibold">${field.value !== null && field.value !== undefined ? field.value : '–'}</span>
-                </div>`;
+                </div>`);
             row.appendChild(col);
         });
         wrap.appendChild(row);
@@ -233,8 +256,8 @@ function renderClassification(section) {
         editableFields.forEach(field => {
             const row = el('div', 'row mb-2 align-items-center');
             const labelCol = el('div', 'col-md-4');
-            labelCol.innerHTML = `<label class="form-label text-secondary small mb-0">${field.label}</label>
-                ${field.hint ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`;
+            setHTML(labelCol, `<label class="form-label text-secondary small mb-0">${field.label}</label>
+                ${field.hint ? `<div class="form-text text-secondary" style="font-size:0.75rem">${field.hint}</div>` : ''}`);
             const inputCol = el('div', 'col-md-8');
             inputCol.appendChild(renderFieldInput(field));
             row.appendChild(labelCol);
@@ -353,7 +376,7 @@ function renderSectionGroup(section) {
         const isFirst = idx === 0;
 
         if (sub.always_expanded) {
-            item.innerHTML = `
+            setHTML(item, `
                 <h2 class="accordion-header" id="${headerId}">
                     <button class="accordion-button pe-none bg-light" type="button" style="cursor:default;opacity:1">
                         ${sub.title}
@@ -362,9 +385,9 @@ function renderSectionGroup(section) {
                 </h2>
                 <div id="${bodyId}" class="accordion-collapse collapse show">
                     <div class="accordion-body pt-2" id="body-${bodyId}"></div>
-                </div>`;
+                </div>`);
         } else {
-            item.innerHTML = `
+            setHTML(item, `
                 <h2 class="accordion-header" id="${headerId}">
                     <button class="accordion-button ${isFirst ? '' : 'collapsed'}"
                             type="button" data-bs-toggle="collapse"
@@ -375,7 +398,7 @@ function renderSectionGroup(section) {
                 </h2>
                 <div id="${bodyId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}">
                     <div class="accordion-body pt-2" id="body-${bodyId}"></div>
-                </div>`;
+                </div>`);
         }
 
         acc.appendChild(item);
@@ -488,8 +511,8 @@ function renderChecklist(section) {
     (section.step_groups || []).forEach(group => {
         const groupEl = el('div', 'mb-4');
         const titleEl = el('div', 'd-flex align-items-center gap-2 mb-2');
-        titleEl.innerHTML = `<span class="fw-semibold">${group.title}</span>
-            ${group.note ? `<small class="text-muted">(${group.note})</small>` : ''}`;
+        setHTML(titleEl, `<span class="fw-semibold">${group.title}</span>
+            ${group.note ? `<small class="text-muted">(${group.note})</small>` : ''}`);
         groupEl.appendChild(titleEl);
 
         (group.hints || []).forEach(hint => {
@@ -503,7 +526,7 @@ function renderChecklist(section) {
         (group.steps || []).forEach((step, idx) => {
             const stepEl = el('div',
                 `p-3 ${idx < group.steps.length - 1 ? 'border-bottom border-secondary' : ''}`);
-            stepEl.innerHTML = `
+            setHTML(stepEl, `
                 <div class="d-flex gap-3">
                     <div class="flex-shrink-0 mt-1">
                         <input type="checkbox" class="form-check-input step-check"
@@ -515,14 +538,15 @@ function renderChecklist(section) {
                         </label>
                         <textarea class="form-control form-control-sm bg-light"
                                   rows="2" placeholder="${step.example || 'Poznámka analytika...'}"
-                                  data-step-id="${step.id}">${step.analyst_note || ''}</textarea>
+                                  data-step-id="${step.id}"></textarea>
                     </div>
-                </div>`;
+                </div>`);
 
             const chk = stepEl.querySelector('.step-check');
             chk.addEventListener('change', () => { step.done = chk.checked; });
 
             const ta = stepEl.querySelector('textarea');
+            ta.value = step.analyst_note || '';
             ta.addEventListener('change', () => { step.analyst_note = ta.value || null; });
 
             stepsEl.appendChild(stepEl);
@@ -552,7 +576,7 @@ function renderChecklist(section) {
                 notifs.forEach(n => { html += `<li>${n}</li>`; });
             }
             html += '</ul>';
-            notifEl.innerHTML = html;
+            setHTML(notifEl, html);
             resEl.appendChild(notifEl);
         }
 
@@ -697,7 +721,7 @@ function renderRaciTable(section) {
         (section.columns || []).forEach(col => {
             const td = el('td', 'small align-middle');
             const val = row[col] || '–';
-            if (val.includes('R')) td.innerHTML = `<strong class="text-danger">${val}</strong>`;
+            if (val.includes('R')) setHTML(td, `<strong class="text-danger">${val}</strong>`);
             else td.textContent = val;
             tr.appendChild(td);
         });
