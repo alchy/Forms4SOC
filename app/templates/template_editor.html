@@ -82,7 +82,7 @@
     <span id="sb-template-id"><i class="bi bi-hash me-1"></i><span>–</span></span>
     <span id="sb-name"><i class="bi bi-card-text me-1"></i><span>–</span></span>
     <span id="sb-status"><i class="bi bi-circle me-1"></i><span>–</span></span>
-    <span class="ms-auto" id="sb-json-ok"><i class="bi bi-check-circle text-success me-1"></i>Validní JSON</span>
+    <span class="ms-auto" id="sb-yaml-ok"><i class="bi bi-file-code me-1"></i>YAML</span>
 </div>
 
 {# ── Ace editor ─────────────────────────────────────────────────────────── #}
@@ -97,7 +97,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <label class="form-label small fw-semibold">Název souboru <span class="text-muted fw-normal">(bez .json)</span></label>
+                <label class="form-label small fw-semibold">Název souboru <span class="text-muted fw-normal">(bez .yaml)</span></label>
                 <input type="text" id="input-filename" class="form-control form-control-sm font-monospace"
                        placeholder="např. ransomware_v1" pattern="[a-z0-9_\-]+" autocomplete="off">
                 <div class="form-text">Povoleny: malá písmena, číslice, <code>_</code>, <code>-</code></div>
@@ -150,7 +150,7 @@ ace.config.set('basePath', '/static/vendor/ace/');
 
 const editor = ace.edit('ace-editor');
 editor.setTheme('ace/theme/tomorrow');
-editor.session.setMode('ace/mode/json');
+editor.session.setMode('ace/mode/yaml');
 editor.setOptions({
     fontSize: '13px',
     showPrintMargin: false,
@@ -196,7 +196,7 @@ async function init() {
                 document.getElementById('tb-filename').textContent = '(nový soubor)';
             }
         } else {
-            setContent('{\n  "template_id": "nova-sablona-v1",\n  "name": "Nová šablona",\n  "version": "1.0",\n  "category": "Obecný incident",\n  "status": "draft",\n  "description": "",\n  "mitre_tactic": "",\n  "mitre_technique": "",\n  "mitre_subtechnique": "",\n  "data_sources": [],\n  "sections": []\n}\n');
+            setContent('template_id: nova-sablona-v1\nname: Nová šablona\nversion: \'1.0\'\ncategory: Obecný incident\nstatus: draft\ndescription: \'\'\nmitre_tactic: \'\'\nmitre_technique: \'\'\nmitre_subtechnique: \'\'\ndata_sources: []\nsections: []\n');
         }
         document.getElementById('tb-filename').textContent = '(nový soubor)';
     }
@@ -228,20 +228,16 @@ function onEditorChange() {
     _changeTimer = setTimeout(updateStatusBar, 300);
 }
 
+function getYamlField(text, key) {
+    const m = text.match(new RegExp(`^${key}:\\s*['\"]?([^'\"\\n]+)['\"]?`, 'm'));
+    return m ? m[1].trim() : '–';
+}
+
 function updateStatusBar() {
     const raw = editor.getValue();
-    try {
-        const obj = JSON.parse(raw);
-        document.getElementById('sb-template-id').querySelector('span').textContent = obj.template_id || '–';
-        document.getElementById('sb-name').querySelector('span').textContent        = obj.name || '–';
-        document.getElementById('sb-status').querySelector('span').textContent      = obj.status || '–';
-        document.getElementById('sb-json-ok').innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Validní JSON';
-    } catch {
-        document.getElementById('sb-template-id').querySelector('span').textContent = '–';
-        document.getElementById('sb-name').querySelector('span').textContent        = '–';
-        document.getElementById('sb-status').querySelector('span').textContent      = '–';
-        document.getElementById('sb-json-ok').innerHTML = '<i class="bi bi-x-circle text-danger me-1"></i>Chyba v JSON';
-    }
+    document.getElementById('sb-template-id').querySelector('span').textContent = getYamlField(raw, 'template_id');
+    document.getElementById('sb-name').querySelector('span').textContent        = getYamlField(raw, 'name');
+    document.getElementById('sb-status').querySelector('span').textContent      = getYamlField(raw, 'status');
 }
 
 // ── Uložit ────────────────────────────────────────────────────────────────
@@ -330,12 +326,8 @@ function cloneTemplate() {
 // ── Smazat ────────────────────────────────────────────────────────────────
 
 function confirmDelete() {
-    try {
-        const obj = JSON.parse(editor.getValue());
-        document.getElementById('delete-name').textContent = obj.name || currentTemplateId;
-    } catch {
-        document.getElementById('delete-name').textContent = currentTemplateId;
-    }
+    const name = getYamlField(editor.getValue(), 'name');
+    document.getElementById('delete-name').textContent = name !== '–' ? name : currentTemplateId;
     deleteModal.show();
 }
 
