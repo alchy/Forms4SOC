@@ -3,7 +3,29 @@
 Šablony jsou JSON soubory uložené v adresáři `data/workbooks/` (konfigurovatelné v sekci Nastavení).
 Každý soubor definuje jeden SOC workbook – strukturu dokumentu incidentu, instrukce a kontrolní seznamy.
 
-Dostupné šablony: `phishing_v2.json` (Phishing / podezřelý e-mail), `ddos_vpn_v1.json` (DDoS útok na VPN Cisco AnyConnect), `vanilla_v1.json` (výchozí kostra pro nové šablony).
+Průvodce pro SOC analytiky (bez nutnosti znalosti JSON): [WORKBOOK_AUTHORING.md](WORKBOOK_AUTHORING.md)
+
+---
+
+## Jak to funguje?
+
+```
+data/workbooks/phishing_v2.json      – šablona (commitována v gitu)
+    │
+    │  Backend při vytvoření incidentu:
+    │  1. hluboká kopie sections
+    │  2. is_example: value → example (placeholder), value = null
+    │  3. auto_value pole vyplněna (case_id, template_name, ...)
+    ▼
+data/events/UIB-DDMMYYYY-HHMM-RRRR.json  – incident (mimo git)
+    │
+    │  Frontend: CaseForm.render(sections, container)
+    ▼
+Prohlížeč – interaktivní formulář
+```
+
+Šablona je **read-only vzor** – při zakládání incidentu se vždy vytváří hluboká kopie.
+Šablonové soubory nikdy neobsahují data vyplněná analytikem.
 
 ---
 
@@ -25,63 +47,43 @@ Dostupné šablony: `phishing_v2.json` (Phishing / podezřelý e-mail), `ddos_vp
 }
 ```
 
-### Povinné klíče šablony
+### Klíče šablony
 
-| Klíč | Typ | Popis |
-|---|---|---|
-| `template_id` | string | Unikátní identifikátor, použitý při vytvoření incidentu |
-| `name` | string | Zobrazovaný název šablony |
-| `version` | string | Verze šablony (např. `"1.0"`) |
-| `category` | string | Kategorie incidentu (např. `"Phishing"`, `"Malware"`) |
-| `status` | string | `active` \| `draft` \| `deprecated` |
-| `sections` | array | Seznam sekcí dokumentu (viz níže) |
-
-### Volitelné klíče šablony
-
-| Klíč | Typ | Popis |
-|---|---|---|
-| `description` | string | Popis účelu šablony |
-| `mitre_tactic` | string | MITRE ATT&CK taktika |
-| `mitre_technique` | string | MITRE ATT&CK technika (např. `"T1566"`) |
-| `mitre_subtechnique` | string | Sub-technika šablony (např. `"T1566.001"`) – slouží jako metadata šablony; v sekci `classification` se sub-technika řeší jako editovatelný `select`, který analytik vyplní až po Posouzení, třídění a rozhodování |
-| `data_sources` | array of strings | Doporučené zdroje dat pro investigaci – zobrazeny jako samostatné badge |
+| Klíč | ✓ | Typ | Popis |
+|------|:-:|-----|-------|
+| `template_id` | ✓ | string | Unikátní identifikátor – použit při vytvoření incidentu |
+| `name` | ✓ | string | Zobrazovaný název šablony v UI |
+| `version` | ✓ | string | Verze šablony (např. `"2.0"`) |
+| `category` | ✓ | string | Kategorie incidentu (např. `"Phishing"`, `"Malware"`) |
+| `status` | ✓ | string | `active` \| `draft` \| `deprecated` |
+| `sections` | ✓ | array | Seznam sekcí dokumentu (viz níže) |
+| `description` | | string | Popis účelu šablony |
+| `mitre_tactic` | | string | MITRE ATT&CK taktika |
+| `mitre_technique` | | string | MITRE ATT&CK technika (např. `"T1566"`) |
+| `mitre_subtechnique` | | string | Sub-technika šablony – slouží jako metadata; v `classification` sekci se sub-technika řeší jako editovatelný `select` |
+| `data_sources` | | array | Doporučené zdroje dat – zobrazeny jako badge seznam |
 
 ---
 
-## Sekce (`sections`)
-
-Každá sekce má `id`, `title` a `type`. Typ určuje způsob renderování.
-
-```json
-{
-  "id": "moje_sekce",
-  "title": "Název sekce",
-  "type": "form",
-  "description": "Volitelný popis sekce zobrazený v záhlaví karty"
-}
-```
-
-### Přehled typů sekcí
+## Přehled typů sekcí
 
 | `type` | Popis |
-|---|---|
-| `workbook_header` | Hlavička incidentu – editovatelná pole + read-only metadata workbooku |
-| `classification` | Panel s MITRE informacemi a zdroji dat. Tactic a Technique jsou read-only (primární indikátory dané šablonou); Sub-technique je editovatelný `select` – analytik vyplní po Posouzení, třídění a rozhodování, kdy je znám konkrétní vektor útoku |
+|--------|-------|
+| `workbook_header` | Hlavička incidentu – editovatelná pole + read-only metadata |
+| `classification` | MITRE ATT&CK klasifikace a zdroje dat |
 | `contact_table` | Tabulka kontaktů pro investigaci a eskalaci |
-| `section_group` | Kontejner pro více podsekce zobrazených jako accordion |
-| `form` | Formulář s libovolnými poli |
-| `closure_form` | Formulář uzavření incidentu (shodná struktura s `form`) |
+| `section_group` | Accordion kontejner pro více podsekce |
+| `form` | Formulář s libovolnými poli; volitelný `hint` zobrazí modrý box |
 | `assets_table` | Tabulka dotčených aktiv s dynamickým přidáváním řádků |
 | `checklist` | Kontrolní seznam kroků s poznámkami analytika |
-| `action_table` | Tabulka akcí Odezva s editovatelným stavem |
-| `notification_table` | Tabulka komunikace a notifikací (shodná struktura s `action_table`) |
+| `action_table` | Tabulka akcí Odezva nebo komunikační matice |
 | `raci_table` | Read-only RACI matice |
 
 ---
 
 ## Formulářová pole (`fields`)
 
-Pole se používají v sekcích `workbook_header`, `form`, `closure_form`, podsekci `form` uvnitř `section_group` a ve výsledkovém bloku `result` uvnitř `checklist`.
+Pole se používají v sekcích `workbook_header`, `form` a podsekci `form` uvnitř `section_group`.
 
 ```json
 {
@@ -95,27 +97,28 @@ Pole se používají v sekcích `workbook_header`, `form`, `closure_form`, podse
 
 ### Klíče pole
 
-| Klíč | Typ | Popis |
-|---|---|---|
-| `key` | string | Unikátní klíč v rámci sekce |
-| `label` | string | Popisek zobrazený v UI |
-| `type` | string | Typ vstupního prvku (viz níže) |
-| `editable` | bool | `true` = analytik může editovat, `false` = read-only |
-| `value` | any | Výchozí hodnota (nebo `null`) |
-| `hint` | string | Nápověda zobrazená pod polem jako viditelný text (nikdy jako placeholder) |
-| `is_example` | bool | Pokud `true`, hodnota se při klonování přesune do `example` (placeholder vstupního pole). Nepoužívej v `contact_table` – viz níže. |
-| `auto_value` | string | Automaticky vyplněno systémem při vytvoření incidentu (viz tabulka níže) |
+| Klíč | ✓ | Typ | Popis |
+|------|:-:|-----|-------|
+| `key` | ✓ | string | Unikátní klíč v rámci sekce |
+| `label` | ✓ | string | Popisek zobrazený v UI |
+| `type` | ✓ | string | Typ vstupního prvku – viz tabulka níže |
+| `editable` | ✓ | bool | `true` = analytik může editovat; `false` = read-only |
+| `value` | ✓ | any | Výchozí hodnota nebo `null` |
+| `hint` | | string | Nápověda pod labelem (nikdy jako placeholder) |
+| `is_example` | | bool | `true` → hodnota se při klonování přesune do `example` (placeholder). Nepodporováno v `contact_table`. |
+| `auto_value` | | string | Automaticky vyplní backend při vytvoření (viz tabulka níže) |
 
 ### Typy polí (`type`)
 
-| `type` | Popis |
-|---|---|
-| `text` | Jednořádkový textový vstup |
-| `textarea` | Víceřádkový textový vstup |
-| `datetime` | Datum a čas (`<input type="datetime-local">`) |
-| `select` | Výběr z předem definovaných možností |
+| `type` | Widget | Popis |
+|--------|--------|-------|
+| `text` | `<input type="text">` | Jednořádkový textový vstup |
+| `textarea` | `<textarea>` | Víceřádkový textový vstup |
+| `datetime` | `<input type="datetime-local">` | Datum a čas |
+| `select` | `<select>` | Výběr z předem definovaných možností |
 
-**Pole typu `select` – rozšíření:**
+### `select` – rozšíření
+
 ```json
 {
   "key": "severity",
@@ -131,12 +134,29 @@ Pole se používají v sekcích `workbook_header`, `form`, `closure_form`, podse
 }
 ```
 
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `options[]` | ✓ | Seznam možností dropdownu |
+| `option_hints{}` | | Nápověda zobrazená pod selectem pro konkrétní vybranou možnost |
+
+### Hodnoty `auto_value`
+
+| Hodnota | Automaticky vyplní |
+|---------|-------------------|
+| `"case_id"` | ID incidentu (UIB-...) |
+| `"template_name"` | `name` ze šablony |
+| `"template_version"` | `version` ze šablony |
+| `"template_status"` | `status` ze šablony |
+| `"template_mitre_tactic"` | `mitre_tactic` ze šablony |
+| `"template_mitre_technique"` | `mitre_technique` ze šablony |
+| `"template_data_sources"` | `data_sources` jako CSV řetězec |
+
 ---
 
 ## `is_example` – příkladové hodnoty
 
 Pole nebo kroky označené `"is_example": true` slouží jako ukázka vyplnění.
-Při vytvoření nového incidentu se hodnota automaticky přesune do klíče `example` a použije jako placeholder – analytik ji přepíše vlastní hodnotou.
+Při vytvoření nového incidentu se hodnota přesune do klíče `example` a použije jako placeholder.
 
 ```json
 {
@@ -149,12 +169,13 @@ Při vytvoření nového incidentu se hodnota automaticky přesune do klíče `e
 }
 ```
 
+Výsledek: pole se zobrazí prázdné s placeholderem „Uživatel obdržel podezřelý e-mail s přílohou."
+
 ---
 
 ## Typ `workbook_header`
 
-Speciální sekce zobrazená na začátku každého incidentu.
-Editovatelná pole (zejména `case_title`) vyplňuje analytik; read-only pole zobrazují metadata workbooku v kompaktní mřížce.
+Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominentně nahoře; read-only pole (case_id, verze, autor) zobrazena jako kompaktní info-grid pod čarou.
 
 ```json
 {
@@ -177,47 +198,74 @@ Editovatelná pole (zejména `case_title`) vyplňuje analytik; read-only pole zo
       "type": "text",
       "editable": true,
       "value": null,
-      "hint": "Analytik zodpovědný za koordinaci řešení. Lze vyplnit tlačítkem Převzít."
+      "hint": "Analytik zodpovědný za koordinaci. Lze vyplnit tlačítkem Převzít."
     },
     {
       "key": "ticket_id",
-      "label": "Ticket ID",
+      "label": "ID UIB",
       "type": "text",
       "editable": false,
       "value": null,
       "auto_value": "case_id"
     },
     {
-      "key": "author",
-      "label": "Autor / vlastník šablony",
-      "type": "text",
-      "editable": false,
-      "value": "Jméno Příjmení",
-      "auto_value": "template_author"
-    },
-    {
       "key": "version",
-      "label": "Verze",
+      "label": "Verze workbooku",
       "type": "text",
       "editable": false,
-      "value": "2.0"
+      "value": null,
+      "auto_value": "template_version"
     }
   ]
 }
 ```
 
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"workbook_header"` |
+| `title` | ✓ | Nadpis karty |
+| `fields[]` | ✓ | Editovatelná pole prominentně nahoře; read-only pole jako info-grid pod čarou |
+
+---
+
+## Typ `classification`
+
+Panel s MITRE ATT&CK informacemi. Tactic a Technique jsou read-only (dané šablonou); Sub-technique je editovatelný `select` – analytik vyplní po Posouzení, kdy je znám konkrétní vektor útoku.
+
+```json
+{
+  "id": "classification",
+  "type": "classification",
+  "title": "Klasifikace (MITRE ATT&CK)",
+  "fields": [
+    { "key": "mitre_tactic",     "label": "Taktika",      "type": "text", "editable": false, "value": null, "auto_value": "template_mitre_tactic" },
+    { "key": "mitre_technique",  "label": "Technika",     "type": "text", "editable": false, "value": null, "auto_value": "template_mitre_technique" },
+    { "key": "mitre_sub",        "label": "Sub-technika", "type": "select", "editable": true, "value": null,
+      "options": ["T1566.001 – Spearphishing Attachment", "T1566.002 – Spearphishing Link"] },
+    { "key": "data_sources",     "label": "Zdroje dat",   "type": "text", "editable": false, "value": null, "auto_value": "template_data_sources" }
+  ]
+}
+```
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"classification"` |
+| `title` | ✓ | Nadpis karty |
+| `fields[]` | ✓ | Pole MITRE; `data_sources` se zobrazí jako badge seznam |
+
 ---
 
 ## Typ `contact_table`
 
-Tabulka kontaktů pro investigaci a eskalaci. Analytik může editovat vybrané sloupce a přidávat nové řádky.
+Tabulka kontaktů pro investigaci a eskalaci. Analytik edituje vybrané sloupce a může přidávat vlastní řádky.
 
 ```json
 {
   "id": "contacts",
   "type": "contact_table",
   "title": "Kontaktní matice",
-  "description": "Volitelný popis zobrazený v záhlaví",
   "columns": ["system_role", "name", "email", "phone", "when_to_contact"],
   "column_labels": {
     "system_role": "Systém / role",
@@ -244,23 +292,25 @@ Tabulka kontaktů pro investigaci a eskalaci. Analytik může editovat vybrané 
 }
 ```
 
-### Klíče `contact_table`
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"contact_table"` |
+| `title` | ✓ | Nadpis karty |
+| `columns[]` | ✓ | Pořadí sloupců |
+| `column_labels{}` | ✓ | Zobrazované názvy sloupců |
+| `rows[]` | ✓ | Předvyplněné řádky (může být `[]`) |
+| `editable_columns[]` | | Sloupce editovatelné inline v šablonových řádcích |
+| `allow_append` | | `true` = analytik přidá řádek tlačítkem `+` |
+| `append_row_template{}` | ◐ | Povinný pokud `allow_append: true` |
 
-| Klíč | Popis |
-|---|---|
-| `columns` | Pořadí sloupců v tabulce |
-| `column_labels` | Zobrazované názvy sloupců |
-| `editable_columns` | Sloupce, které může analytik editovat inline |
-| `allow_append` | `true` = analytik může přidat nový řádek tlačítkem `+` |
-| `append_row_template` | Struktura prázdného nového řádku |
-
-> **Poznámka k `is_example` v kontaktní tabulce:** Řádky `contact_table` **nepodporují** `is_example`. Hodnoty v `rows` jsou předvyplněné jako běžný text a analytik je může editovat inline. Nepoužívej `"is_example": true` v řádcích kontaktní tabulky.
+> Řádky `contact_table` **nepodporují** `is_example`. Hodnoty jsou předvyplněné jako běžný editovatelný text.
 
 ---
 
 ## Typ `section_group`
 
-Kontejner sdružující více podsekce do jednoho bloku (zobrazeny jako accordion). Podporované typy podsekce: `form`, `closure_form`, `assets_table`, `checklist` a všechny typy tabulek (`contact_table`, `action_table`, `notification_table`, `raci_table`).
+Accordion kontejner sdružující více podsekce. Podporované typy podsekce: `form`, `assets_table`.
 
 ```json
 {
@@ -274,94 +324,141 @@ Kontejner sdružující více podsekce do jednoho bloku (zobrazeny jako accordio
       "title": "Společné údaje",
       "note": "Vyplní SOC Analytik",
       "always_expanded": true,
-      "fields": []
+      "fields": [
+        { "key": "detection_source", "label": "Zdroj detekce", "type": "text", "editable": true, "value": null }
+      ]
     },
     {
-      "id": "optional_section",
-      "type": "form",
-      "title": "Podmíněná sekce",
-      "condition": "source_type == 'automated'",
-      "fields": []
+      "id": "affected_assets",
+      "type": "assets_table",
+      "title": "Dotčená aktiva",
+      "always_expanded": true,
+      "columns": ["asset_name", "asset_ip", "asset_type"],
+      "column_labels": { "asset_name": "Název", "asset_ip": "IP", "asset_type": "Typ" },
+      "column_options": { "asset_type": ["Server", "Workstation", "Mailbox"] },
+      "rows": []
     }
   ]
 }
 ```
 
-### Klíče podsekce
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"section_group"` |
+| `title` | ✓ | Nadpis karty |
+| `subsections[]` | ✓ | Seznam podsekce (accordion panely) |
+| `subsections[].id` | ✓ | Identifikátor podsekce |
+| `subsections[].type` | ✓ | `"form"` nebo `"assets_table"` |
+| `subsections[].title` | ✓ | Nadpis accordion panelu |
+| `subsections[].note` | | Šedý text vpravo od nadpisu panelu |
+| `subsections[].always_expanded` | | `true` = panel nelze sbalit |
 
-| Klíč | Popis |
-|---|---|
-| `always_expanded` | `true` = podsekce se nezbaluje (vždy viditelná) |
-| `note` | Poznámka pro analytika zobrazená v záhlaví accordion |
-| `condition` | Informativní textový popis podmínky zobrazení (zatím nevynucuje logiku) |
+---
+
+## Typ `form`
+
+Formulář s libovolnými poli zobrazený jako dvousloupcový grid. Volitelný klíč `hint` zobrazí modrý informační box nad formulářem – vhodné pro uzavírací sekce nebo upozornění.
+
+```json
+{
+  "id": "reported_by",
+  "type": "form",
+  "title": "Hlášeno osobou",
+  "note": "Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci",
+  "fields": [
+    { "key": "reported_at",   "label": "Datum a čas nahlášení",   "type": "datetime", "editable": true, "value": null },
+    { "key": "reporter_name", "label": "Jméno oznamovatele",       "type": "text",     "editable": true, "value": null, "example": "Jan Novák" },
+    { "key": "description",   "label": "Popis slovy oznamovatele", "type": "textarea", "editable": true, "value": null }
+  ]
+}
+```
+
+Příklad uzavírací sekce s `hint`:
+
+```json
+{
+  "id": "closure",
+  "type": "form",
+  "title": "Klasifikace a uzavření",
+  "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
+  "fields": [
+    { "key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "value": null,
+      "options": ["True Positive", "False Positive", "Benign True Positive"] },
+    { "key": "root_cause",    "label": "Root Cause",            "type": "textarea", "editable": true, "value": null },
+    { "key": "closed_at",     "label": "Datum uzavření",         "type": "datetime", "editable": true, "value": null }
+  ]
+}
+```
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"form"` |
+| `title` | ✓ | Nadpis karty |
+| `fields[]` | ✓ | Formulářová pole |
+| `description` | | Podnadpis v záhlaví karty |
+| `note` | | Metadata ukládaná do dat; zobrazí je accordion v `section_group` |
+| `hint` | | HTML text zobrazený jako modrý informační box nad formulářem |
 
 ---
 
 ## Typ `assets_table`
 
-Tabulka dotčených aktiv s dynamickým přidáváním a mazáním řádků. Používá se jako podsekce uvnitř `section_group` nebo jako samostatná sekce.
+Tabulka dotčených aktiv. Všechny buňky jsou editovatelné; analytik může přidávat i mazat řádky.
+Sloupce v `column_options` se zobrazí jako `<select>`; ostatní jako textový vstup.
 
 ```json
 {
   "id": "affected_assets",
   "type": "assets_table",
   "title": "Dotčená aktiva",
-  "note": "Doplňuj průběžně při každém rozšíření scope",
   "hint": "Pokud je aktivum součástí kritické infrastruktury → ihned informuj CISO.",
-  "always_expanded": true,
-  "columns": ["asset_name", "asset_ip", "asset_type", "critical_infrastructure", "contact_owner", "guarantor", "email", "phone"],
+  "columns": ["asset_name", "asset_ip", "asset_type", "critical_infrastructure"],
   "column_labels": {
     "asset_name":              "Název aktiva (hostname, mailbox, IS)",
     "asset_ip":                "IP adresa",
     "asset_type":              "Typ aktiva",
-    "critical_infrastructure": "Kritická infrastruktura",
-    "contact_owner":           "Kontakt vlastníka",
-    "guarantor":               "Garant",
-    "email":                   "E-mail",
-    "phone":                   "Telefon"
+    "critical_infrastructure": "Kritická infrastruktura"
   },
   "column_options": {
-    "asset_type": ["Endpoint", "Server", "Mailbox", "Informační systém", "Síťový prvek", "Sdílené úložiště", "Jiné"],
+    "asset_type":              ["Endpoint", "Server", "Mailbox", "Informační systém", "Síťový prvek"],
     "critical_infrastructure": ["Ano", "Ne"]
   },
-  "editable": true,
   "rows": []
 }
 ```
 
-### Klíče `assets_table`
-
-| Klíč | Popis |
-|---|---|
-| `columns` | Pořadí sloupců |
-| `column_labels` | Zobrazované názvy sloupců |
-| `column_options` | Pro zadaný sloupec se místo textového pole zobrazí `<select>` s danými možnostmi |
-| `hint` | Text zobrazen jako varování (oranžový alert) nad tabulkou |
-| `editable` | `true` = všechny buňky jsou editovatelné, automaticky povoleno přidávání a mazání řádků |
-| `rows` | Předvyplněné řádky (obvykle prázdné pole `[]`) |
-
-> **Doporučená struktura sloupců (v2):** `asset_name`, `asset_ip`, `asset_type`, `critical_infrastructure`, `contact_owner`, `guarantor`, `email`, `phone`
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"assets_table"` |
+| `title` | ✓ | Nadpis karty |
+| `columns[]` | ✓ | Pořadí sloupců |
+| `column_labels{}` | ✓ | Zobrazované názvy sloupců |
+| `rows[]` | ✓ | Předvyplněné řádky (obvykle `[]`) |
+| `column_options{}` | | Sloupce renderované jako `<select>` místo textového pole |
+| `hint` | | Oranžový výstražný box nad tabulkou |
+| `always_expanded` | | Pouze uvnitř `section_group` – `true` = podsekci nelze sbalit |
 
 ---
 
 ## Typ `checklist`
 
-Kontrolní seznam kroků. Analytik označuje kroky jako splněné (checkbox) a zapisuje vlastní poznámky. Kroky jsou organizovány do skupin (`step_groups`).
+Kontrolní seznam kroků organizovaný do skupin. Analytik označuje kroky jako splněné a zapisuje poznámky.
 
 ```json
 {
   "id": "triage_investigation",
   "type": "checklist",
   "title": "Posouzení, třídění a rozhodování",
-  "description": "Popis účelu bloku – zobrazí se v záhlaví.",
   "step_groups": [
     {
       "id": "email_analysis",
       "title": "Analýza e-mailu",
       "note": "Přeskoč pokud není relevantní",
-      "condition": "has_attachment == true",
       "hints": [
-        "Pokud byla příloha otevřena nebo nalezena na více zařízeních → rozšiř scope."
+        "Pokud byla příloha otevřena na více zařízeních → rozšiř scope."
       ],
       "classification_hints": [
         "Hash detekován na TI a příloha otevřena → True Positive, High",
@@ -370,13 +467,13 @@ Kontrolní seznam kroků. Analytik označuje kroky jako splněné (checkbox) a z
       "steps": [
         {
           "id": "ea_01",
-          "action": "Ověř záhlaví e-mailu (SPF, DKIM, DMARC)",
+          "action": "Ověř záhlaví e-mailu (SPF, DKIM, DMARC).",
           "analyst_note": null,
           "done": false
         },
         {
           "id": "ea_02",
-          "action": "Zjisti hash přílohy",
+          "action": "Zjisti hash přílohy.",
           "analyst_note": "SHA256: příklad…",
           "is_example": true,
           "done": false
@@ -389,69 +486,41 @@ Kontrolní seznam kroků. Analytik označuje kroky jako splněné (checkbox) a z
 
 ### Klíče `step_group`
 
-| Klíč | Typ | Popis |
-|---|---|---|
-| `id` | string | Unikátní identifikátor skupiny |
-| `title` | string | Název skupiny kroků |
-| `note` | string | Poznámka zobrazená za názvem (např. „Přeskoč pokud …") |
-| `condition` | string | Informativní podmínka zobrazení (nevynucuje logiku) |
-| `steps` | array | Seznam kroků (viz níže) |
-| `hints` | array of strings | Operační nápovědy zobrazené nad kroky (šedý styl) |
-| `classification_hints` | array of strings | Klasifikační vodítka (True/False Positive, Severity) – zobrazena s pastelově žlutým pozadím a oranžovým okrajem |
+| Klíč | ✓ | Typ | Popis |
+|------|:-:|-----|-------|
+| `id` | ✓ | string | Unikátní identifikátor skupiny |
+| `title` | ✓ | string | Název skupiny kroků |
+| `steps[]` | ✓ | array | Kroky skupiny |
+| `note` | | string | Šedý podnadpis za názvem skupiny |
+| `hints[]` | | array | Operační nápovědy – šedé boxy s ikonou ℹ |
+| `classification_hints[]` | | array | Klasifikační vodítka True/False Positive – žluté boxy |
+| `condition` | | string | Informativní podmínka zobrazení (nevynucuje logiku) |
 
-### Klíče kroků (`steps`)
+### Klíče kroku (`steps[]`)
 
-| Klíč | Typ | Popis |
-|---|---|---|
-| `id` | string | Unikátní identifikátor kroku |
-| `action` | string | Text instrukce |
-| `analyst_note` | string \| null | Předvyplněná poznámka (nebo `null`) |
-| `is_example` | bool | `true` = `analyst_note` je příklad, přesune se do `example` při klonování |
-| `done` | bool | Výchozí stav checkboxu – vždy `false` |
-
-### `classification_hints` – vizuální odlišení klasifikačních vodítek
-
-Skupiny kroků mohou obsahovat dva typy nápověd:
-- **`hints`** – operační poznámky (šedý styl, ikona ℹ)
-- **`classification_hints`** – vodítka pro klasifikaci výsledku (True / False Positive, Severity) – zobrazena s **pastelově žlutým pozadím** a oranžovým levým okrajem (ikona ⬧)
-
-```json
-{
-  "id": "attachment_analysis",
-  "title": "E-mail obsahuje přílohu",
-  "hints": [
-    "Pokud byla příloha otevřena nebo nalezena na více zařízeních → rozšiř scope."
-  ],
-  "classification_hints": [
-    "Hash detekován na TI a příloha otevřena → True Positive, High · Hash na TI, příloha neotvřena → True Positive, Medium · Hash na TI nedetekován → zvaž False Positive"
-  ],
-  "steps": [...]
-}
-```
+| Klíč | ✓ | Typ | Popis |
+|------|:-:|-----|-------|
+| `id` | ✓ | string | Unikátní identifikátor kroku |
+| `action` | ✓ | string | Text instrukce |
+| `done` | ✓ | bool | Výchozí stav checkboxu – vždy `false` |
+| `analyst_note` | ✓ | string \| null | Předvyplněná poznámka (vždy `null` v šabloně) |
+| `is_example` | | bool | `true` = `analyst_note` je ukázka, přesune se do `example` |
+| `example` | | string | Placeholder v textarea poznámky |
 
 ### Volitelný blok `result`
 
-Na konci checklistu lze přidat výsledkový formulář s `fields` (stejná struktura jako `form`) a `notifications` (seznam notifikačních pravidel). V šabloně phishing_v2 je `result` odstraněn – finální klasifikace se zaznamenává pouze v bloku Klasifikace a uzavření.
+Na konci checklistu lze přidat výsledkový formulář:
 
 ```json
 "result": {
-  "id": "result_id",
   "title": "Výsledek",
   "fields": [
-    {
-      "key": "classification",
-      "label": "Klasifikace",
-      "type": "select",
-      "editable": true,
-      "value": null,
-      "options": ["True Positive", "False Positive", "Benign True Positive"]
-    }
+    { "key": "classification", "label": "Klasifikace", "type": "select",
+      "editable": true, "value": null,
+      "options": ["True Positive", "False Positive", "Benign True Positive"] }
   ],
   "notifications": [
-    {
-      "condition": "True Positive, Critical",
-      "actions": ["informuj CISO a Management", "zvaž notifikaci CERT / NÚKIB"]
-    }
+    { "condition": "True Positive, Critical", "actions": ["Informuj CISO", "Zvaž notifikaci NÚKIB"] }
   ]
 }
 ```
@@ -460,11 +529,13 @@ Na konci checklistu lze přidat výsledkový formulář s `fields` (stejná stru
 
 ## Typ `action_table`
 
-Tabulka akcí Odezva. Analytik označuje stav každé akce z předdefinovaného seznamu. Lze přidávat a mazat řádky.
+Univerzální tabulka pro akce Odezvy i komunikační matice. Sloupce v `editable_columns` se renderují jako dropdown (pokud je definováno `status_options`) nebo jako volný textový vstup.
+
+Příklad tabulky akcí Odezvy:
 
 ```json
 {
-  "id": "odezva",
+  "id": "response_actions",
   "type": "action_table",
   "title": "Odezva",
   "description": "U každé akce zaznamenej stav. Pokud akce není relevantní, napiš N/A.",
@@ -475,46 +546,26 @@ Tabulka akcí Odezva. Analytik označuje stav každé akce z předdefinovaného 
     "cooperation": "Součinnost",
     "status": "Stav"
   },
-  "status_options": ["Provedeno", "Probíhá", "Čeká", "N/A", "Není nutné provést"],
   "editable_columns": ["status"],
+  "status_options": ["Provedeno", "Probíhá", "Čeká", "N/A", "Není nutné provést"],
   "allow_append": true,
   "allow_delete": true,
   "append_row_template": {
     "action": null, "responsible_role": null, "cooperation": null, "status": null
   },
   "rows": [
-    {
-      "action": "Počítač izolován od sítě",
-      "responsible_role": "SOC Analytický tým",
-      "cooperation": "Správce AV/EDR · IT Helpdesk",
-      "status": null
-    }
+    { "action": "Počítač izolován od sítě", "responsible_role": "SOC Analytický tým",
+      "cooperation": "Správce AV/EDR · IT Helpdesk", "status": null }
   ]
 }
 ```
 
-### Klíče `action_table`
-
-| Klíč | Popis |
-|---|---|
-| `status_options` | Seznam možností pro sloupec Stav; aktuální hodnoty: `Provedeno`, `Probíhá`, `Čeká`, `N/A`, `Není nutné provést` |
-| `editable_columns` | Sloupce editovatelné analytikem (typicky jen `status`) |
-| `allow_append` | `true` = analytik může přidat vlastní akci |
-| `allow_delete` | `true` = analytik může smazat libovolný řádek |
-| `append_row_template` | Struktura prázdného nového řádku |
-
-> **Konvence formulace akcí:** akce jsou formulovány jako **oznamovací tvrzení** popisující co bylo provedeno (např. „Blokována doména odesílatele na mail serveru"), nikoli jako imperatív.
-
----
-
-## Typ `notification_table`
-
-Tabulka komunikace a notifikací. Shodná struktura s `action_table` – analytik doplňuje poznámky ke každému příjemci.
+Příklad komunikační matice (bez `status_options` – volný textový vstup):
 
 ```json
 {
   "id": "communication",
-  "type": "notification_table",
+  "type": "action_table",
   "title": "Komunikace a notifikace",
   "columns": ["recipient", "communication_method", "sla", "note"],
   "column_labels": {
@@ -528,20 +579,34 @@ Tabulka komunikace a notifikací. Shodná struktura s `action_table` – analyti
     "Oznamovatele informuj vždy – bez ohledu na výsledek klasifikace."
   ],
   "rows": [
-    {"recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon", "sla": "Do 30 min od Posouzení", "note": null},
-    {"recipient": "CISO / Management",         "communication_method": "E-mail / telefon", "sla": "Do 1 h (High / Critical)", "note": null},
-    {"recipient": "CERT / NÚKIB",              "communication_method": "Datová schránka",  "sla": "Dle regulatorní povinnosti", "note": null}
+    { "recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon", "sla": "Do 30 min od Posouzení", "note": null },
+    { "recipient": "CISO / Management",         "communication_method": "E-mail / telefon", "sla": "Do 1 h (High / Critical)", "note": null }
   ]
 }
 ```
 
-> `hints` v `notification_table` se zobrazí jako šedé informační texty pod tabulkou (stejný styl jako `action_table`).
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"action_table"` |
+| `title` | ✓ | Nadpis karty |
+| `columns[]` | ✓ | Pořadí sloupců |
+| `column_labels{}` | ✓ | Zobrazované názvy sloupců |
+| `rows[]` | ✓ | Předdefinované řádky |
+| `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
+| `status_options[]` | | Pokud definováno → dropdown; jinak volný textový vstup |
+| `allow_append` | | `true` = analytik přidá vlastní řádek |
+| `allow_delete` | | `true` = analytik smaže libovolný řádek |
+| `append_row_template{}` | ◐ | Povinný pokud `allow_append: true` |
+| `hints[]` | | Informační texty zobrazené pod tabulkou |
+
+> **Konvence formulace akcí:** používej oznamovací tvrzení popisující co bylo provedeno (např. „Blokována doména odesílatele na mail serveru"), nikoli imperativ.
 
 ---
 
 ## Typ `raci_table`
 
-Read-only RACI matice. Buňky obsahující `R` jsou zvýrazněny tučně červeně.
+Read-only RACI matice. Buňky obsahující `"R"` jsou zvýrazněny tučně červeně.
 
 ```json
 {
@@ -549,148 +614,95 @@ Read-only RACI matice. Buňky obsahující `R` jsou zvýrazněny tučně červen
   "type": "raci_table",
   "title": "RACI matice",
   "legend": "R = Responsible · A = Accountable · C = Consulted · I = Informed",
-  "columns": ["activity", "ki", "cirt", "r_dtech", "r_dplr", "garant", "delegat", "nukib", "ucl"],
+  "columns": ["activity", "ki", "cirt", "ciso", "garant"],
   "column_labels": {
     "activity": "Aktivita",
     "ki":       "Koordinátor incidentu",
     "cirt":     "CIRT",
-    "r_dtech":  "Ř-DTECH",
-    "r_dplr":   "Ř-DPLR",
-    "garant":   "Garant aktiva",
-    "delegat":  "Delegát",
-    "nukib":    "NÚKIB",
-    "ucl":      "ÚCL"
+    "ciso":     "CISO",
+    "garant":   "Garant aktiva"
   },
   "rows": [
-    {"activity": "Posouzení, třídění a rozhodování", "ki": "R, A", "cirt": "R", "r_dtech": "C", "r_dplr": "–", "garant": "C", "delegat": "C", "nukib": "–",          "ucl": "–"},
-    {"activity": "Odezva",                           "ki": "A",    "cirt": "R", "r_dtech": "C", "r_dplr": "–", "garant": "C", "delegat": "R", "nukib": "–",          "ucl": "–"},
-    {"activity": "Notifikace NÚKIB",                 "ki": "R, A", "cirt": "C", "r_dtech": "–", "r_dplr": "I", "garant": "I", "delegat": "–", "nukib": "I",          "ucl": "–"},
-    {"activity": "Notifikace ÚCL",                   "ki": "R, A", "cirt": "C", "r_dtech": "–", "r_dplr": "I", "garant": "I", "delegat": "–", "nukib": "–",          "ucl": "I"},
-    {"activity": "Klasifikace a uzavření",            "ki": "R, A", "cirt": "C", "r_dtech": "–", "r_dplr": "I", "garant": "I", "delegat": "–", "nukib": "–",          "ucl": "–"}
+    { "activity": "Posouzení, třídění a rozhodování", "ki": "R, A", "cirt": "R", "ciso": "C", "garant": "C" },
+    { "activity": "Odezva",                           "ki": "A",    "cirt": "R", "ciso": "I", "garant": "C" },
+    { "activity": "Klasifikace a uzavření",           "ki": "R, A", "cirt": "C", "ciso": "I", "garant": "I" }
   ]
 }
 ```
 
-### Konvence RACI
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"raci_table"` |
+| `title` | ✓ | Nadpis karty |
+| `columns[]` | ✓ | Pořadí sloupců |
+| `column_labels{}` | ✓ | Zobrazované názvy sloupců |
+| `rows[]` | ✓ | Řádky matice |
+| `legend` | | Legenda zkratek zobrazená nad tabulkou |
+
+### Konvence hodnot RACI
 
 | Hodnota | Popis |
-|---|---|
+|---------|-------|
 | `R` | Responsible – provádí aktivitu |
 | `A` | Accountable – zodpovídá za výsledek |
 | `C` | Consulted – poskytuje součinnost |
-| `I` | Informed – je informován o výsledku |
+| `I` | Informed – informován o výsledku |
 | `I (Critical)` | Informován pouze při Severity Critical |
-| `I (High/Critical)` | Informován při Severity High nebo Critical |
 | `–` | Není zapojen |
 
 ---
 
-## Typ `closure_form` – klasifikace a uzavření incidentu
+## Standardní sekce Klasifikace a uzavření
 
-Sekce uzavření incidentu. Shodná struktura renderování s `form`, ale sémanticky odlišena jako finální krok workbooku.
+Všechny workbooky obsahují sekci uzavření s těmito standardními poli **v tomto pořadí**. Šablonově specifická pole přidej **za** `ucl_notification_required` a **před** `root_cause`.
 
-### Standardní struktura polí
-
-Všechny workbooky by měly obsahovat closure sekci s níže uvedenými poli **v tomto pořadí**. Šablony specifické pro daný typ útoku mohou vložit vlastní pole (např. `attack_type_final`, `vpn_outage_duration`) **za pole `ucl_notification_required`** a **před `root_cause`**.
-
-| `key` | `label` | `type` | Popis |
-|---|---|---|---|
-| `final_classification` | Klasifikace výsledku | `select` | True Positive / False Positive / Benign True Positive |
-| `impact_level` | Úroveň dopadu | `select` | Nízká / Střední / Vysoká / Kritická – zahrnuje dopad na regulovanou službu |
-| `impact_primary_service` | Dostupnost primárních služeb organizace | `select` | Dostupnost (CIA: A) klíčových služeb pro klienty / interní provoz |
-| `impact_scope` | Rozsah zasažených uživatelů / systémů | `select` | Celoplošný / Významný / Omezený / Individuální |
-| `impact_duration` | Doba výpadku / narušení **(dostupnost)** | `select` | Délka narušení dostupnosti (CIA: Availability) |
-| `impact_data` | Dopad na data (důvěrnost / integrita) | `select` | Exfiltrace, neoprávněný přístup, narušení integrity (CIA: C, I) |
-| `nukib_notification_required` | Povinnost hlášení NÚKIB | `select` | Povinná / Zvážit / Není vyžadována (ZOKB §8, vyhl. 82/2018 Sb.) |
-| `ucl_notification_required` | Povinnost hlášení ÚCL | `select` | Povinná / Zvážit / Není vyžadována (dle sektorové regulace ÚCL) |
-| *(volitelná šablon. pole)* | | | Pole specifická pro daný typ incidentu |
-| `root_cause` | Root Cause | `textarea` | Kořenová příčina incidentu |
-| `actions_taken` | Popis přijatých opatření | `textarea` | Souhrn provedených kroků Odezvy |
-| `recommendations` | Doporučení pro zlepšení | `textarea` | Doporučení pro snížení rizika opakování |
-| `related_service_requests` | Související servisní požadavky | `textarea` | Čísla/odkazy na servisní požadavky z průběhu řešení |
-| `reporter_notified` | Oznamovatel informován | `select` | Ano / Ne |
-| `closed_at` | Datum uzavření | `datetime` | Datum a čas uzavření |
-
-### CIA anotace v popisech polí
-
-Pole hodnotící specifický aspekt bezpečnostní triády CIA jsou v `label` označena závorkou:
-- `(dostupnost)` – vztahuje se k CIA pilíři **Availability** (dostupnost)
-- `(důvěrnost / integrita)` – vztahuje se k CIA pilíři **Confidentiality** a **Integrity**
+| `key` | `label` | `type` |
+|-------|---------|--------|
+| `final_classification` | Klasifikace výsledku | `select` |
+| `impact_level` | Úroveň dopadu | `select` |
+| `impact_primary_service` | Dostupnost primárních služeb organizace | `select` |
+| `impact_scope` | Rozsah zasažených uživatelů / systémů | `select` |
+| `impact_duration` | Doba výpadku / narušení (dostupnost) | `select` |
+| `impact_data` | Dopad na data (důvěrnost / integrita) | `select` |
+| `nukib_notification_required` | Povinnost hlášení NÚKIB | `select` |
+| `ucl_notification_required` | Povinnost hlášení ÚCL | `select` |
+| *(šablonově specifická pole)* | | |
+| `root_cause` | Root Cause | `textarea` |
+| `actions_taken` | Popis přijatých opatření | `textarea` |
+| `recommendations` | Doporučení pro zlepšení | `textarea` |
+| `related_service_requests` | Související servisní požadavky | `textarea` |
+| `reporter_notified` | Oznamovatel informován | `select` |
+| `closed_at` | Datum uzavření | `datetime` |
 
 ### Úroveň dopadu – škála a podmínky notifikace
 
 | Úroveň | Popis | Povinnost hlášení NÚKIB |
-|---|---|---|
-| **Nízká** | Incidenty s omezeným nebo lokálním dopadem. Žádný dopad na regulovanou službu. | Není vyžadována |
-| **Střední** | Incidenty, které postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů. Nezasahuje aktiva regulované služby. | Není vyžadována |
-| **Vysoká** | Incidenty s významným dopadem na klíčové procesy nebo systémy. Při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB. Ohrožují kontinuitu činnosti nebo reputaci. | Zvážit / Povinná (při zasažení regulované služby) |
-| **Kritická** | Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI. | Povinná (ZOKB §8) |
+|--------|-------|------------------------|
+| **Nízká** | Omezený nebo lokální dopad. Žádný dopad na regulovanou službu. | Není vyžadována |
+| **Střední** | Postihuje důležité systémy, ale klíčové procesy pokračují. Nezasahuje aktiva regulované služby. | Není vyžadována |
+| **Vysoká** | Významný dopad na klíčové procesy. Při zasažení aktiv regulované služby splňuje kritéria KBI. | Zvážit / Povinná |
+| **Kritická** | Katastrofický dopad, úplný kolaps regulované služby. Jde vždy o KBI. | Povinná (ZOKB §8) |
 
-Lhůty hlášení NÚKIB dle vyhlášky č. 82/2018 Sb.: **do 24 h** (první hlášení) · **do 72 h** (detailní hlášení) · **do 30 dní** (závěrečná zpráva).
-
-### Příklad minimální closure sekce
-
-```json
-{
-  "id": "closure",
-  "title": "Klasifikace a uzavření",
-  "type": "closure_form",
-  "description": "Uzavření provádí SOC Analytický tým po dokončení Odezvy, nebo ihned po Posouzení u False Positive / Benign True Positive.",
-  "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
-  "fields": [
-    {"key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true,
-      "is_example": true, "value": "True Positive",
-      "options": ["True Positive", "False Positive", "Benign True Positive"]},
-    {"key": "impact_level", "label": "Úroveň dopadu", "type": "select", "editable": true, "value": null,
-      "options": ["Nízká", "Střední", "Vysoká", "Kritická"],
-      "option_hints": {
-        "Nízká":    "Incidenty s omezeným nebo lokálním dopadem. Žádný dopad na regulovanou službu.",
-        "Střední":  "Incidenty, které postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů. Nezasahuje aktiva regulované služby.",
-        "Vysoká":   "Incidenty s významným dopadem na klíčové procesy nebo systémy. Při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB. Ohrožují kontinuitu činnosti nebo reputaci.",
-        "Kritická": "Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI."
-      },
-      "hint": "Úroveň Vysoká a Kritická při zasažení regulované služby zakládají povinnost hlášení NÚKIB a ÚCL."},
-    {"key": "impact_primary_service", "label": "Dostupnost primárních služeb organizace", "type": "select", "editable": true, "value": null,
-      "options": ["Zcela nedostupné", "Částečně nedostupné / degradované", "Dostupné bez omezení", "Netýká se"],
-      "hint": "Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy organizace."},
-    {"key": "impact_scope", "label": "Rozsah zasažených uživatelů / systémů", "type": "select", "editable": true, "value": null,
-      "options": ["Celoplošný (> 50 % uživatelů nebo klíčových systémů)", "Významný (10–50 %)", "Omezený (< 10 %)", "Individuální (1 uživatel / 1 systém)"]},
-    {"key": "impact_duration", "label": "Doba výpadku / narušení (dostupnost)", "type": "select", "editable": true, "value": null,
-      "options": ["> 4 hodiny", "1–4 hodiny", "15 min – 1 hodina", "< 15 min", "Žádný výpadek / narušení"]},
-    {"key": "impact_data", "label": "Dopad na data (důvěrnost / integrita)", "type": "select", "editable": true, "value": null,
-      "options": ["Exfiltrace dat potvrzena", "Neoprávněný přístup k datům potvrzen", "Integrita dat narušena", "Žádný dopad na data", "Nelze určit"]},
-    {"key": "nukib_notification_required", "label": "Povinnost hlášení NÚKIB", "type": "select", "editable": true, "value": null,
-      "options": ["Povinná – Regulovaná služba + Vysoká/Kritická (ZOKB §8, vyhl. 82/2018 Sb.)", "Zvážit – hraniční případ", "Není vyžadována"],
-      "hint": "Správci KII a VIS jsou povinni hlásit kybernetické bezpečnostní incidenty NÚKIB. Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018 Sb."},
-    {"key": "ucl_notification_required", "label": "Povinnost hlášení ÚCL", "type": "select", "editable": true, "value": null,
-      "options": ["Povinná – dle sektorové regulace ÚCL", "Zvážit – hraniční případ", "Není vyžadována"],
-      "hint": "Povinnost hlášení ÚCL se vztahuje na poskytovatele letových provozních služeb a další subjekty v gesci Úřadu pro civilní letectví."},
-    {"key": "root_cause",           "label": "Root Cause",                     "type": "textarea", "editable": true, "value": null},
-    {"key": "actions_taken",        "label": "Popis přijatých opatření",       "type": "textarea", "editable": true, "value": null},
-    {"key": "recommendations",      "label": "Doporučení pro zlepšení",        "type": "textarea", "editable": true, "value": null},
-    {"key": "related_service_requests", "label": "Související servisní požadavky", "type": "textarea", "editable": true, "value": null,
-      "hint": "Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení."},
-    {"key": "reporter_notified",    "label": "Oznamovatel informován",         "type": "select",   "editable": true, "value": null, "options": ["Ano", "Ne"]},
-    {"key": "closed_at",            "label": "Datum uzavření",                 "type": "datetime", "editable": true, "value": null}
-  ]
-}
-```
+Lhůty hlášení NÚKIB dle vyhl. č. 82/2018 Sb.: **do 24 h** (první hlášení) · **do 72 h** (detailní hlášení) · **do 30 dní** (závěrečná zpráva).
 
 ---
 
 ## Souhrn speciálních klíčů
 
 | Klíč | Umístění | Popis |
-|---|---|---|
-| `is_example: true` | pole, kroky checklistu | Hodnota = ukázka, při klonování se stane placeholderem vstupního pole. Nepodporováno v `contact_table`. |
-| `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu. Podporované hodnoty: `"case_id"` · `"template_name"` · `"template_version"` · `"template_status"` · `"template_mitre_tactic"` · `"template_mitre_technique"` · `"template_data_sources"` |
+|------|----------|-------|
+| `is_example: true` | pole, kroky checklistu | Hodnota = ukázka; při klonování se stane placeholderem. Nepodporováno v `contact_table`. |
+| `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu (viz tabulka výše) |
 | `always_expanded: true` | podsekce v `section_group` | Podsekce se nezbaluje |
-| `allow_append: true` | tabulky | Analytik může přidat řádek tlačítkem `+` |
-| `allow_delete: true` | tabulky | Analytik může smazat libovolný řádek |
+| `allow_append: true` | tabulky | Analytik přidá řádek tlačítkem `+` |
+| `allow_delete: true` | tabulky | Analytik smaže libovolný řádek |
 | `append_row_template` | tabulky | Struktura prázdného přidávaného řádku |
 | `editable_columns` | tabulky | Sloupce editovatelné analytikem |
 | `column_options` | `assets_table` | Sloupce renderované jako `<select>` místo textového pole |
-| `status_options` | `action_table` | Seznam hodnot dostupných v dropdownu Stav |
-| `classification_hints` | `step_group` | Klasifikační vodítka s pastelově žlutým pozadím (True/False Positive, Severity) |
+| `status_options` | `action_table` | Hodnoty dropdownu Stav; bez tohoto klíče = volný textový vstup |
+| `classification_hints` | `step_group` | Klasifikační vodítka – žluté boxy |
+| `hints` | `step_group`, `action_table` | Operační nápovědy – šedé boxy |
+| `hint` | `form`, `assets_table` | Alert box nad sekcí (`form` = modrý; `assets_table` = oranžový) |
 | `condition` | podsekce, `step_group` | Informativní podmínka zobrazení (nevynucuje logiku) |
-| `note` | podsekce, `step_group` | Poznámka analytika zobrazená v záhlaví |
+| `note` | podsekce, `step_group` | Poznámka zobrazená v záhlaví accordion panelu |

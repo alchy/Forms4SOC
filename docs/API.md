@@ -1,118 +1,93 @@
 # Forms4SOC – API dokumentace
 
-> Interaktivní dokumentace: http://localhost:8080/api/docs (Swagger UI)
-> ReDoc: http://localhost:8080/api/redoc
+REST API pro správu incidentů, šablon, uživatelů a nastavení. Veškerá komunikace probíhá přes JSON; autentizace je řešena httpOnly cookie.
+
+**Interaktivní dokumentace:** http://localhost:8080/api/docs (Swagger UI) · http://localhost:8080/api/redoc
+
+---
+
+## Jak to funguje?
+
+```
+Prohlížeč / klient
+    │
+    │  HTTP požadavek + Cookie (forms4soc_token)
+    ▼
+FastAPI app  →  JWT middleware  →  route handler
+    │
+    ├── /api/v1/auth/*       – přihlášení / odhlášení / info o uživateli
+    ├── /api/v1/cases/*      – CRUD incidentů + zámky
+    ├── /api/v1/templates/*  – CRUD šablon (JSON workbooků)
+    ├── /api/v1/settings/*   – nastavení aplikace (admin)
+    └── /api/v1/users/*      – správa uživatelů (admin)
+```
+
+Endpointy označené **🔒** jsou dostupné pouze uživatelům s rolí `admin`.
 
 ---
 
 ## Autentizace
 
-Všechny `/api/v1/*` endpointy (kromě `/auth/login` a `/auth/logout`) vyžadují platný JWT token.
-Token je nastaven jako **httpOnly cookie** (`forms4soc_token`) při přihlášení a automaticky přikládán prohlížečem ke každému požadavku.
+Přihlášením přes `POST /auth/login` se nastaví httpOnly cookie `forms4soc_token` (JWT).
+Prohlížeč cookie přikládá automaticky ke každému dalšímu požadavku. Odhlášení cookie smaže.
 
-Endpointy označené 🔒 vyžadují roli **admin**.
+```
+POST /auth/login  →  nastaví cookie  →  všechny /api/v1/* endpointy
+                                          (kromě /login a /logout)
+```
+
+> Přímé volání z externího klienta (curl, Python): pošli přihlašovací požadavek, ulož cookie a přikládej ji k dalším voláním.
 
 ---
 
 ## AUTH – `/api/v1/auth`
 
-| Metoda | Endpoint  | Popis | Auth |
-|--------|-----------|-------|------|
-| POST | `/login`  | Přihlášení – vrátí JWT token a nastaví httpOnly cookie | — |
-| POST | `/logout` | Odhlášení – smaže cookie | — |
-| GET  | `/me`     | Info o přihlášeném uživateli | ✓ |
+| Metoda | Endpoint | Popis | Auth |
+|--------|----------|-------|------|
+| POST | `/auth/login` | Přihlášení – nastaví httpOnly cookie | — |
+| POST | `/auth/logout` | Odhlášení – smaže cookie | — |
+| GET | `/auth/me` | Info o přihlášeném uživateli | ✓ |
 
-**POST /auth/login**
+### `POST /auth/login`
+
 ```json
 // Tělo požadavku
 { "username": "admin", "password": "heslo" }
 
-// Odpověď 200
+// Odpověď 200 – nastaví Cookie: forms4soc_token=<jwt>
 { "access_token": "<jwt>", "token_type": "bearer" }
+
+// Odpověď 401 – nesprávné přihlašovací údaje
+{ "detail": "Neplatné přihlašovací údaje" }
 ```
 
----
+### `GET /auth/me`
 
-## TEMPLATES – `/api/v1/templates`
-
-| Metoda | Endpoint | Popis | Auth |
-|--------|----------|-------|------|
-| GET    | `/`                       | Seznam všech SOC šablon | ✓ |
-| POST   | `/`                       | Vytvoření nové šablony ze zadaného JSON obsahu 🔒 | admin |
-| GET    | `/{template_id}`          | Detail konkrétní šablony | ✓ |
-| GET    | `/{template_id}/source`   | Zdrojový JSON šablony (pro editor) 🔒 | admin |
-| PUT    | `/{template_id}`          | Uložení upraveného obsahu šablony 🔒 | admin |
-| DELETE | `/{template_id}`          | Smazání šablony 🔒 | admin |
-
-**POST /templates/ – vytvoření šablony**
 ```json
-// Tělo požadavku
-{ "filename": "ransomware_v1.json", "content": "{...}" }
-
 // Odpověď 200
-{ "ok": true, "template_id": "ransomware-v1", "filename": "ransomware_v1.json" }
-// Odpověď 409 – soubor již existuje
-// Odpověď 400 – neplatný JSON
+{
+  "username": "admin",
+  "role": "admin",
+  "is_active": true,
+  "created_at": "2026-01-01T00:00:00"
+}
 ```
-
-**PUT /templates/{template_id} – uložení šablony**
-```json
-// Tělo požadavku
-{ "content": "{...}" }
-
-// Odpověď 200
-{ "ok": true, "filename": "ransomware_v1.json" }
-```
-
-**GET /templates/ – příklad odpovědi**
-```json
-[
-  {
-    "template_id": "phishing-v2",
-    "name": "Podezřelý e-mail / Phishing",
-    "version": "2.0",
-    "category": "Phishing",
-    "status": "active",
-    "description": "...",
-    "mitre_tactic": "Initial Access",
-    "mitre_technique": "T1566",
-    "mitre_subtechnique": "T1566.001",
-    "data_sources": ["Inbound SMTP Mail Gateway", "Proxy", "SIEM"],
-    "sections": [...],
-    "filename": "phishing_v2.json"
-  },
-  {
-    "template_id": "ddos-vpn-v1",
-    "name": "DDoS útok na VPN Cisco AnyConnect",
-    "version": "1.0",
-    ...
-    "filename": "ddos_vpn_v1.json"
-  },
-  {
-    "template_id": "vanilla-v1",
-    "name": "Výchozí kostra (Vanilla)",
-    "version": "1.0",
-    ...
-    "filename": "vanilla_v1.json"
-  }
-]
-```
-
-Dostupné šablony: `phishing-v2` (Phishing / podezřelý e-mail), `ddos-vpn-v1` (DDoS útok na VPN Cisco AnyConnect), `vanilla-v1` (výchozí kostra pro nové šablony).
 
 ---
 
 ## CASES – `/api/v1/cases`
 
+Incidenty jsou JSON dokumenty uložené jako soubory v adresáři `data/events/` (konfigurovatelné). Každý incident vznikne klonováním šablony.
+
 | Metoda | Endpoint | Popis | Auth |
 |--------|----------|-------|------|
-| GET    | `/`                      | Seznam všech incidentů (řazeno od nejnovějšího) | ✓ |
-| POST   | `/`                      | Vytvoření incidentu ze šablony | ✓ |
-| GET    | `/{case_id}`             | Detail incidentu | ✓ |
-| PATCH  | `/{case_id}`             | Aktualizace stavu a/nebo dat incidentu | ✓ |
-| DELETE | `/{case_id}`             | Smazání incidentu 🔒 | admin |
-| POST   | `/{case_id}/lock`        | Získání zámku pro editaci | ✓ |
-| DELETE | `/{case_id}/lock`        | Uvolnění zámku | ✓ |
+| GET | `/cases/` | Seznam všech incidentů (od nejnovějšího) | ✓ |
+| POST | `/cases/` | Vytvoření incidentu ze šablony | ✓ |
+| GET | `/cases/{case_id}` | Detail incidentu | ✓ |
+| PATCH | `/cases/{case_id}` | Aktualizace stavu a/nebo dat | ✓ |
+| DELETE | `/cases/{case_id}` | Smazání incidentu 🔒 | admin |
+| POST | `/cases/{case_id}/lock` | Získání zámku pro editaci | ✓ |
+| DELETE | `/cases/{case_id}/lock` | Uvolnění zámku | ✓ |
 
 ### Formát Case ID
 
@@ -124,14 +99,15 @@ Příklad: UIB-06032026-0954-3712
 
 ### Stavy incidentu (`status`)
 
-| Hodnota | Zobrazení |
-|---|---|
+| Hodnota | Zobrazení v UI |
+|---------|----------------|
 | `open` | Přiřazeno |
 | `in_progress` | V řešení |
 | `closed` | Uzavřený |
 | `false_positive` | False Positive |
 
-**POST /cases/ – vytvoření incidentu**
+### `POST /cases/` – vytvoření incidentu
+
 ```json
 // Tělo požadavku
 { "template_id": "phishing-v2" }
@@ -145,32 +121,39 @@ Příklad: UIB-06032026-0954-3712
   "created_at": "2026-03-05T14:30:22+00:00",
   "updated_at": "2026-03-05T14:30:22+00:00",
   "locked_by": null,
-  "data": { ... }
+  "data": { "sections": [...] }
 }
 ```
 
-**PATCH /cases/{case_id} – aktualizace**
+### `PATCH /cases/{case_id}` – aktualizace
+
+Všechna pole jsou volitelná – lze aktualizovat pouze status, pouze data, nebo oboje najednou.
+
 ```json
 // Pouze status
 { "status": "in_progress" }
 
 // Pouze data dokumentu
-{ "data": { ... } }
+{ "data": { "sections": [...] } }
 
 // Obojí najednou
-{ "status": "closed", "data": { ... } }
+{ "status": "closed", "data": { "sections": [...] } }
 ```
 
 ### Zámky (file locking)
 
-Před editací incidentu je nutné získat zámek. Zámek zabrání souběžné editaci více uživateli.
+Před editací doporučujeme získat zámek – zabrání souběžné editaci více uživateli.
 
-**POST /cases/{case_id}/lock**
+```
+POST  /cases/{id}/lock   →  200 OK (zámek získán) nebo 423 Locked (zamčeno jiným)
+DELETE /cases/{id}/lock  →  204 No Content
+```
+
 ```json
-// Odpověď 200 – zámek získán
+// POST /cases/{id}/lock – odpověď 200
 { "locked_by": "admin" }
 
-// Odpověď 423 – zamčeno jiným uživatelem
+// POST /cases/{id}/lock – odpověď 423
 {
   "detail": {
     "message": "Incident je zamčen jiným uživatelem",
@@ -180,32 +163,92 @@ Před editací incidentu je nutné získat zámek. Zámek zabrání souběžné 
 }
 ```
 
-**DELETE /cases/{case_id}/lock** – uvolní zámek (admin může uvolnit komukoliv)
-```
-Odpověď: 204 No Content
-```
+> Admin může uvolnit zámek kohokoliv přes `DELETE /cases/{id}/lock`.
 
 ### Tisk
 
-Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases/{case_id}/print` v nové záložce. Stránka zobrazí celý obsah incidentu ve formátu optimalizovaném pro tisk a umožní uložit jako PDF přes dialog prohlížeče (`Ctrl+P`).
+Stránka `/cases/{case_id}/print` zobrazí incident ve formátu optimalizovaném pro tisk. Tlačítko „Tisk / Uložit PDF" využije dialog prohlížeče (`Ctrl+P`). Stránka je dostupná bez samostatného API endpointu – otevři ji přímo v prohlížeči.
+
+---
+
+## TEMPLATES – `/api/v1/templates`
+
+Šablony jsou JSON soubory v adresáři `data/workbooks/` (konfigurovatelné). Každá šablona definuje strukturu jednoho typu incidentu.
+
+| Metoda | Endpoint | Popis | Auth |
+|--------|----------|-------|------|
+| GET | `/templates/` | Seznam všech šablon | ✓ |
+| POST | `/templates/` | Vytvoření nové šablony 🔒 | admin |
+| GET | `/templates/{template_id}` | Detail šablony | ✓ |
+| GET | `/templates/{template_id}/source` | Zdrojový JSON (pro editor) 🔒 | admin |
+| PUT | `/templates/{template_id}` | Uložení upraveného obsahu 🔒 | admin |
+| DELETE | `/templates/{template_id}` | Smazání šablony 🔒 | admin |
+
+### `GET /templates/` – příklad odpovědi
+
+```json
+[
+  {
+    "template_id": "phishing-v2",
+    "name": "Podezřelý e-mail / Phishing",
+    "version": "2.0",
+    "category": "Phishing",
+    "status": "active",
+    "description": "...",
+    "mitre_tactic": "Initial Access",
+    "mitre_technique": "T1566",
+    "data_sources": ["Inbound SMTP Mail Gateway", "Proxy", "SIEM"],
+    "sections": [...],
+    "filename": "phishing_v2.json"
+  }
+]
+```
+
+Dostupné šablony: `phishing-v2` (Phishing / podezřelý e-mail) · `ddos-vpn-v1` (DDoS na VPN) · `vanilla-v1` (výchozí kostra).
+
+### `POST /templates/` – vytvoření šablony
+
+```json
+// Tělo požadavku
+{ "filename": "ransomware_v1.json", "content": "{...}" }
+
+// Odpověď 200
+{ "ok": true, "template_id": "ransomware-v1", "filename": "ransomware_v1.json" }
+
+// Odpověď 409 – soubor již existuje
+// Odpověď 400 – neplatný JSON
+```
+
+### `PUT /templates/{template_id}` – uložení šablony
+
+```json
+// Tělo požadavku
+{ "content": "{...}" }
+
+// Odpověď 200
+{ "ok": true, "filename": "ransomware_v1.json" }
+```
 
 ---
 
 ## SETTINGS – `/api/v1/settings` 🔒
 
+Nastavení aplikace – adresáře pro incidenty a šablony. Změny se projeví okamžitě (bez restartu).
+
 | Metoda | Endpoint | Popis |
 |--------|----------|-------|
-| GET    | `/`      | Aktuální nastavení |
-| PATCH  | `/`      | Aktualizace nastavení |
+| GET | `/settings/` | Aktuální nastavení |
+| PATCH | `/settings/` | Aktualizace nastavení |
 
-**Dostupné klíče nastavení:**
+### Dostupné klíče
 
 | Klíč | Popis | Výchozí hodnota |
-|---|---|---|
-| `incidents_dir` | Adresář pro ukládání JSON souborů incidentů | `data/events` |
-| `templates_dir` | Adresář pro načítání JSON šablon | `data/workbooks` |
+|------|-------|-----------------|
+| `incidents_dir` | Adresář pro JSON soubory incidentů | `data/events` |
+| `templates_dir` | Adresář pro JSON šablony workbooků | `data/workbooks` |
 
-**PATCH /settings/**
+### `PATCH /settings/`
+
 ```json
 // Tělo požadavku
 {
@@ -213,7 +256,7 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
   "templates_dir": "C:/SOC/workbooks"
 }
 
-// Odpověď 200 – vrátí aktuální nastavení
+// Odpověď 200 – vrátí aktuální stav po změně
 {
   "incidents_dir": "C:/SOC/incidents",
   "templates_dir": "C:/SOC/workbooks"
@@ -224,22 +267,25 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
 
 ## USERS – `/api/v1/users` 🔒
 
+Správa uživatelů. Admin může vytvářet, upravovat a mazat účty.
+
 | Metoda | Endpoint | Popis |
 |--------|----------|-------|
-| GET    | `/`              | Seznam všech uživatelů |
-| POST   | `/`              | Vytvoření uživatele |
-| GET    | `/{username}`    | Detail uživatele |
-| PATCH  | `/{username}`    | Aktualizace uživatele (role, stav, heslo) |
-| DELETE | `/{username}`    | Smazání uživatele |
+| GET | `/users/` | Seznam všech uživatelů |
+| POST | `/users/` | Vytvoření uživatele |
+| GET | `/users/{username}` | Detail uživatele |
+| PATCH | `/users/{username}` | Aktualizace (role, stav, heslo) |
+| DELETE | `/users/{username}` | Smazání uživatele |
 
-**Role uživatelů:**
+### Role uživatelů
 
-| Role | Popis |
-|---|---|
-| `admin` | Plný přístup vč. správy uživatelů, nastavení a mazání incidentů |
+| Role | Oprávnění |
+|------|-----------|
+| `admin` | Plný přístup – správa uživatelů, nastavení, mazání incidentů, editor šablon |
 | `analyst` | Vytváření a editace incidentů |
 
-**POST /users/ – vytvoření uživatele**
+### `POST /users/` – vytvoření uživatele
+
 ```json
 // Tělo požadavku
 { "username": "analyst1", "password": "heslo", "role": "analyst" }
@@ -254,9 +300,10 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
 }
 ```
 
-**PATCH /users/{username}**
+### `PATCH /users/{username}` – aktualizace
+
 ```json
-// Všechny parametry jsou volitelné
+// Všechna pole jsou volitelná
 {
   "role": "admin",
   "is_active": false,
@@ -268,11 +315,29 @@ Tlačítko **Tisk** v seznamu incidentů i v detailu incidentu otevírá `/cases
 
 ## Auth provider – konfigurace
 
-Přepnutí providera v `.env`:
-```
+Přepnutí poskytovatele autentizace v `.env`:
+
+```ini
 AUTH_PROVIDER=simple   # výchozí – username/password z SQLite DB
 AUTH_PROVIDER=oauth    # OAuth2 (stub – nutno implementovat)
 AUTH_PROVIDER=ldap     # LDAP/AD (stub – nutno implementovat)
 ```
 
-Implementace: `app/auth/auth_provider.py` (ABC rozhraní), `app/auth/simple_auth.py` (aktivní).
+Implementace: `app/auth/auth_provider.py` (ABC rozhraní) · `app/auth/simple_auth.py` (aktivní provider).
+
+---
+
+## Přehled HTTP stavových kódů
+
+| Kód | Kdy nastane |
+|-----|------------|
+| `200 OK` | Úspěch (GET, PATCH, PUT) |
+| `201 Created` | Incident nebo uživatel vytvořen |
+| `204 No Content` | Smazání nebo uvolnění zámku |
+| `400 Bad Request` | Neplatné tělo požadavku (např. neplatný JSON šablony) |
+| `401 Unauthorized` | Chybí nebo vypršel JWT token |
+| `403 Forbidden` | Nedostatečná oprávnění (vyžaduje admin) |
+| `404 Not Found` | Incident nebo šablona nenalezena |
+| `409 Conflict` | Soubor šablony již existuje |
+| `415 Unsupported Media Type` | Chybí `Content-Type: application/json` |
+| `423 Locked` | Incident zamčen jiným uživatelem |
