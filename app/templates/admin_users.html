@@ -176,29 +176,64 @@
         tbody.innerHTML = '';
         allUsers.forEach(u => {
             const isSelf = u.username === CURRENT_USER;
-            const activeBadge = u.is_active
-                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Aktivní</span>'
-                : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Deaktivován</span>';
-            const roleBadge = u.role === 'admin'
+            const tr = document.createElement('tr');
+
+            // Jméno – textContent zaručí, že username se nikdy nevyinterpretuje jako HTML
+            const tdName = document.createElement('td');
+            tdName.className = 'ps-3 align-middle fw-semibold';
+            tdName.textContent = u.username;
+            if (isSelf) {
+                const self = document.createElement('span');
+                self.className = 'text-muted small';
+                self.textContent = ' (vy)';
+                tdName.appendChild(self);
+            }
+            tr.appendChild(tdName);
+
+            // Role badge – hardcoded text, bezpečné přes innerHTML
+            const tdRole = document.createElement('td');
+            tdRole.className = 'align-middle';
+            tdRole.innerHTML = u.role === 'admin'
                 ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">admin</span>'
                 : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">analyst</span>';
+            tr.appendChild(tdRole);
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="ps-3 align-middle fw-semibold">${u.username}${isSelf ? ' <span class="text-muted small">(vy)</span>' : ''}</td>
-                <td class="align-middle">${roleBadge}</td>
-                <td class="align-middle">${activeBadge}</td>
-                <td class="align-middle small text-muted">${new Date(u.created_at).toLocaleString('cs-CZ')}</td>
-                <td class="align-middle text-end pe-3">
-                    <div class="d-flex gap-1 justify-content-end">
-                        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${u.username}')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        ${!isSelf ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">
-                            <i class="bi bi-trash"></i>
-                        </button>` : ''}
-                    </div>
-                </td>`;
+            // Stav badge – hardcoded text, bezpečné přes innerHTML
+            const tdActive = document.createElement('td');
+            tdActive.className = 'align-middle';
+            tdActive.innerHTML = u.is_active
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Aktivní</span>'
+                : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Deaktivován</span>';
+            tr.appendChild(tdActive);
+
+            // Datum – textContent (bezpečné)
+            const tdDate = document.createElement('td');
+            tdDate.className = 'align-middle small text-muted';
+            tdDate.textContent = new Date(u.created_at).toLocaleString('cs-CZ');
+            tr.appendChild(tdDate);
+
+            // Akce – addEventListener místo onclick atributu, username nikdy nevstoupí do HTML
+            const tdActions = document.createElement('td');
+            tdActions.className = 'align-middle text-end pe-3';
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'd-flex gap-1 justify-content-end';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn btn-secondary btn-sm';
+            editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
+            editBtn.addEventListener('click', () => openEditModal(u.username));
+            btnGroup.appendChild(editBtn);
+
+            if (!isSelf) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+                delBtn.addEventListener('click', () => deleteUser(u.username));
+                btnGroup.appendChild(delBtn);
+            }
+
+            tdActions.appendChild(btnGroup);
+            tr.appendChild(tdActions);
             tbody.appendChild(tr);
         });
     }
