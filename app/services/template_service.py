@@ -1,4 +1,6 @@
 import logging
+import re
+import unicodedata
 from pathlib import Path
 from typing import Optional
 
@@ -15,9 +17,90 @@ from app.services.settings_service import get_setting
 logger = logging.getLogger(__name__)
 
 
+# ── Normalizátor šablony ───────────────────────────────────────────────────
+#
+# Umožňuje psát šablony ve zjednodušeném formátu:
+#   - pole bez `type` → výchozí "text"
+#   - pole bez `editable` → výchozí true
+#   - pole bez `value` → výchozí null
+#   - kroky v checklist jako prostý řetězec → automaticky rozbalí na {action: ...}
+#   - kroky a skupiny bez `id` → ID se vygeneruje ze `title` nebo pořadí
+#   - sekce bez `id` → ID se vygeneruje z `title` nebo `type`
+#
+# Plný formát (stávající šablony) zůstává beze změny (zpětně kompatibilní).
+
+def _slugify(text: str) -> str:
+    """Převede text na ASCII slug s podtržítky (pro generování ID)."""
+    text = unicodedata.normalize("NFD", text)
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = text.lower().strip()
+    text = re.sub(r"[^\w\s-]", "", text)
+    text = re.sub(r"[\s\-]+", "_", text)
+    return text or "item"
+
+
+def _norm_field(field: dict) -> dict:
+    """Doplní výchozí hodnoty pro pole formuláře."""
+    field.setdefault("type", "text")
+    field.setdefault("editable", True)
+    field.setdefault("value", None)
+    return field
+
+
+def _norm_step(step, idx: int, prefix: str) -> dict:
+    """Rozbalí string krok nebo doplní výchozí hodnoty dict kroku."""
+    if isinstance(step, str):
+        step = {"action": step}
+    step.setdefault("id", f"{prefix}_{idx + 1:02d}")
+    step.setdefault("analyst_note", None)
+    step.setdefault("done", False)
+    return step
+
+
+def _norm_group(group: dict, idx: int, section_id: str) -> dict:
+    """Doplní ID skupiny a normalizuje její kroky."""
+    group_id = group.get("id") or _slugify(group.get("title", f"group_{idx + 1}"))
+    group["id"] = group_id
+    prefix = f"{section_id}_{group_id}"
+    group["steps"] = [
+        _norm_step(s, i, prefix) for i, s in enumerate(group.get("steps", []))
+    ]
+    return group
+
+
+def _norm_section(section: dict, idx: int) -> dict:
+    """Doplní ID sekce a normalizuje pole a skupiny kroků."""
+    title = section.get("title", "")
+    section_id = section.get("id") or _slugify(
+        title or section.get("type", f"section_{idx + 1}")
+    )
+    section["id"] = section_id
+
+    if "fields" in section:
+        section["fields"] = [_norm_field(f) for f in section["fields"]]
+
+    if "step_groups" in section:
+        section["step_groups"] = [
+            _norm_group(g, i, section_id)
+            for i, g in enumerate(section["step_groups"])
+        ]
+    return section
+
+
+def _normalize_template(data: dict) -> dict:
+    """Normalizuje surová YAML data šablony – doplní výchozí hodnoty a rozbalí zkratky."""
+    if "sections" in data and isinstance(data["sections"], list):
+        data["sections"] = [
+            _norm_section(s, i) for i, s in enumerate(data["sections"])
+        ]
+    return data
+
+
+# ── TemplateService ────────────────────────────────────────────────────────
+
 class TemplateService:
     """
-    Přístup k JSON šablonám ze souborového systému.
+    Přístup k YAML šablonám ze souborového systému.
     Odděleno od StorageBackend – šablony mají vlastní CRUD bez zámků.
     """
 
@@ -30,6 +113,7 @@ class TemplateService:
         for yaml_file in sorted(self.templates_dir.glob("*.yaml")):
             try:
                 data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+                data = _normalize_template(data)
                 result.append(SOCTemplate(**data, filename=yaml_file.name))
             except Exception as exc:
                 logger.warning("Cannot load template '%s': %s", yaml_file.name, exc)

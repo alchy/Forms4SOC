@@ -47,47 +47,36 @@ sections:
       # is_example: value slouží jako příklad/placeholder, smaže se při klonování.
       - key: case_title
         label: Stručný popis události
-        type: text
-        editable: true
         is_example: true
         value: 'Zde analytik napíše krátký popis, např.: Podezřelý přihlášení ze zahraničí – uživatel jan.novak'
         hint: Výstižný popis pro odlišení od ostatních incidentů – viditelný v seznamu.
+
+      # Systémová pole – nevyplňuje se ručně, hodnoty doplní aplikace automaticky.
       - key: ticket_id
         label: Ticket ID
-        type: text
         editable: false
-        value: null
         auto_value: case_id
       - key: workbook_name
         label: Workbook
-        type: text
         editable: false
-        value: null
         auto_value: template_name
       - key: workbook_version
         label: Verze workbooku
-        type: text
         editable: false
-        value: null
         auto_value: template_version
+
       - key: author
         label: Autor / vlastník šablony
-        type: text
         editable: false
         value: SOC Analytický tým
       - key: incident_coordinator
         label: Koordinátor incidentu
-        type: text
-        editable: true
-        value: null
         hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
+
       # Volitelné pole – přidej libovolná další pole relevantní pro tvůj typ incidentu.
       # Například: priority, source_system, assigned_to...
       - key: source_alert
         label: Zdrojový alert / ticket
-        type: text
-        editable: true
-        value: null
         hint: ID alertu nebo ticketu ze SIEM / ITSM, ze kterého incident vznikl.
 
   # SEKCE 2 – Klasifikace MITRE ATT&CK. Povinná.
@@ -99,33 +88,27 @@ sections:
     fields:
       - key: mitre_tactic
         label: MITRE Tactic
-        type: text
         editable: false
-        value: null
         auto_value: template_mitre_tactic
       - key: mitre_technique
         label: MITRE Technique
-        type: text
         editable: false
-        value: null
         auto_value: template_mitre_technique
+
       # Sub-technika: vyplní analytik po Posouzení, třídění a rozhodování.
       # Uprav options dle typických variant pro tvůj typ incidentu.
       - key: mitre_subtechnique
         label: MITRE Sub-technique
         type: select
-        editable: true
-        value: null
         options:
           - Doplň variantu A
           - Doplň variantu B
           - Nelze určit
         hint: Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku.
+
       - key: data_sources
         label: Doporučené zdroje dat pro investigaci
-        type: text
         editable: false
-        value: null
         auto_value: template_data_sources
 
   # SEKCE 3 – Kontakty. Volitelná, ale doporučená.
@@ -177,8 +160,18 @@ sections:
   # SEKCE 4 – Posouzení, třídění a rozhodování (checklist). Jádro workbooku.
   # Uprav krok po kroku dle svého typu incidentu.
   # Přidávej step_groups pro logické bloky (Posouzení, Analýza, Scope).
-  # Každý krok má 'action' (instrukce) a 'analyst_note' (kam analytik zapíše výsledek).
-  # Použij 'hints' pro vodítka a 'classification_hints' pro pomoc s klasifikací True/False Positive a Závažností.
+  #
+  # Každý krok lze zapsat dvěma způsoby:
+  #
+  #   Zkrácený zápis (pro jednoduché kroky):
+  #     - Text instrukce pro analytika.
+  #
+  #   Plný zápis (pro kroky s hinty, klasifikačními vodítky nebo is_example):
+  #     - action: Text instrukce.
+  #       hints:
+  #         - Vodítko pro analytika
+  #       classification_hints:
+  #         - "True Positive → ... | False Positive → ..."
   - id: triage_investigation
     title: Posouzení, třídění a rozhodování
     type: checklist
@@ -187,22 +180,13 @@ sections:
 
       # Skupina 1 – Posouzení: rychlá verifikace alertu a první odhad závažnosti.
       # Uprav kroky dle svého prostředí.
-      - id: triage
-        title: Posouzení – ověření alertu
+      - title: Posouzení – ověření alertu
         steps:
-          - id: t_01
-            action: Ověř, zda je alert validní – potvrď základní fakta (kdo, kdy, odkud, co).
-            analyst_note: null
-            done: false
-          - id: t_02
-            action: Prověř kontext uživatele / systému v SIEM – porovnej s historickým baselineem.
-            analyst_note: null
+          - Ověř, zda je alert validní – potvrď základní fakta (kdo, kdy, odkud, co).
+          - action: Prověř kontext uživatele / systému v SIEM – porovnej s historickým baselineem.
+            analyst_note: Analytik zapíše výsledek zde.
             is_example: true
-            done: false
-          - id: t_03
-            action: Urči předběžnou závažnost (Kritická / Vysoká / Střední / Nízká) a scope.
-            analyst_note: null
-            done: false
+          - Urči předběžnou závažnost (Kritická / Vysoká / Střední / Nízká) a scope.
         hints:
           - Pokud alert nelze ověřit nebo je zřejmě falešný, uzavři jako False Positive v sekci Uzavření incidentu.
         classification_hints:
@@ -212,21 +196,11 @@ sections:
       # Přizpůsob kroky pro svůj typ incidentu.
       # Přidej tolik skupin, kolik potřebuješ – každá skupina je jeden logický blok
       # (např. Analýza malware, Analýza síťové komunikace, Lateral movement...).
-      - id: investigation
-        title: Investigace
+      - title: Investigace
         steps:
-          - id: i_01
-            action: Zkoumej logové záznamy ze zdrojů dat – identifikuj timeline událostí.
-            analyst_note: null
-            done: false
-          - id: i_02
-            action: Ověř, zda incident zasáhl další systémy nebo uživatele – prověř lateral movement.
-            analyst_note: null
-            done: false
-          - id: i_03
-            action: 'Zhodnoť dopad na data: důvěrnost (exfiltrace?), integritu (modifikace?) a dostupnost (výpadek?).'
-            analyst_note: null
-            done: false
+          - Zkoumej logové záznamy ze zdrojů dat – identifikuj timeline událostí.
+          - Ověř, zda incident zasáhl další systémy nebo uživatele – prověř lateral movement.
+          - 'Zhodnoť dopad na data: důvěrnost (exfiltrace?), integritu (modifikace?) a dostupnost (výpadek?).'
         hints:
           - Zdokumentuj každý krok – i negativní výsledky (co bylo prověřeno a nenalezeno) jsou důležité pro audit trail.
 
@@ -303,18 +277,16 @@ sections:
       - key: final_classification
         label: Klasifikace výsledku
         type: select
-        editable: true
         is_example: true
         value: True Positive
         options:
           - True Positive
           - False Positive
           - Benign True Positive
+
       - key: impact_level
         label: Úroveň dopadu
         type: select
-        editable: true
-        value: null
         options:
           - Nízká
           - Střední
@@ -332,21 +304,19 @@ sections:
             Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní
             finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI.
         hint: Úroveň Vysoká a Kritická při zasažení regulované služby zakládají povinnost hlášení NÚKIB a ÚCL.
+
       - key: nukib_notification_required
         label: Povinnost hlášení NÚKIB
         type: select
-        editable: true
-        value: null
         options:
           - Povinná – Regulovaná služba + Vysoká/Kritická (ZOKB §8, vyhl. 82/2018 Sb.)
           - Zvážit – hraniční případ
           - Není vyžadována
         hint: 'Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018 Sb.'
+
       - key: ucl_notification_required
         label: Povinnost hlášení ÚCL
         type: select
-        editable: true
-        value: null
         options:
           - Povinná – Regulovaná letecká služba + P1/P2
           - Zvážit – hraniční případ
@@ -357,96 +327,84 @@ sections:
       # Příklad:
       #   - key: affected_service
       #     label: Dotčená služba
-      #     type: text
-      #     editable: true
-      #     value: null
       # Vkládej sem pole relevantní pro tvůj typ incidentu – za ucl_notification_required a před impact_primary_service.
       - key: specific_field_placeholder
         label: Specifická pole pro tento typ incidentu
-        type: text
         editable: false
         value: '– toto pole odstraň a nahraď vlastními poli pro svůj typ incidentu –'
 
       - key: impact_primary_service
         label: Dostupnost primárních služeb organizace
         type: select
-        editable: true
-        value: null
         options:
           - Zcela nedostupné
           - Částečně nedostupné / degradované
           - Dostupné bez omezení
           - Netýká se
         hint: Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy.
+
       - key: impact_scope
         label: Rozsah zasažených uživatelů / systémů
         type: select
-        editable: true
-        value: null
         options:
           - Celoplošný (> 50 % uživatelů nebo klíčových systémů)
           - Významný (10–50 %)
           - Omezený (< 10 %)
           - Individuální (1 uživatel / 1 systém)
+
       - key: impact_duration
         label: Doba výpadku / narušení (dostupnost)
         type: select
-        editable: true
-        value: null
         options:
           - '> 4 hodiny'
           - 1–4 hodiny
           - 15 min – 1 hodina
           - < 15 min
           - Žádný výpadek / narušení
+
       - key: impact_data
         label: Dopad na data (důvěrnost / integrita)
         type: select
-        editable: true
-        value: null
         options:
           - Exfiltrace dat potvrzena
           - Neoprávněný přístup k datům potvrzen
           - Integrita dat narušena
           - Žádný dopad na data
           - Nelze určit
+
       - key: root_cause
         label: Root Cause
         type: textarea
-        editable: true
         is_example: true
         value: Popis kořenové příčiny incidentu
+
       - key: actions_taken
         label: Popis přijatých opatření
         type: textarea
-        editable: true
         is_example: true
         value: Stručný souhrn provedených containment a remediation kroků
+
       - key: recommendations
         label: Doporučení pro zlepšení
         type: textarea
-        editable: true
         is_example: true
         value: Doporučení pro snížení rizika opakování incidentu
+
       - key: related_service_requests
         label: Související servisní požadavky
         type: textarea
-        editable: true
-        value: null
         hint: Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení.
+
       - key: reporter_notified
         label: Oznamovatel informován
         type: select
-        editable: true
-        value: null
         options:
           - Ano
           - Ne
+
       - key: closed_at
         label: Datum uzavření
         type: datetime
-        editable: true
-        value: null
 
   # SEKCE 7 – RACI matice. Volitelná, ale doporučená.
   # Uprav sloupce a řádky dle struktury tvé organizace.
