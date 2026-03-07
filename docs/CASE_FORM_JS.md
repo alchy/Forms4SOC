@@ -155,19 +155,48 @@ Sekce se přidávají jednoduše do pole `sections`. Každá se vykreslí jako s
 
 ## Přehled typů sekcí
 
-### Formulář (`form`, `closure_form`)
+### Formulář (`form`)
 
-Nejjednodušší sekce. Pole jsou zobrazena jako dvousloupcový grid – label vlevo, input vpravo. `closure_form` je totožná, ale může mít volitelný informační box nahoře (klíč `hint`).
+Nejjednodušší sekce. Pole jsou zobrazena jako dvousloupcový grid – label vlevo, input vpravo.
 
 ```jsonc
 {
-  "id": "details",
+  "id": "reported_by",
   "type": "form",
-  "title": "Detaily incidentu",
+  "title": "Hlášeno osobou",
+  "note": "Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci",
   "fields": [
-    { "key": "source_ip",   "label": "Zdrojová IP",   "type": "text",     "editable": true, "value": null },
-    { "key": "detected_at", "label": "Čas detekce",   "type": "datetime", "editable": true, "value": null },
-    { "key": "description", "label": "Popis",          "type": "textarea", "editable": true, "value": null }
+    { "key": "reported_at",         "label": "Datum a čas nahlášení",    "type": "datetime", "editable": true, "value": null },
+    { "key": "reporter_name",       "label": "Jméno oznamovatele",        "type": "text",     "editable": true, "value": null, "example": "Jan Novák" },
+    { "key": "reporter_department", "label": "Oddělení",                  "type": "text",     "editable": true, "value": null, "example": "Účetní oddělení" },
+    { "key": "description",         "label": "Popis slovy oznamovatele",  "type": "textarea", "editable": true, "value": null }
+  ]
+}
+```
+
+### Uzavření incidentu (`closure_form`)
+
+Sémanticky odlišená forma uzavření – renderuje se stejně jako `form`, ale volitelně zobrazí modrý informační box nad formulářem (klíč `hint`). Pole `hint` může obsahovat HTML.
+
+```jsonc
+{
+  "id": "closure",
+  "type": "closure_form",
+  "title": "Klasifikace a uzavření",
+  "hint": "Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.",
+  "fields": [
+    { "key": "final_classification", "label": "Klasifikace výsledku", "type": "select", "editable": true, "value": null,
+      "options": ["True Positive", "False Positive", "Benign True Positive"] },
+    { "key": "impact_level", "label": "Úroveň dopadu", "type": "select", "editable": true, "value": null,
+      "options": ["Nízká", "Střední", "Vysoká", "Kritická"],
+      "option_hints": {
+        "Vysoká":   "Při zasažení regulované služby zakládá povinnost hlášení NÚKIB.",
+        "Kritická": "Vždy Kybernetický bezpečnostní incident (KBI)."
+      }},
+    { "key": "root_cause",      "label": "Root Cause",               "type": "textarea", "editable": true, "value": null },
+    { "key": "actions_taken",   "label": "Přijatá opatření",          "type": "textarea", "editable": true, "value": null },
+    { "key": "recommendations", "label": "Doporučení pro zlepšení",   "type": "textarea", "editable": true, "value": null },
+    { "key": "closed_at",       "label": "Datum uzavření",            "type": "datetime", "editable": true, "value": null }
   ]
 }
 ```
@@ -229,26 +258,50 @@ Tabulka dotčených systémů a zařízení. Všechny buňky jsou editovatelné.
 }
 ```
 
-### Tabulka akcí (`action_table`, `notification_table`)
+### Tabulka akcí (`action_table`)
 
-Předdefinovaný seznam akcí odezvy. Analytik mění stav každé akce z dropdown seznamu (`status_options`). Může přidávat vlastní akce (`allow_append`) a mazat řádky (`allow_delete`). `notification_table` je identická sekce – rozdíl je jen v datech šablony (používá se pro sledování notifikací namísto akcí).
+Předdefinovaný seznam akcí odezvy. Analytik mění stav každé akce z dropdown seznamu (`status_options`). Může přidávat vlastní akce (`allow_append`) a mazat řádky (`allow_delete`).
 
 ```jsonc
 {
   "id": "response_actions",
   "type": "action_table",
   "title": "Akce odezvy",
-  "columns": ["action", "owner", "status"],
-  "column_labels": { "action": "Akce", "owner": "Zodpovídá", "status": "Stav" },
+  "columns": ["action", "responsible_role", "cooperation", "status"],
+  "column_labels": { "action": "Akce", "responsible_role": "Zodpovědná role", "cooperation": "Součinnost", "status": "Stav" },
   "editable_columns": ["status"],
-  "status_options": ["Čeká", "Probíhá", "Hotovo", "N/A"],
+  "status_options": ["Provedeno", "Probíhá", "Čeká", "N/A", "Není nutné provést"],
   "allow_append": true,
-  "allow_delete": false,
-  "append_row_template": { "action": null, "owner": null, "status": null },
-  "hints": ["Stav průběžně aktualizujte."],
+  "allow_delete": true,
+  "append_row_template": { "action": null, "responsible_role": null, "cooperation": null, "status": null },
+  "hints": ["Pokud akce není relevantní, napiš N/A."],
   "rows": [
-    { "action": "Izolovat kompromitovanou stanici", "owner": null, "status": null },
-    { "action": "Resetovat přihlašovací údaje",     "owner": null, "status": null }
+    { "action": "Počítač izolován od sítě",             "responsible_role": "SOC Analytický tým", "cooperation": "Správce AV/EDR", "status": null },
+    { "action": "Blokována doména odesílatele na mail serveru", "responsible_role": "SOC Analytický tým", "cooperation": "Správce Exchange", "status": null }
+  ]
+}
+```
+
+### Komunikace a notifikace (`notification_table`)
+
+Stejný renderer jako `action_table`, ale typicky **bez** `status_options`. Místo stavového dropdownu slouží `editable_columns` pro volný textový vstup (např. poznámka nebo stav notifikace). Pomocí `hints[]` lze přidat regulatorní připomínky.
+
+```jsonc
+{
+  "id": "communication",
+  "type": "notification_table",
+  "title": "Komunikace a notifikace",
+  "columns": ["recipient", "communication_method", "sla", "note"],
+  "column_labels": { "recipient": "Příjemce", "communication_method": "Způsob", "sla": "SLA", "note": "Poznámka / stav" },
+  "editable_columns": ["note"],
+  "hints": [
+    "SLA je orientační – vždy ověř požadavky dle platné legislativy (NIS2, GDPR).",
+    "Oznamovatele informuj vždy, bez ohledu na výsledek klasifikace."
+  ],
+  "rows": [
+    { "recipient": "Vlastník dotčeného aktiva", "communication_method": "E-mail / telefon", "sla": "Do 30 min od Posouzení", "note": null },
+    { "recipient": "CISO / Management",         "communication_method": "E-mail / telefon", "sla": "Do 1 h (High / Critical)", "note": null },
+    { "recipient": "Oznamovatel události",       "communication_method": "E-mail / telefon", "sla": "Po uzavření incidentu", "note": null }
   ]
 }
 ```
@@ -270,6 +323,7 @@ Na konci checklistu může být volitelný blok `result` s notifikacemi a formul
   "title": "Postup vyšetřování",
   "step_groups": [
     {
+      "id": "triage",
       "title": "1. Triáž",
       "note": "max. 15 minut",
       "hints": ["Před zahájením ověřte dostupnost logů v SIEM."],
@@ -285,7 +339,6 @@ Na konci checklistu může být volitelný blok `result` s notifikacemi a formul
         {
           "id": "s02",
           "action": "Zkontrolujte odesílatele vůči blacklistům.",
-          "example": "",
           "done": false,
           "analyst_note": null
         }
@@ -381,12 +434,149 @@ Každé pole má povinné klíče `key`, `label`, `type`, `editable`, `value`. V
 | Klíč | Popis |
 |------|-------|
 | `example` | Placeholder text ve vstupu |
-| `hint` | Nápověda zobrazená pod labelem |
-| `options` | Seznam možností pro typ `select` |
+| `hint` | Nápověda zobrazená pod labelem (nikdy jako placeholder) |
+| `options` | Seznam možností pro typ `select` – povinný pokud `type: "select"` |
 | `option_hints` | Nápověda pod selectem pro konkrétní možnost: `{ "high": "Výrazné omezení" }` |
-| `auto_value` | `"case_id"` → backend vyplní automaticky při vytvoření případu |
+| `auto_value` | Backend vyplní automaticky: `"case_id"`, `"template_name"`, `"template_version"`, `"template_status"`, `"template_mitre_tactic"`, `"template_mitre_technique"`, `"template_data_sources"` |
+| `is_example` | `true` → hodnota z šablony se zobrazí jako placeholder; při klonování do nového případu se vymaže (pole zůstane prázdné) |
 
 Pokud je `editable: false`, pole se zobrazí jako read-only text (šedě, bez inputu). Hodnota `null` znamená nevyplněno.
+
+---
+
+## Povinné a volitelné klíče
+
+Rychlá reference pro tvorbu JSON šablon. ✓ = povinné, prázdno = volitelné.
+
+### Společné klíče (všechny typy sekcí)
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce v dokumentu |
+| `type` | ✓ | Typ sekce – viz přehled výše |
+| `title` | ✓ | Nadpis karty |
+| `description` | | Podnadpis v pravé části hlavičky karty |
+
+### `workbook_header` a `form`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `fields[]` | ✓ | Pole formulářových polí (může být `[]`) |
+| `note` | | Šedý text za nadpisem (např. „přeskoč pokud...") – ukládá se do dat, renderer ho nezobrazuje v kartě, ale může ho zobrazit podsekce v `section_group` |
+
+### `closure_form`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `fields[]` | ✓ | Pole formulářových polí |
+| `hint` | | HTML text zobrazený jako modrý informační box nad formulářem |
+
+### Klíče každého pole (`fields[]`)
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `key` | ✓ | Unikátní identifikátor pole v rámci sekce |
+| `label` | ✓ | Popisek vlevo od inputu |
+| `type` | ✓ | `text` \| `textarea` \| `select` \| `datetime` |
+| `editable` | ✓ | `false` → zobrazí se jako read-only text |
+| `value` | ✓ | Aktuální hodnota; `null` = nevyplněno |
+| `options[]` | (pro `select`) | Povinný pokud `type: "select"` |
+| `example` | | Placeholder text ve vstupu |
+| `hint` | | Nápověda pod labelem |
+| `option_hints{}` | | Nápověda dle vybrané možnosti v selectu |
+| `auto_value` | | Automaticky vyplněno backendem (viz tabulka typů polí) |
+| `is_example` | | `true` → hodnota slouží jako placeholder, smaže se při klonování |
+
+### `contact_table`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
+| `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
+| `rows[]` | ✓ | Řádky tabulky (může být `[]`) |
+| `editable_columns[]` | | Sloupce editovatelné inline v šablonových řádcích |
+| `allow_append` | | `true` → tlačítko „Přidat řádek" |
+| `append_row_template{}` | (pokud `allow_append`) | Vzor pro nový prázdný řádek |
+
+Řádky přidané analytikem (interní flag `analyst_added: true`) jsou vždy plně editovatelné a mají tlačítko Smazat.
+
+### `assets_table`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
+| `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
+| `rows[]` | ✓ | Řádky tabulky (může být `[]`) |
+| `column_options{}` | | `{ sloupec: [možnosti] }` – sloupce renderované jako `<select>` |
+| `hint` | | Oranžový výstražný box nad tabulkou |
+| `always_expanded` | | Při použití uvnitř `section_group`: `true` = podsekce nelze sbalit |
+
+### `section_group`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `subsections[]` | ✓ | Seznam podsekci (accordion panely) |
+| `subsections[].id` | ✓ | Identifikátor podsekce |
+| `subsections[].type` | ✓ | `form` nebo `assets_table` |
+| `subsections[].title` | ✓ | Nadpis accordion panelu |
+| `subsections[].note` | | Šedý text vpravo od nadpisu |
+| `subsections[].always_expanded` | | `true` = podsekce bez možnosti sbalení |
+
+### `checklist`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `step_groups[]` | ✓ | Skupiny kroků |
+| `step_groups[].id` | ✓ | Identifikátor skupiny |
+| `step_groups[].title` | ✓ | Nadpis skupiny |
+| `step_groups[].steps[]` | ✓ | Kroky skupiny |
+| `step_groups[].note` | | Šedý podnadpis za nadpisem skupiny |
+| `step_groups[].hints[]` | | Šedé informační boxy (operační nápovědy) |
+| `step_groups[].classification_hints[]` | | Žluté boxy s klasifikačními vodítky |
+| `result{}` | | Blok výsledku na konci checklistu |
+| `result.title` | (pokud `result`) | Nadpis bloku výsledku |
+| `result.fields[]` | (pokud `result`) | Formulářová pole výsledku |
+| `result.notifications[]` | | `string[]` nebo `[{ condition, actions[] }]` |
+
+Klíče každého kroku (`steps[]`):
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Identifikátor kroku |
+| `action` | ✓ | Text kroku (HTML bezpečně sanitizován) |
+| `done` | ✓ | Výchozí stav checkboxu (`false`) |
+| `analyst_note` | ✓ | Výchozí hodnota poznámky (`null`) |
+| `example` | | Placeholder v textarea poznámky |
+| `is_example` | | `true` → `analyst_note` slouží jako placeholder, smaže se při klonování |
+
+### `action_table`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
+| `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
+| `rows[]` | ✓ | Řádky tabulky |
+| `editable_columns[]` | ✓ | Sloupce renderované jako stavový `<select>` |
+| `status_options[]` | ✓ | Možnosti stavového dropdownu |
+| `allow_append` | | `true` → tlačítko „Přidat akci" |
+| `allow_delete` | | `true` → tlačítko Smazat u všech řádků |
+| `append_row_template{}` | (pokud `allow_append`) | Vzor pro nový řádek |
+| `hints[]` | | Informační texty pod tabulkou |
+
+### `notification_table`
+
+Stejná struktura jako `action_table`, ale typicky **bez** `status_options`. Místo stavového dropdownu slouží `editable_columns` pro volný textový vstup.
+
+### `raci_table`
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `columns[]` | ✓ | Seřazený seznam klíčů sloupců |
+| `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
+| `rows[]` | ✓ | Řádky tabulky |
+| `legend` | | Text popisující zkratky R/A/C/I, zobrazen nad tabulkou |
+
+Buňky, jejichž hodnota obsahuje podřetězec `"R"` (substring), jsou zvýrazněny tučně červeně – takže např. `"R, A"` je červeně zvýrazněno také.
 
 ---
 
