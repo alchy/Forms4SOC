@@ -1,7 +1,8 @@
-import json
 import logging
 from pathlib import Path
 from typing import Optional
+
+import yaml
 
 import aiosqlite
 from fastapi import Depends
@@ -26,12 +27,12 @@ class TemplateService:
 
     async def list_templates(self) -> list[SOCTemplate]:
         result = []
-        for json_file in sorted(self.templates_dir.glob("*.json")):
+        for yaml_file in sorted(self.templates_dir.glob("*.yaml")):
             try:
-                data = json.loads(json_file.read_text(encoding="utf-8"))
-                result.append(SOCTemplate(**data, filename=json_file.name))
+                data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+                result.append(SOCTemplate(**data, filename=yaml_file.name))
             except Exception as exc:
-                logger.warning("Cannot load template '%s': %s", json_file.name, exc)
+                logger.warning("Cannot load template '%s': %s", yaml_file.name, exc)
         return result
 
     async def get_template(self, template_id: str) -> Optional[SOCTemplate]:
@@ -42,11 +43,11 @@ class TemplateService:
 
     def _find_file(self, template_id: str) -> Optional[Path]:
         """Najde soubor šablony dle template_id."""
-        for json_file in self.templates_dir.glob("*.json"):
+        for yaml_file in self.templates_dir.glob("*.yaml"):
             try:
-                data = json.loads(json_file.read_text(encoding="utf-8"))
+                data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
                 if data.get("template_id") == template_id:
-                    return json_file
+                    return yaml_file
             except Exception:
                 pass
         return None
@@ -59,8 +60,8 @@ class TemplateService:
         return {"content": path.read_text(encoding="utf-8"), "filename": path.name}
 
     async def save(self, template_id: str, content: str) -> str:
-        """Validuje JSON a přepíše existující soubor. Vrátí filename."""
-        json.loads(content)  # vyvolá ValueError pokud není validní JSON
+        """Validuje YAML a přepíše existující soubor. Vrátí filename."""
+        yaml.safe_load(content)  # vyvolá ValueError pokud není validní YAML
         path = self._find_file(template_id)
         if not path:
             raise FileNotFoundError(f"Šablona '{template_id}' nebyla nalezena")
@@ -68,16 +69,15 @@ class TemplateService:
         return path.name
 
     async def create(self, filename: str, content: str) -> str:
-        """Validuje JSON a vytvoří nový soubor. Vrátí template_id z obsahu."""
-        json.loads(content)  # vyvolá ValueError pokud není validní JSON
-        if not filename.endswith(".json"):
-            filename += ".json"
+        """Validuje YAML a vytvoří nový soubor. Vrátí template_id z obsahu."""
+        data = yaml.safe_load(content)  # vyvolá ValueError pokud není validní YAML
+        if not filename.endswith(".yaml"):
+            filename += ".yaml"
         target = self.templates_dir / filename
         if target.exists():
             raise FileExistsError(f"Soubor '{filename}' již existuje")
         target.write_text(content, encoding="utf-8")
-        data = json.loads(content)
-        return data.get("template_id", filename.replace(".json", ""))
+        return data.get("template_id", filename.replace(".yaml", ""))
 
     async def delete(self, template_id: str) -> None:
         """Smaže soubor šablony."""

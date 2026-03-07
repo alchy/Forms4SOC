@@ -41,11 +41,11 @@ async def create_template(
 ):
     try:
         template_id = await svc.create(body.filename, body.content)
-        return {"ok": True, "template_id": template_id, "filename": body.filename.rstrip(".json") + ".json"}
+        return {"ok": True, "template_id": template_id, "filename": body.filename.rstrip(".yaml") + ".yaml"}
     except FileExistsError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=f"Neplatný JSON: {exc}")
+        raise HTTPException(status_code=400, detail=f"Neplatný YAML: {exc}")
 
 
 @router.get(
@@ -95,7 +95,7 @@ async def save_template(
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=f"Neplatný JSON: {exc}")
+        raise HTTPException(status_code=400, detail=f"Neplatný YAML: {exc}")
 
 
 @router.delete(

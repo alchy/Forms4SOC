@@ -1,0 +1,829 @@
+template_id: phishing-v2
+name: Podezřelý e-mail / Phishing v2
+version: '2.0'
+category: Phishing
+status: active
+description: Workbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha,
+  URL). Posouzení, třídění a rozhodování jsou sloučeny do jednoho bloku.
+mitre_tactic: Initial Access
+mitre_technique: T1566 – Phishing
+mitre_subtechnique: T1566.001
+data_sources:
+- Inbound SMTP Mail Gateway
+- Proxy
+- Antivirus / EDR
+- Umbrella
+- SIEM
+sections:
+- id: header
+  type: workbook_header
+  title: Hlavička
+  fields:
+  - key: case_title
+    label: Stručný popis události
+    type: text
+    editable: true
+    is_example: true
+    value: Stručný popis pro vyhledání události
+    hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
+  - key: ticket_id
+    label: Ticket ID
+    type: text
+    editable: false
+    value: null
+    auto_value: case_id
+  - key: workbook_name
+    label: Název workbooku
+    type: text
+    editable: false
+    value: null
+    auto_value: template_name
+  - key: workbook_id
+    label: Workbook ID
+    type: text
+    editable: false
+    value: 2026-002
+  - key: version
+    label: Verze
+    type: text
+    editable: false
+    value: null
+    auto_value: template_version
+  - key: last_updated
+    label: Datum poslední aktualizace
+    type: text
+    editable: false
+    value: '2026-03-05'
+  - key: author
+    label: Autor / vlastník šablony
+    type: text
+    editable: false
+    value: SOC Analytický tým
+  - key: incident_coordinator
+    label: Koordinátor incidentu
+    type: text
+    editable: true
+    value: null
+    hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
+  - key: workbook_status
+    label: Status
+    type: text
+    editable: false
+    value: null
+    auto_value: template_status
+- id: classification
+  type: classification
+  title: Klasifikace
+  fields:
+  - key: mitre_tactic
+    label: MITRE Tactic
+    type: text
+    editable: false
+    value: null
+    auto_value: template_mitre_tactic
+  - key: mitre_technique
+    label: MITRE Technique
+    type: text
+    editable: false
+    value: null
+    auto_value: template_mitre_technique
+  - key: mitre_subtechnique
+    label: MITRE Sub-technique
+    type: select
+    editable: true
+    value: null
+    options:
+    - T1566.001 – Spearphishing Attachment
+    - T1566.002 – Spearphishing Link
+    - T1566.003 – Spearphishing via Service
+    - T1566.004 – Spearphishing Voice
+    - Nelze určit
+    hint: Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku.
+  - key: data_sources
+    label: Doporučené zdroje dat pro investigaci
+    type: text
+    editable: false
+    value: null
+    auto_value: template_data_sources
+- id: contacts
+  title: Kontaktní matice
+  type: contact_table
+  description: Kontakty pro investigaci a eskalaci. Vyplň dle aktuální struktury organizace.
+  columns:
+  - system_role
+  - name
+  - email
+  - phone
+  - when_to_contact
+  column_labels:
+    system_role: Systém / role
+    name: Jméno
+    email: E-mail
+    phone: Telefon
+    when_to_contact: Kdy kontaktovat
+  editable_columns:
+  - name
+  - email
+  - phone
+  allow_append: true
+  append_row_template:
+    system_role: null
+    name: null
+    email: null
+    phone: null
+    when_to_contact: null
+  rows:
+  - system_role: Správce Exchange / Mail GW
+    name: Jan Novák
+    email: jan.novak@firma.cz
+    phone: +420 123 456 789
+    when_to_contact: Získání e-mailových logů, blokace odesílatele, počet příjemců
+  - system_role: Správce Proxy
+    name: Petra Svobodová
+    email: petra.svobodova@firma.cz
+    phone: +420 123 456 790
+    when_to_contact: Proxy logy, blokace URL / domény
+  - system_role: Správce AV / EDR
+    name: Tomáš Blažek
+    email: tomas.blazek@firma.cz
+    phone: +420 123 456 791
+    when_to_contact: Hash vyhledání, AV scan, izolace endpointu
+  - system_role: SOC Analytický tým
+    name: SOC L2
+    email: soc@firma.cz
+    phone: +420 123 456 792
+    when_to_contact: Interní koordinace
+  - system_role: CISO
+    name: Ing. Martin Kovář
+    email: ciso@firma.cz
+    phone: +420 123 456 793
+    when_to_contact: Závažnost Vysoká / Kritická
+  - system_role: ISO
+    name: Mgr. Eva Horáčková
+    email: iso@firma.cz
+    phone: +420 123 456 794
+    when_to_contact: Závažnost Kritická / dle interní politiky
+  - system_role: CERT / NÚKIB
+    name: NÚKIB
+    email: podatelna@nukib.cz
+    phone: +420 222 362 888
+    when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
+- id: incident_context
+  title: Informace o kontextu UIB
+  type: section_group
+  subsections:
+  - id: reported_by_person
+    title: Hlášeno osobou
+    type: form
+    note: Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci
+    condition: source_type == 'person'
+    fields:
+    - key: reported_at
+      label: Datum a čas nahlášení
+      type: datetime
+      editable: true
+      is_example: true
+      value: 2025-03-15T09:42
+    - key: reporter_name
+      label: Jméno oznamovatele
+      type: text
+      editable: true
+      is_example: true
+      value: Jan Novák
+    - key: reporter_department
+      label: Oddělení / organizační jednotka
+      type: text
+      editable: true
+      is_example: true
+      value: Účetní oddělení
+    - key: reporter_contact
+      label: Kontakt (e-mail / telefon)
+      type: text
+      editable: true
+      is_example: true
+      value: novakj@ans.cz / +420 123 456 789
+    - key: affected_user
+      label: Postižený uživatel (pokud jiný než oznamovatel)
+      type: text
+      editable: true
+      is_example: true
+      value: (oznamovatel = postižený)
+    - key: affected_asset
+      label: Postižené aktivum
+      type: text
+      editable: true
+      is_example: true
+      value: 'PC-NOVAK-01 · mailbox: novakj@ans.cz'
+      hint: Uveď hostname počítače, IP adresu, název systému nebo mailbox
+    - key: target_type
+      label: Cíl události
+      type: select
+      editable: true
+      is_example: true
+      value: Uživatel
+      options:
+      - Uživatel
+      - Informační systém
+      - Kombinace
+      option_hints:
+        Uživatel: Útok cílí na konkrétního uživatele nebo skupinu
+        Informační systém: Cílem je konkrétní IS nebo infrastruktura
+        Kombinace: Obojí
+    - key: description_by_reporter
+      label: Popis události slovy oznamovatele
+      type: textarea
+      editable: true
+      is_example: true
+      value: Přišel podezřelý e-mail s přílohou od neznámého odesílatele.
+  - id: automated_detection
+    title: Automatizovaná detekce
+    type: form
+    note: Vyplní SOC Analytik — přeskoč pokud hlásila osoba
+    condition: source_type == 'automated'
+    fields:
+    - key: alert_timestamp
+      label: Datum a čas alertu
+      type: datetime
+      editable: true
+      is_example: true
+      value: 2025-03-15T09:38
+    - key: detection_tool
+      label: Identifikace detekčního nástroje
+      type: text
+      editable: true
+      value: null
+    - key: alert_id
+      label: ID alertu / Identifikace pravidla
+      type: text
+      editable: true
+      value: null
+    - key: affected_asset_auto
+      label: Postižené aktivum (hostname, IP, IS)
+      type: text
+      editable: true
+      value: null
+    - key: target_type
+      label: Cíl události
+      type: select
+      editable: true
+      value: null
+      options:
+      - Uživatel
+      - Informační systém
+      - Kombinace
+    - key: alert_description
+      label: Popis alertu
+      type: textarea
+      editable: true
+      value: null
+  - id: affected_assets
+    title: Dotčená aktiva
+    type: assets_table
+    note: Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope
+    hint: Pokud je některé aktivum součástí kritické infrastruktury (KI) → ihned informuj CISO.
+    always_expanded: true
+    columns:
+    - asset_name
+    - asset_ip
+    - asset_type
+    - critical_infrastructure
+    - contact_owner
+    - guarantor
+    - email
+    - phone
+    column_labels:
+      asset_name: Název aktiva (hostname, mailbox, IS)
+      asset_ip: IP adresa
+      asset_type: Typ aktiva
+      critical_infrastructure: KI
+      contact_owner: Kontakt vlastníka
+      guarantor: Garant
+      email: E-mail
+      phone: Telefon
+    column_options:
+      asset_type:
+      - Endpoint
+      - Server
+      - Mailbox
+      - Informační systém
+      - Síťový prvek
+      - Sdílené úložiště
+      - Jiné aktivum
+      critical_infrastructure:
+      - Ano
+      - Ne
+    editable: true
+    rows: []
+- id: triage_investigation
+  title: Posouzení, třídění a rozhodování
+  type: checklist
+  description: Cílem je potvrdit nebo vyvrátit bezpečnostní incident, stanovit rozsah kompromitace a připravit podklady pro
+    Odezva. Klasifikace (True/False Positive, Severity) se v průběhu Posouzení, třídění a rozhodování může měnit — finální
+    klasifikace se zaznamenává v bloku Uzavření incidentu.
+  step_groups:
+  - id: context_artifacts
+    title: Ověření kontextu a artefaktů
+    steps:
+    - id: ta_01
+      action: Vyžádej si podezřelý e-mail ve formátu .eml nebo jako forward na dedikovanou SOC schránku
+      analyst_note: E-mail přijat jako .eml
+      is_example: true
+      done: false
+    - id: ta_02
+      action: Zaznamenej odesílatele, předmět a časové razítko e-mailu
+      analyst_note: 'Od: invoice@podezrely-domena.com · Předmět: "Faktura #2025-112" · Přijato: 2025-03-15 09:31'
+      is_example: true
+      done: false
+  - id: email_analysis
+    title: Analýza obsahu e-mailu
+    steps:
+    - id: ea_01
+      action: Zkontroluj obsah e-mailu — identifikuj přítomnost přílohy, hyperlinku nebo pouze textu
+      analyst_note: 'Příloha: faktura_2025.xlsx · Hyperlink přítomen v těle e-mailu'
+      is_example: true
+      done: false
+    - id: ea_02
+      action: Ověř záhlaví e-mailu (SPF, DKIM, DMARC)
+      analyst_note: 'SPF: fail · DKIM: none · Doména spoofována'
+      is_example: true
+      done: false
+  - id: attachment_analysis
+    title: E-mail obsahuje přílohu
+    note: Přeskoč pokud příloha není přítomna
+    condition: has_attachment == true
+    steps:
+    - id: att_01
+      action: Zjisti hash přílohy (MD5 / SHA256) — přílohu přímo neotvírej
+      analyst_note: 'SHA256: 3a1f2b…'
+      is_example: true
+      done: false
+    - id: att_02
+      action: Ověř hash na VirusTotal nebo interním Threat Intelligence zdroji
+      analyst_note: 'VT: 12/72 detekcí – malicious'
+      is_example: true
+      done: false
+    - id: att_03
+      action: Zjisti z AV / EDR, zda byla příloha otevřena, kým a kdy
+      analyst_note: Příloha otevřena uživatelem PC-NOVAK-01 ve 09:38
+      is_example: true
+      done: false
+    - id: att_04
+      action: Vyhledej stejný hash na ostatních endpointech přes AV / EDR — kontaktuj Správce AV/EDR (viz Kontaktní matice)
+      analyst_note: Hash nalezen na PC-SVOBODA-02 a PC-KRAL-05
+      is_example: true
+      done: false
+    hints:
+    - Pokud byla příloha otevřena nebo nalezena na více zařízeních → zaznamenej všechna zasažená zařízení a rozšiř scope.
+    classification_hints:
+    - Hash detekován na TI a příloha otevřena → True Positive, High · Hash na TI, příloha neotvřena → True Positive, Medium
+      · Hash na TI nedetekován → zvaž False Positive
+  - id: url_analysis
+    title: E-mail obsahuje URL odkaz
+    note: Přeskoč pokud URL není přítomna
+    condition: has_url == true
+    steps:
+    - id: url_01
+      action: Extrahuj URL z e-mailu — neotevírej odkaz přímo, použij defangovaný formát (např. hxxps://)
+      analyst_note: hxxps://podezrely-domena[.]com/faktura
+      is_example: true
+      done: false
+    - id: url_02
+      action: Ověř URL na VirusTotal / URLScan.io nebo interním TI zdroji
+      analyst_note: Kategorizováno jako phishing
+      is_example: true
+      done: false
+    - id: url_03
+      action: Zkontroluj proxy logy — byl odkaz prokliknut? Kým? Kdy? Kontaktuj Správce Proxy (viz Kontaktní matice)
+      analyst_note: 'Prokliknutí zaznamenáno 09:39 · uživatel: novakj · PC-NOVAK-01'
+      is_example: true
+      done: false
+    - id: url_04
+      action: Zkontroluj logy z Umbrella DNS Protection pro zjištěné destinace
+      analyst_note: null
+      done: false
+    hints:
+    - Pokud bylo prokliknutí potvrzeno → rozšiř scope.
+    classification_hints:
+    - URL phishing + prokliknutí potvrzeno → True Positive, High · URL phishing, prokliknutí nepotvrzeno → True Positive,
+      Medium · URL legitimní → zvaž False Positive
+  - id: bec_analysis
+    title: Pouze textový e-mail – BEC / Social Engineering
+    note: Přeskoč pokud příloha nebo URL jsou přítomny
+    condition: has_attachment == false && has_url == false
+    steps:
+    - id: bec_01
+      action: Zhodnoť povahu žádosti — o co odesílatel žádá. Zkontaktuj postiženého uživatele — byla žádost splněna? Pokud
+        splněna → zjisti rozsah (výše transakce, sdílené údaje, …)
+      analyst_note: Žádost o převod platby na "nový účet dodavatele". Uživatel žádost nesplnil, nahlásil ihned.
+      is_example: true
+      done: false
+    hints:
+    - Pokud uživatel žádost splnil → kontaktuj CISO (viz Kontaktní matice).
+    classification_hints:
+    - Žádost splněna → True Positive, High/Critical · Žádost nesplněna, SPF fail → True Positive, Low/Medium · Odesílatel
+      legitimní → zvaž False Positive
+  - id: scope_correlation
+    title: Rozsah kampaně a korelace
+    steps:
+    - id: sc_01
+      action: Koreluj události napříč dostupnými zdroji, pokud je relevantní (proxy, EDR, mail gateway, SIEM)
+      analyst_note: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
+      is_example: true
+      done: false
+    - id: sc_02
+      action: Na inbound mail gateway ověř, kolik příjemců e-mail obdrželo — kontaktuj Správce Exchange (viz Kontaktní matice)
+      analyst_note: E-mail doručen 18 uživatelům ve 3 odděleních
+      is_example: true
+      done: false
+    - id: sc_03
+      action: Zhodnoť, zda jde o cílenou nebo plošnou kampaň; zaznamenej seznam postižených mailboxů
+      analyst_note: Plošná kampaň – seznam příjemců přiložen k ticketu
+      is_example: true
+      done: false
+    - id: sc_04
+      action: Identifikuj scope — počet postižených uživatelů, zařízení, systémů, dat
+      analyst_note: 3 PC · 18 mailboxů · 1 sdílený síťový disk
+      is_example: true
+      done: false
+    - id: sc_05
+      action: Sestav timeline události — od doručení e-mailu po aktuální stav
+      analyst_note: Timeline přiložena k ticketu
+      is_example: true
+      done: false
+    hints:
+    - Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v sekci Odezva).
+  - id: lateral_evidence
+    title: Laterální pohyb a zajištění důkazů
+    steps:
+    - id: le_01
+      action: Ověř, zda došlo k laterálnímu pohybu nebo exfiltraci dat
+      analyst_note: Laterální pohyb nezaznamenán · exfiltrace dat nezjištěna
+      is_example: true
+      done: false
+    - id: le_02
+      action: Zajisti důkazy (evidence collection) — logy, .eml soubor, hash, screenshoty a ulož odkaz na umístění těchto
+        souborů
+      analyst_note: 'Uloženo: /evidence/INC-2025-0042/'
+      is_example: true
+      done: false
+    classification_hints:
+    - Laterální pohyb nebo exfiltrace potvrzena → True Positive, Critical / High (navýšení severity) · Laterální pohyb nezjištěn
+      → pokračuj dle předchozí klasifikace
+- id: containment_remediation
+  title: Odezva
+  type: action_table
+  description: Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní, napiš N/A.
+  columns:
+  - action
+  - responsible_role
+  - cooperation
+  - status
+  column_labels:
+    action: Akce
+    responsible_role: Zodpovědná role
+    cooperation: Součinnost
+    status: Stav
+  status_options:
+  - Provedeno
+  - Probíhá
+  - Čeká
+  - N/A
+  - Není nutné provést
+  editable_columns:
+  - status
+  allow_append: true
+  allow_delete: true
+  append_row_template:
+    action: null
+    responsible_role: null
+    cooperation: null
+    status: null
+  rows:
+  - action: Počítač izolován od sítě
+    responsible_role: SOC Analytický tým
+    cooperation: Správce AV/EDR · IT Helpdesk
+    status: null
+  - action: Blokována doména odesílatele na mail serveru
+    responsible_role: SOC Analytický tým
+    cooperation: Správce Exchange
+    status: null
+  - action: Blokována URL / doména na proxy / firewallu
+    responsible_role: SOC Analytický tým
+    cooperation: Správce Proxy
+    status: null
+  - action: Blokován hash přílohy v AV / EDR
+    responsible_role: SOC Analytický tým
+    cooperation: Správce AV/EDR
+    status: null
+  - action: Provedena mimořádná kontrola AV postižených zařízení
+    responsible_role: SOC Analytický tým
+    cooperation: Správce AV/EDR
+    status: null
+  - action: Resetována přihlašovací hesla postižených uživatelů
+    responsible_role: IT Helpdesk
+    cooperation: SOC Analytický tým
+    status: null
+  - action: Proveden patch / update zranitelného softwaru
+    responsible_role: Vlastník systému / IT
+    cooperation: SOC Analytický tým
+    status: null
+  - action: Rozesláno bezpečnostní upozornění uživatelům
+    responsible_role: SOC Analytický tým
+    cooperation: –
+    status: null
+  - action: Jiné
+    responsible_role: null
+    cooperation: null
+    status: null
+- id: communication
+  title: Komunikace a notifikace
+  type: action_table
+  columns:
+  - recipient
+  - communication_method
+  - sla
+  - note
+  column_labels:
+    recipient: Příjemce
+    communication_method: Způsob komunikace
+    sla: SLA pro notifikaci
+    note: Poznámka / stav
+  editable_columns:
+  - note
+  hints:
+  - SLA je orientační. Vždy ověř požadavky dle platné legislativy (NIS2, GDPR) a interních předpisů.
+  - Oznamovatele informuj vždy — bez ohledu na výsledek klasifikace.
+  rows:
+  - recipient: Vlastník dotčeného aktiva
+    communication_method: E-mail / telefon
+    sla: Do 30 min od Posouzení
+    note: null
+  - recipient: CISO / Management
+    communication_method: E-mail / telefon
+    sla: Do 1 h (High / Critical)
+    note: null
+  - recipient: Postižení uživatelé
+    communication_method: Hromadný e-mail
+    sla: Do 2 h
+    note: null
+  - recipient: Oznamovatel události
+    communication_method: E-mail / telefon
+    sla: Po uzavření incidentu
+    note: null
+  - recipient: CERT / NÚKIB
+    communication_method: Datová schránka
+    sla: Dle regulatorní povinnosti
+    note: null
+- id: closure
+  title: Klasifikace a uzavření
+  type: form
+  description: Uzavření provádí SOC Analytický tým po dokončení Odezvy, nebo ihned po Posouzení, třídění a rozhodování u False
+    Positive / Benign True Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.
+  hint: Před uzavřením ověř, že oznamovatel byl informován o výsledku šetření.<br><br><b>Metodika klasifikace – Úroveň dopadu:</b><br><b>Nízká</b>
+    – incidenty s omezeným nebo lokálním dopadem; žádný dopad na regulovanou službu.<br><b>Střední</b> – postihují důležité
+    systémy, ale nezpůsobují kompletní přerušení klíčových procesů; nezasahuje aktiva regulované služby.<br><b>Vysoká</b>
+    – významný dopad na klíčové procesy nebo systémy; při zasažení aktiv regulované služby splňují kritéria KBI dle ZKB; ohrožují
+    kontinuitu činnosti nebo reputaci.<br><b>Kritická</b> – katastrofický dopad; vedou k úplnému kolapsu regulované služby,
+    mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo jeho způsobilost; jde vždy o KBI.
+  fields:
+  - key: final_classification
+    label: Klasifikace výsledku
+    type: select
+    editable: true
+    is_example: true
+    value: True Positive
+    options:
+    - True Positive
+    - False Positive
+    - Benign True Positive
+    hint: Klasifikace odráží celkový výsledek Posouzení, třídění a rozhodování a může se lišit od průběžného hodnocení.
+  - key: impact_level
+    label: Úroveň dopadu
+    type: select
+    editable: true
+    value: null
+    options:
+    - Nízká
+    - Střední
+    - Vysoká
+    - Kritická
+    option_hints:
+      Nízká: Incidenty s omezeným nebo lokálním dopadem. Žádný dopad na regulovanou službu.
+      Střední: Incidenty, které postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů. Nezasahuje
+        aktiva regulované služby.
+      Vysoká: Incidenty s významným dopadem na klíčové procesy nebo systémy. Při zasažení aktiv regulované služby splňují
+        kritéria KBI dle ZKB. Ohrožují kontinuitu činnosti nebo reputaci.
+      Kritická: Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo
+        právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI.
+    hint: Úroveň Vysoká a Kritická při zasažení regulované služby zakládají povinnost hlášení NÚKIB a ÚCL.
+  - key: nukib_notification_required
+    label: Povinnost hlášení NÚKIB
+    type: select
+    editable: true
+    value: null
+    options:
+    - Povinná – Regulovaná služba + Vysoká/Kritická (ZOKB §8, vyhl. 82/2018 Sb.)
+    - Zvážit – hraniční případ
+    - Není vyžadována
+    hint: 'Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018
+      Sb.'
+  - key: ucl_notification_required
+    label: Povinnost hlášení ÚCL
+    type: select
+    editable: true
+    value: null
+    options:
+    - Povinná – Regulovaná letecká služba + Vysoká/Kritická
+    - Zvážit – hraniční případ
+    - Není vyžadována
+    hint: ÚCL (Úřad pro civilní letectví) – hlášení povinné při Vysokém nebo Kritickém dopadu (P1/P2) na regulovanou leteckou
+      službu.
+  - key: impact_primary_service
+    label: Dostupnost primárních služeb organizace
+    type: select
+    editable: true
+    value: null
+    options:
+    - Zcela nedostupné
+    - Částečně nedostupné / degradované
+    - Dostupné bez omezení
+    - Netýká se
+    hint: Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy.
+  - key: impact_scope
+    label: Rozsah zasažených uživatelů / systémů
+    type: select
+    editable: true
+    value: null
+    options:
+    - Celoplošný (> 50 % uživatelů nebo klíčových systémů)
+    - Významný (10–50 %)
+    - Omezený (< 10 %)
+    - Individuální (1 uživatel / 1 systém)
+  - key: impact_duration
+    label: Doba výpadku / narušení (dostupnost)
+    type: select
+    editable: true
+    value: null
+    options:
+    - '> 4 hodiny'
+    - 1–4 hodiny
+    - 15 min – 1 hodina
+    - < 15 min
+    - Žádný výpadek / narušení
+  - key: impact_data
+    label: Dopad na data (důvěrnost / integrita)
+    type: select
+    editable: true
+    value: null
+    options:
+    - Exfiltrace dat potvrzena
+    - Neoprávněný přístup k datům potvrzen
+    - Integrita dat narušena
+    - Žádný dopad na data
+    - Nelze určit
+  - key: root_cause
+    label: Root Cause
+    type: textarea
+    editable: true
+    is_example: true
+    value: Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem
+  - key: actions_taken
+    label: Popis přijatých opatření
+    type: textarea
+    editable: true
+    is_example: true
+    value: Izolace 3 zařízení, blokace domény na mail serveru, AV scan
+  - key: recommendations
+    label: Doporučení pro zlepšení
+    type: textarea
+    editable: true
+    is_example: true
+    value: Zvážit implementaci sandboxingu příloh na inbound mail gateway
+  - key: related_service_requests
+    label: Související servisní požadavky
+    type: textarea
+    editable: true
+    value: null
+    hint: Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení (např. požadavek na změnu konfigurace, aktualizaci
+      pravidel apod.)
+  - key: reporter_notified
+    label: Oznamovatel informován
+    type: select
+    editable: true
+    value: null
+    options:
+    - Ano
+    - Ne
+  - key: closed_at
+    label: Datum uzavření
+    type: datetime
+    editable: true
+    value: null
+- id: raci
+  title: RACI matice
+  type: raci_table
+  legend: R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I =
+    Informed (je informován) · (Vysoká/Kritická) = podmínka pro aktivaci role
+  columns:
+  - activity
+  - ki
+  - cirt
+  - r_dtech
+  - r_dplr
+  - garant
+  - delegat
+  - dpo
+  - nukib
+  - ucl
+  column_labels:
+    activity: Aktivita
+    ki: Koordinátor
+    cirt: CIRT
+    r_dtech: Ř-DTECH
+    r_dplr: Ř-DPLR
+    garant: Garant
+    delegat: Delegát
+    dpo: DPO
+    nukib: NÚKIB
+    ucl: ÚCL
+  rows:
+  - activity: Příjem a zaevidování události
+    ki: R, A
+    cirt: C
+    r_dtech: –
+    r_dplr: –
+    garant: –
+    delegat: –
+    dpo: –
+    nukib: –
+    ucl: –
+  - activity: Posouzení, třídění a rozhodování
+    ki: A
+    cirt: R
+    r_dtech: –
+    r_dplr: –
+    garant: C
+    delegat: C
+    dpo: –
+    nukib: –
+    ucl: –
+  - activity: Odezva
+    ki: A
+    cirt: R
+    r_dtech: I (Vysoká/Kritická)
+    r_dplr: –
+    garant: A
+    delegat: R
+    dpo: –
+    nukib: –
+    ucl: –
+  - activity: Notifikace dotčených stran
+    ki: R, A
+    cirt: –
+    r_dtech: I
+    r_dplr: –
+    garant: I
+    delegat: –
+    dpo: –
+    nukib: –
+    ucl: –
+  - activity: Notifikace DPO (únik dat)
+    ki: R
+    cirt: C
+    r_dtech: –
+    r_dplr: –
+    garant: I
+    delegat: –
+    dpo: A, I
+    nukib: –
+    ucl: –
+  - activity: Eskalace na management
+    ki: R
+    cirt: –
+    r_dtech: A
+    r_dplr: I
+    garant: –
+    delegat: –
+    dpo: –
+    nukib: –
+    ucl: –
+  - activity: Hlášení NÚKIB / ÚCL
+    ki: R
+    cirt: C
+    r_dtech: –
+    r_dplr: –
+    garant: –
+    delegat: –
+    dpo: –
+    nukib: I (Vysoká/Kritická)
+    ucl: I (Vysoká/Kritická)
+  - activity: Klasifikace a uzavření
+    ki: R, A
+    cirt: C
+    r_dtech: I (Vysoká/Kritická)
+    r_dplr: –
+    garant: I
+    delegat: –
+    dpo: –
+    nukib: –
+    ucl: –

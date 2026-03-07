@@ -1,0 +1,940 @@
+template_id: ddos-vpn-v1
+name: DDoS útok na VPN (Cisco AnyConnect)
+version: '1.0'
+category: DDoS
+status: active
+description: Playbook pro řešení incidentů typu DDoS zaměřených na VPN službu organizace (Cisco AnyConnect / Cisco ASA). Pokrývá
+  volumetrické útoky (SYN/UDP/ICMP flood), reflection/amplification útoky i aplikační útoky (SSL/TLS exhaustion). Kroky Odezvy
+  jsou podmíněné – závisí na dostupnosti ochranných opatření v prostředí organizace. Blokace zdrojových adres je povolena
+  výhradně na úrovni CIDR bloků (/24 nebo větší).
+mitre_tactic: Impact
+mitre_technique: T1498 – Network Denial of Service
+mitre_subtechnique: T1498.001
+data_sources:
+- NetFlow / sFlow / IPFIX
+- Firewall / NGFW logy
+- IPS / IDS
+- Cisco ASA / FTD logy
+- ISP telemetrie / NOC
+- SIEM
+sections:
+- id: header
+  type: workbook_header
+  title: Hlavička
+  fields:
+  - key: case_title
+    label: Stručný popis události
+    type: text
+    editable: true
+    is_example: true
+    value: DDoS útok na VPN – zahlcení služby Cisco AnyConnect
+    hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
+  - key: ticket_id
+    label: Ticket ID
+    type: text
+    editable: false
+    value: null
+    auto_value: case_id
+  - key: workbook_name
+    label: Název workbooku
+    type: text
+    editable: false
+    value: null
+    auto_value: template_name
+  - key: workbook_id
+    label: Workbook ID
+    type: text
+    editable: false
+    value: 2026-003
+  - key: version
+    label: Verze
+    type: text
+    editable: false
+    value: null
+    auto_value: template_version
+  - key: last_updated
+    label: Datum poslední aktualizace
+    type: text
+    editable: false
+    value: '2026-03-06'
+  - key: author
+    label: Autor / vlastník šablony
+    type: text
+    editable: false
+    value: SOC Analytický tým
+  - key: incident_coordinator
+    label: Koordinátor incidentu
+    type: text
+    editable: true
+    value: null
+    hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
+  - key: workbook_status
+    label: Status
+    type: text
+    editable: false
+    value: null
+    auto_value: template_status
+- id: classification
+  type: classification
+  title: Klasifikace
+  fields:
+  - key: mitre_tactic
+    label: MITRE Tactic
+    type: text
+    editable: false
+    value: null
+    auto_value: template_mitre_tactic
+  - key: mitre_technique
+    label: MITRE Technique
+    type: text
+    editable: false
+    value: null
+    auto_value: template_mitre_technique
+  - key: mitre_subtechnique
+    label: MITRE Sub-technique
+    type: select
+    editable: true
+    value: null
+    options:
+    - T1498.001 – Direct Network Flood (SYN / UDP / ICMP flood)
+    - T1498.002 – Reflection Amplification (DNS / NTP / SSDP)
+    - T1499.003 – Application Exhaustion Flood (SSL/TLS exhaustion)
+    - Kombinace typů
+    - Nelze určit
+    hint: Vyplň po Posouzení, třídění a rozhodování, kdy je znám konkrétní typ útoku. Pokud jde o kombinaci typů (např. volumetrický
+      + SSL exhaustion), vyber 'Kombinace typů'.
+  - key: data_sources
+    label: Doporučené zdroje dat pro investigaci
+    type: text
+    editable: false
+    value: null
+    auto_value: template_data_sources
+- id: contacts
+  title: Kontaktní matice
+  type: contact_table
+  description: Kontakty pro investigaci a eskalaci. Vyplň dle aktuální struktury organizace. ISP NOC kontaktuj při volumetrickém
+    útoku přesahujícím kapacitu internetové linky.
+  columns:
+  - system_role
+  - name
+  - email
+  - phone
+  - when_to_contact
+  column_labels:
+    system_role: Systém / role
+    name: Jméno
+    email: E-mail
+    phone: Telefon
+    when_to_contact: Kdy kontaktovat
+  editable_columns:
+  - name
+  - email
+  - phone
+  allow_append: true
+  append_row_template:
+    system_role: null
+    name: null
+    email: null
+    phone: null
+    when_to_contact: null
+  rows:
+  - system_role: Správce sítě / hraničního FW
+    name: Tomáš Novotný
+    email: tomas.novotny@firma.cz
+    phone: +420 123 456 781
+    when_to_contact: Blokace CIDR bloků, rate limiting, geo-blocking, BGP blackhole
+  - system_role: Správce VPN (Cisco ASA / AnyConnect)
+    name: Petr Marek
+    email: petr.marek@firma.cz
+    phone: +420 123 456 782
+    when_to_contact: Logy ASA/FTD, SYN proxy, úprava session limitů, whitelist zdrojových IP bloků
+  - system_role: Správce IPS / IDS
+    name: Lucie Horáková
+    email: lucie.horakova@firma.cz
+    phone: +420 123 456 783
+    when_to_contact: Analýza provozu, aktivace pravidel rate limit / geo-blocking na IPS
+  - system_role: ISP NOC
+    name: NOC Operátor
+    email: noc@isp-provider.cz
+    phone: +420 800 000 001
+    when_to_contact: Upstream mitigation, BGP blackhole routing – volumetrický útok přesahující kapacitu linky
+  - system_role: SOC Analytický tým
+    name: SOC L2
+    email: soc@firma.cz
+    phone: +420 123 456 792
+    when_to_contact: Interní koordinace
+  - system_role: CISO
+    name: Ing. Martin Kovář
+    email: ciso@firma.cz
+    phone: +420 123 456 793
+    when_to_contact: Závažnost Vysoká / Kritická nebo výpadek VPN > 30 min
+  - system_role: ISO
+    name: Mgr. Eva Horáčková
+    email: iso@firma.cz
+    phone: +420 123 456 794
+    when_to_contact: Závažnost Kritická / dle interní politiky
+  - system_role: CERT / NÚKIB
+    name: NÚKIB
+    email: podatelna@nukib.cz
+    phone: +420 222 362 888
+    when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
+- id: incident_context
+  title: Informace o kontextu UIB
+  type: section_group
+  subsections:
+  - id: automated_detection
+    title: Automatizovaná detekce
+    type: form
+    note: Vyplní SOC Analytik — DDoS je typicky detekován automaticky (SIEM alert, monitoring nedostupnosti VPN)
+    condition: source_type == 'automated'
+    fields:
+    - key: alert_timestamp
+      label: Datum a čas alertu
+      type: datetime
+      editable: true
+      is_example: true
+      value: 2026-03-06T08:15
+    - key: detection_tool
+      label: Detekční nástroj / zdroj alertu
+      type: text
+      editable: true
+      is_example: true
+      value: SIEM – pravidlo 'VPN_HIGH_CONN_RATE'
+    - key: alert_id
+      label: ID alertu / Identifikace pravidla
+      type: text
+      editable: true
+      value: null
+    - key: affected_asset_auto
+      label: Postižené aktivum (hostname, IP)
+      type: text
+      editable: true
+      is_example: true
+      value: vpn-gw.firma.cz · 203.0.113.10
+    - key: alert_description
+      label: Popis alertu
+      type: textarea
+      editable: true
+      is_example: true
+      value: Abnormální nárůst příchozích spojení na UDP/443 a TCP/443 – počet new connections/s překročil práh 10 000/s
+  - id: reported_by_person
+    title: Hlášeno osobou
+    type: form
+    note: Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci
+    condition: source_type == 'person'
+    fields:
+    - key: reported_at
+      label: Datum a čas nahlášení
+      type: datetime
+      editable: true
+      value: null
+    - key: reporter_name
+      label: Jméno oznamovatele
+      type: text
+      editable: true
+      value: null
+    - key: reporter_department
+      label: Oddělení / organizační jednotka
+      type: text
+      editable: true
+      value: null
+    - key: reporter_contact
+      label: Kontakt (e-mail / telefon)
+      type: text
+      editable: true
+      value: null
+    - key: description_by_reporter
+      label: Popis události slovy oznamovatele
+      type: textarea
+      editable: true
+      is_example: true
+      value: VPN je nedostupná, uživatelé se nemohou připojit. Problém trvá přibližně od 08:10.
+  - id: affected_assets
+    title: Dotčená aktiva
+    type: assets_table
+    note: Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope
+    hint: Pokud je VPN brána nebo infrastruktura za ní součástí kritické infrastruktury (KI) → ihned informuj CISO.
+    always_expanded: true
+    columns:
+    - asset_name
+    - asset_ip
+    - asset_type
+    - critical_infrastructure
+    - contact_owner
+    - guarantor
+    - email
+    - phone
+    column_labels:
+      asset_name: Název aktiva (hostname, IS)
+      asset_ip: IP adresa / CIDR
+      asset_type: Typ aktiva
+      critical_infrastructure: KI
+      contact_owner: Kontakt vlastníka
+      guarantor: Garant
+      email: E-mail
+      phone: Telefon
+    column_options:
+      asset_type:
+      - VPN brána
+      - Firewall / NGFW
+      - Síťový prvek
+      - Server
+      - Informační systém
+      - Jiné aktivum
+      critical_infrastructure:
+      - Ano
+      - Ne
+    editable: true
+    rows: []
+- id: triage_investigation
+  title: Posouzení, třídění a rozhodování
+  type: checklist
+  description: Cílem je potvrdit DDoS útok, identifikovat jeho typ a rozsah, zmapovat zdrojové adresní bloky a připravit podklady
+    pro Odezva. Klasifikace (True/False Positive, Severity) se v průběhu může upřesňovat — finální klasifikace se zaznamenává
+    v bloku Uzavření incidentu.
+  step_groups:
+  - id: confirm_attack
+    title: Potvrzení útoku a základní diagnostika
+    steps:
+    - id: ca_01
+      action: Ověř aktuální dostupnost VPN – pokus o připojení přes Cisco AnyConnect, ICMP ping na VPN GW adresu, ověř monitoring
+        dashboard / stavovou stránku
+      analyst_note: VPN nedostupná – ping na 203.0.113.10 bez odezvy · AnyConnect hlásí 'Connection attempt failed'
+      is_example: true
+      done: false
+    - id: ca_02
+      action: 'Přihlaš se na Cisco ASA / FTD a zkontroluj: CPU utilizaci, využití paměti, počet aktuálních spojení (show conn
+        count), počet half-open TCP spojení'
+      analyst_note: 'CPU: 98 % · RAM: 92 % · Conn count: 48 200 (normál cca 800) · Half-open TCP: 42 180'
+      is_example: true
+      done: false
+    - id: ca_03
+      action: Ověř v SIEM – identifikuj aktivní alerting pravidla, potvrď korelaci s provozními statistikami (NetFlow / sFlow
+        pokud dostupné)
+      analyst_note: SIEM alert 'VPN_HIGH_CONN_RATE' aktivní od 08:12 · NetFlow potvrzuje nárůst z 50 Mbps na 4,8 Gbps
+      is_example: true
+      done: false
+    - id: ca_04
+      action: Kontaktuj Správce sítě (viz Kontaktní matice) – požaduj potvrzení abnormálního provozu ze síťových prvků a dostupnost
+        dat z NetFlow / sFlow
+      analyst_note: 'Správce sítě potvrdil: abnormální provoz na WAN rozhraní od 08:11 · NetFlow export k dispozici'
+      is_example: true
+      done: false
+    classification_hints:
+    - VPN nedostupná + abnormální provoz potvrzený na síťové vrstvě → True Positive · VPN nedostupná bez abnormálního provozu
+      (provozní chyba, výpadek linky) → False Positive / jiný incident
+  - id: attack_type_identification
+    title: Identifikace typu útoku
+    steps:
+    - id: at_01
+      action: 'Ze síťových logů / NetFlow zjisti: objem dat (Gbps / Mbps), počet paketů (Mpps / kpps), dominantní protokol
+        (TCP / UDP / ICMP) a cílové porty VPN'
+      analyst_note: UDP · 4,8 Gbps · 6,2 Mpps · cíl UDP/443
+      is_example: true
+      done: false
+    - id: at_02
+      action: Ověř, zda zdrojové IP adresy jsou různorodé a geograficky rozptýlené – zjisti počet unikátních zdrojových IP
+        v časovém okně útoku (5 min)
+      analyst_note: '~120 000 unikátních zdrojových IP · geolokace: CN, RU, BR, UA'
+      is_example: true
+      done: false
+    - id: at_03
+      action: 'Na ASA/FTD ověř počet half-open TCP spojení (indikátor SYN flood) – příkaz: show conn | grep SYN'
+      analyst_note: 'Half-open TCP: 42 180 (normál: < 100) → SYN flood indikátor potvrzen'
+      is_example: true
+      done: false
+    - id: at_04
+      action: 'Ověř počet SSL/TLS handshake pokusů za sekundu na ASA (indikátor SSL/TLS exhaustion) – příkaz: show ssl statistics
+        | grep Handshake'
+      analyst_note: 'SSL handshake pokusy: 320/s (normál: < 10/s) → SSL exhaustion složka přítomna'
+      is_example: true
+      done: false
+    - id: at_05
+      action: Dle výsledků výše urči typ útoku a pokračuj příslušnou větví Posouzení. Zaznamenej zjištění – typ bude finálně
+        potvrzen v bloku Uzavření incidentu.
+      analyst_note: 'Typ útoku: Volumetrický – UDP flood (primární) + SSL exhaustion složka (sekundární) → kombinace typů'
+      is_example: true
+      done: false
+    hints:
+    - 'Volumetrický (L3/L4): vysoký objem Gbps/Mpps, různorodé zdrojové IP, UDP/ICMP flood nebo SYN flood.'
+    - 'Reflection/Amplification (L3/L4): zdrojové IP jsou veřejné servery (DNS/NTP/SSDP), pakety jsou velké, zdánlivě legitimní
+      zdroje.'
+    - 'SSL/TLS Exhaustion (L7): relativně nižší objem provozu, ale vysoký počet SSL handshake pokusů – CPU ASA zatíženo TLS
+      processingem.'
+  - id: volumetric_attack
+    title: Volumetrický útok (SYN / UDP / ICMP flood)
+    note: Přeskoč pokud není přítomen volumetrický útok
+    condition: attack_type == 'volumetric'
+    steps:
+    - id: va_01
+      action: 'Zaznamenej objem útoku: Gbps, Mpps, protokol, cílový port – tyto hodnoty jsou klíčové pro ISP mitigation request'
+      analyst_note: UDP flood · 4,8 Gbps · 6,2 Mpps · cíl UDP/443
+      is_example: true
+      done: false
+    - id: va_02
+      action: Z NetFlow / sFlow identifikuj zdrojové CIDR bloky (/24 nebo větší) s nejvyšším objemem provozu – seřaď dle Gbps/Mpps
+        sestupně
+      analyst_note: 'Top bloky: 1.2.3.0/24 (0,8 Gbps) · 5.6.7.0/24 (0,6 Gbps) · dalších 22 bloků /24 identifikováno'
+      is_example: true
+      done: false
+    - id: va_03
+      action: Ověř ASN a geolokaci top zdrojových CIDR bloků (whois, ipinfo.io, Shodan nebo interní TI) – odhadni, zda jde
+        o botnet nebo spoofované adresy
+      analyst_note: AS4134 (China Telecom) · AS8359 (MTS Russia) – pravděpodobný botnet, adresy nejsou spoofované (TTL odpovídá)
+      is_example: true
+      done: false
+    - id: va_04
+      action: Zkontroluj, zda objem útoku přesahuje kapacitu internetové linky organizace – pokud ano, lokální opatření nestačí
+        a je nezbytná ISP upstream mitigation
+      analyst_note: 'Kapacita linky: 10 Gbps · Útok: 4,8 Gbps → linka přetížena, ISP mitigation nezbytná'
+      is_example: true
+      done: false
+    hints:
+    - Pokud objem útoku přesahuje kapacitu linky → ISP upstream mitigation je nezbytná. Kontaktuj ISP NOC (viz Kontaktní matice)
+      bez zbytečného odkladu.
+    classification_hints:
+    - 'Volumetrický útok potvrzený NetFlow + VPN nedostupná → True Positive · Severity dle dopadu: výpadek VPN pro všechny
+      uživatele → High / Critical'
+  - id: reflection_amplification
+    title: Reflection / Amplification útok
+    note: Přeskoč pokud není přítomen reflection/amplification útok
+    condition: attack_type == 'reflection'
+    steps:
+    - id: ra_01
+      action: Ověř zdrojové IP adresy v NetFlow / sFlow – jde o veřejné DNS resolvery, NTP servery nebo SSDP zařízení? Ověř
+        pomocí whois / Shodan.
+      analyst_note: 'Zdrojové IP: otevřené NTP servery (UDP/123) · NTP amplification potvrzena'
+      is_example: true
+      done: false
+    - id: ra_02
+      action: Identifikuj typ reflection protokolu (DNS / NTP / SSDP / CLDAP / Memcached) a odhadni amplifikační faktor (poměr
+        příchozí/odchozí u útočníka)
+      analyst_note: NTP amplification · faktor ~550x · vstupní provoz útočníka ~8,7 Mbps → výstup na cíl 4,8 Gbps
+      is_example: true
+      done: false
+    - id: ra_03
+      action: Z NetFlow identifikuj zdrojové CIDR bloky reflektorů (/24 nebo větší) s nejvyšším objemem – zaznamenej jako
+        podklad pro blokaci na FW
+      analyst_note: 'Top reflektorové bloky: 5.6.7.0/24 · 9.10.11.0/24 – celkem 18 /24 bloků identifikováno'
+      is_example: true
+      done: false
+    hints:
+    - Zdrojové IP reflection útoku jsou legitimní servery třetích stran – blokací je učiníš nedostupnými pro provoz organizace.
+      Informuj Správce sítě o vedlejším efektu blokace.
+    classification_hints:
+    - Reflection/amplification potvrzena + VPN nedostupná → True Positive · Severity dle délky výpadku a dopadu
+  - id: ssl_exhaustion
+    title: SSL / TLS Exhaustion (aplikační DDoS)
+    note: Přeskoč pokud není přítomen SSL/TLS exhaustion útok
+    condition: attack_type == 'ssl_exhaustion'
+    steps:
+    - id: se_01
+      action: 'Na ASA/FTD ověř detailní SSL statistiky: počet handshake pokusů/s, počet neúspěšných handshakes, CPU zátěž
+        způsobenou TLS processingem'
+      analyst_note: 'Handshake pokusy: 320/s · neúspěšné: 98 % · TLS CPU zátěž: 94 %'
+      is_example: true
+      done: false
+    - id: se_02
+      action: Zjisti, zda zdrojové IP jsou unikátní nebo se opakují – SSL exhaustion může pocházet z menšího počtu IP (botnet
+        s TLS schopností). Identifikuj zdrojové CIDR bloky (/24 nebo větší).
+      analyst_note: ~2 400 unikátních zdrojových IP v rozsazích /24 · opakované pokusy ze stejných bloků
+      is_example: true
+      done: false
+    - id: se_03
+      action: Ověř, zda je na ASA/FTD aktivní SSL session rate limiting nebo TCP SYN proxy. Pokud ne, předej Správci VPN k
+        okamžité aktivaci (viz Kontaktní matice).
+      analyst_note: SYN proxy neaktivní – předáno správci VPN k okamžité aktivaci
+      is_example: true
+      done: false
+    hints:
+    - SSL/TLS exhaustion je primárně aplikační útok (L7) – volumetrická opatření (rate limiting na L3/L4) nemusí být dostatečná.
+      Klíčová je aktivace SYN proxy / SSL session rate limitingu přímo na ASA.
+    classification_hints:
+    - SSL exhaustion potvrzena (CPU ASA přetíženo TLS processingem) + VPN nedostupná → True Positive · Severity dle dopadu
+  - id: source_analysis
+    title: Analýza zdrojových adresních bloků
+    steps:
+    - id: sa_01
+      action: Sestav konsolidovaný seznam zdrojových CIDR bloků (/24 nebo větší) ze všech identifikovaných typů útoku – seřaď
+        dle objemu provozu sestupně
+      analyst_note: Celkem 24 zdrojových /24 bloků – top 5 zodpovědných za 70 % celkového objemu útoku
+      is_example: true
+      done: false
+    - id: sa_02
+      action: Ověř, zda blokace těchto CIDR bloků nezpůsobí kolaterální výpadek – zkontroluj přítomnost legitimního provozu
+        z těchto rozsahů (zaměstnanci v zahraničí, partneři, SaaS služby)
+      analyst_note: 'Rozsah 1.2.3.0/24 – ověřeno v NetFlow za posledních 30 dní: žádný legitimní provoz · ostatní bloky rovněž
+        bez legitimního provozu'
+      is_example: true
+      done: false
+    - id: sa_03
+      action: Ověř ASN vlastníky a geolokaci zdrojových CIDR bloků – zvaž geo-blocking celých zemí / regionů, pokud organizace
+        v těchto regionech nemá uživatele
+      analyst_note: CN, RU, UA, BR – organizace nemá uživatele ani obchodní partnery v těchto regionech → geo-blocking vhodný
+      is_example: true
+      done: false
+    - id: sa_04
+      action: Zaznamenej finální seznam CIDR bloků a zemí schválených k blokaci jako podklad pro Odezvu – ulož odkaz na soubor
+      analyst_note: 'Seznam uložen: /evidence/INC-DDOS-2026-001/cidr_blocklist.txt · 24 bloků /24 · geo-blocking: CN, RU,
+        UA, BR'
+      is_example: true
+      done: false
+    hints:
+    - 'POZOR: Blokace je povolena výhradně na úrovni súvislých CIDR bloků (/24 nebo větší). Blokace jednotlivých per-IP adres
+      není povolena – generuje nekontrolovatelný počet pravidel na firewallu.'
+  - id: impact_scope
+    title: Dopad a scope incidentu
+    steps:
+    - id: is_01
+      action: Zjisti počet postižených VPN uživatelů – počet neúspěšných připojovacích pokusů z logů Cisco ASA v době útoku
+      analyst_note: 820 unikátních uživatelů se pokusilo připojit a neuspělo v intervalu 08:12–09:45
+      is_example: true
+      done: false
+    - id: is_02
+      action: Identifikuj business dopad – které systémy, aplikace nebo procesy jsou nedostupné v důsledku nedostupnosti VPN
+      analyst_note: 'Nedostupné přes VPN: ERP systém, sdílené úložiště, interní portál – postiženi vzdáleně pracující uživatelé'
+      is_example: true
+      done: false
+    - id: is_03
+      action: Ověř, zda VPN brána nebo infrastruktura za ní je součástí kritické infrastruktury (KI) dle interního registru
+        aktiv
+      analyst_note: 'VPN GW není v registru KI · systémy za VPN: ERP (KI: Ne) · SCADA přístup přes VPN (KI: ověřit!)'
+      is_example: true
+      done: false
+    - id: is_04
+      action: Sestav timeline útoku od prvního detekovaného signálu po aktuální stav
+      analyst_note: 08:11 první NetFlow anomálie · 08:12 SIEM alert · 08:14 VPN nedostupná · 08:20 SOC incident otevřen
+      is_example: true
+      done: false
+    classification_hints:
+    - VPN nedostupná pro všechny uživatele + KI dopad → True Positive, Critical · VPN nedostupná bez KI dopadu → True Positive,
+      High · Degradovaná dostupnost (část uživatelů) → True Positive, Medium · Krátkodobý výpadek < 15 min → True Positive,
+      Low
+  - id: evidence_collection
+    title: Zajištění důkazů
+    steps:
+    - id: ec_01
+      action: 'Exportuj a ulož relevantní logy: ASA/FTD logy, NetFlow data, SIEM záznamy, firewall logy – zaznamenej cestu
+        k uložišti'
+      analyst_note: 'Uloženo: /evidence/INC-DDOS-2026-001/logs/'
+      is_example: true
+      done: false
+    - id: ec_02
+      action: Pokud je k dispozici packet capture (SPAN / TAP nebo ASA capture), exportuj vzorový pcap ze začátku útoku (min.
+        5 min)
+      analyst_note: 'pcap uložen: /evidence/INC-DDOS-2026-001/attack_sample.pcap'
+      is_example: true
+      done: false
+    - id: ec_03
+      action: Ulož dokumentaci identifikovaných zdrojových CIDR bloků a jejich charakteristiky (ASN, geolokace, objem provozu,
+        typ útoku)
+      analyst_note: 'cidr_blocklist.txt uložen – 24 bloků /24 · celkový objem 4,8 Gbps · typ: UDP flood + NTP amplification'
+      is_example: true
+      done: false
+- id: containment_remediation
+  title: Odezva
+  type: action_table
+  description: Akce jsou seřazeny dle priority. Položky označené '[Pokud dostupné]' jsou podmíněny existencí příslušné technologie
+    nebo smluvního vztahu v prostředí organizace. Blokace zdrojových adres je povolena výhradně na úrovni CIDR bloků (/24
+    nebo větší) – blokace per-IP není povolena.
+  columns:
+  - action
+  - responsible_role
+  - cooperation
+  - status
+  column_labels:
+    action: Akce
+    responsible_role: Zodpovědná role
+    cooperation: Součinnost
+    status: Stav
+  status_options:
+  - Provedeno
+  - Probíhá
+  - Čeká
+  - N/A
+  - Není nutné provést
+  editable_columns:
+  - status
+  allow_append: true
+  allow_delete: true
+  append_row_template:
+    action: null
+    responsible_role: null
+    cooperation: null
+    status: null
+  hints:
+  - Akce provádět v uvedeném pořadí. Pokud lokální opatření (rate limiting, CIDR blokace) nezastaví útok do 15 minut nebo
+    objem útoku přesahuje kapacitu linky, okamžitě eskaluj na ISP NOC.
+  - Blokace zdrojových adres je povolena pouze na úrovni súvislých CIDR bloků (/24 nebo větší). Blokace per-IP adres není
+    povolena.
+  rows:
+  - action: Aktivace SYN proxy / TCP intercept a session rate limitingu na Cisco ASA/FTD – omezení počtu nových TCP/UDP spojení
+      za sekundu na VPN porty (UDP/443, TCP/443)
+    responsible_role: Správce VPN
+    cooperation: SOC Analytický tým
+    status: null
+  - action: Blokace zdrojových CIDR bloků (/24 nebo větší) na hraničním firewallu – dle seznamu připraveného v Posouzení.
+      Blokace per-IP adres není povolena.
+    responsible_role: Správce sítě / FW
+    cooperation: SOC Analytický tým
+    status: null
+  - action: '[Pokud dostupné] Geo-blocking zdrojových zemí / regionů na hraničním FW nebo IPS – aktivuj pro regiony bez legitimního
+      provozu organizace, dle výsledků Posouzení'
+    responsible_role: Správce sítě / FW
+    cooperation: Správce IPS · SOC Analytický tým
+    status: null
+  - action: '[Pokud dostupné] Upstream ISP mitigation – kontaktuj ISP NOC (viz Kontaktní matice), předej seznam zdrojových
+      CIDR bloků, typ a objem útoku. Požaduj filtraci provozu před vstupem do sítě organizace.'
+    responsible_role: SOC Analytický tým
+    cooperation: ISP NOC · Správce sítě
+    status: null
+  - action: '[Pokud dostupné] BGP blackhole routing – koordinuj s ISP pro null routing zdrojových CIDR bloků na úrovni ISP
+      routerů. Podmínkou je smluvní podpora BGP blackhole u ISP.'
+    responsible_role: Správce sítě
+    cooperation: ISP NOC
+    status: null
+  - action: '[Pokud dostupné] Přesměrování VPN provozu přes scrubbing centrum (anti-DDoS cloud, Cloudflare / Akamai / ISP
+      scrubbing) – aktivuj dle smluvní dohody s poskytovatelem'
+    responsible_role: Správce sítě
+    cooperation: ISP NOC · SOC Analytický tým
+    status: null
+  - action: Dočasné omezení VPN přístupu – povolení připojení pouze ze známých zdrojových CIDR bloků legitimních uživatelů
+      (whitelist). Použít jako krajní opatření při přetrvávající nedostupnosti VPN.
+    responsible_role: Správce VPN
+    cooperation: SOC Analytický tým
+    status: null
+  - action: Monitoring obnovy dostupnosti VPN – průběžně ověřuj, že legitimní uživatelé se mohou po zavedení opatření znovu
+      připojit (testovací připojení)
+    responsible_role: SOC Analytický tým
+    cooperation: Správce VPN
+    status: null
+  - action: Informování VPN uživatelů o výpadku a předpokládané době obnovy (interní komunikace / hromadný e-mail / intranet)
+    responsible_role: SOC Analytický tým
+    cooperation: –
+    status: null
+  - action: Jiné
+    responsible_role: null
+    cooperation: null
+    status: null
+- id: communication
+  title: Komunikace a notifikace
+  type: action_table
+  columns:
+  - recipient
+  - communication_method
+  - sla
+  - note
+  column_labels:
+    recipient: Příjemce
+    communication_method: Způsob komunikace
+    sla: SLA pro notifikaci
+    note: Poznámka / stav
+  editable_columns:
+  - note
+  hints:
+  - SLA je orientační. Vždy ověř požadavky dle platné legislativy (NIS2, GDPR) a interních předpisů.
+  - Při výpadku VPN delším než 30 minut notifikuj CISO bez ohledu na Severity.
+  rows:
+  - recipient: Vlastník dotčeného aktiva (VPN GW)
+    communication_method: E-mail / telefon
+    sla: Do 15 min od potvrzení útoku
+    note: null
+  - recipient: CISO / Management
+    communication_method: E-mail / telefon
+    sla: Do 30 min (High / Critical) nebo výpadek VPN > 30 min
+    note: null
+  - recipient: VPN uživatelé
+    communication_method: Hromadný e-mail / intranet
+    sla: Do 30 min od potvrzení výpadku
+    note: null
+  - recipient: ISP NOC
+    communication_method: Telefon / NOC ticket
+    sla: Ihned při volumetrickém útoku přesahujícím kapacitu linky
+    note: null
+  - recipient: CERT / NÚKIB
+    communication_method: Datová schránka
+    sla: Dle regulatorní povinnosti (NIS2 apod.)
+    note: null
+- id: closure
+  title: Klasifikace a uzavření
+  type: form
+  description: Uzavření provádí SOC Analytický tým po obnově dostupnosti VPN a dokončení Odezvy, nebo ihned po Posouzení,
+    třídění a rozhodování u False Positive. Klasifikace a Severity vyjadřují finální stav po Posouzení, třídění a rozhodování.
+  hint: Před uzavřením ověř, že VPN je plně dostupná pro legitimní uživatele a všechna zavedená opatření Odezvy jsou zdokumentována.<br><br><b>Metodika
+    klasifikace – Úroveň dopadu:</b><br><b>Nízká</b> – incidenty s omezeným nebo lokálním dopadem; žádný dopad na regulovanou
+    službu.<br><b>Střední</b> – postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů; nezasahuje
+    aktiva regulované služby.<br><b>Vysoká</b> – významný dopad na klíčové procesy nebo systémy; při zasažení aktiv regulované
+    služby splňují kritéria KBI dle ZKB; ohrožují kontinuitu činnosti nebo reputaci.<br><b>Kritická</b> – katastrofický dopad;
+    vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo právní důsledky a ohrožují existenci podniku nebo
+    jeho způsobilost; jde vždy o KBI.
+  fields:
+  - key: final_classification
+    label: Klasifikace výsledku
+    type: select
+    editable: true
+    is_example: true
+    value: True Positive
+    options:
+    - True Positive
+    - False Positive
+    - Benign True Positive
+    hint: 'False Positive: výpadek VPN způsoben provozní chybou nebo výpadkem linky bez útočné aktivity.'
+  - key: impact_level
+    label: Úroveň dopadu
+    type: select
+    editable: true
+    value: null
+    options:
+    - Nízká
+    - Střední
+    - Vysoká
+    - Kritická
+    option_hints:
+      Nízká: Incidenty s omezeným nebo lokálním dopadem. Žádný dopad na regulovanou službu.
+      Střední: Incidenty, které postihují důležité systémy, ale nezpůsobují kompletní přerušení klíčových procesů. Nezasahuje
+        aktiva regulované služby.
+      Vysoká: Incidenty s významným dopadem na klíčové procesy nebo systémy. Při zasažení aktiv regulované služby splňují
+        kritéria KBI dle ZKB. Ohrožují kontinuitu činnosti nebo reputaci.
+      Kritická: Incidenty s katastrofickým dopadem. Vedou k úplnému kolapsu regulované služby, mají masivní finanční nebo
+        právní důsledky a ohrožují existenci podniku nebo jeho způsobilost. Jde vždy o KBI.
+    hint: Úroveň Vysoká a Kritická při zasažení regulované služby zakládají povinnost hlášení NÚKIB a ÚCL.
+  - key: nukib_notification_required
+    label: Povinnost hlášení NÚKIB
+    type: select
+    editable: true
+    value: null
+    options:
+    - Povinná – Regulovaná služba + Vysoká/Kritická (ZOKB §8, vyhl. 82/2018 Sb.)
+    - Zvážit – hraniční případ
+    - Není vyžadována
+    hint: 'Lhůty: do 24 h (první hlášení) · do 72 h (detailní hlášení) · do 30 dní (závěrečná zpráva) – dle vyhlášky č. 82/2018
+      Sb.'
+  - key: ucl_notification_required
+    label: Povinnost hlášení ÚCL
+    type: select
+    editable: true
+    value: null
+    options:
+    - Povinná – Regulovaná letecká služba + P1/P2
+    - Zvážit – hraniční případ
+    - Není vyžadována
+    hint: ÚCL (Úřad pro civilní letectví) – hlášení povinné při Vysokém nebo Kritickém dopadu (P1/P2) na regulovanou leteckou
+      službu.
+  - key: impact_primary_service
+    label: Dostupnost primárních služeb organizace
+    type: select
+    editable: true
+    value: null
+    options:
+    - Zcela nedostupné
+    - Částečně nedostupné / degradované
+    - Dostupné bez omezení
+    - Netýká se
+    hint: Primární = služby poskytované organizací klientům / uživatelům nebo klíčové interní provozní procesy.
+  - key: impact_scope
+    label: Rozsah zasažených uživatelů / systémů
+    type: select
+    editable: true
+    value: null
+    options:
+    - Celoplošný (> 50 % uživatelů nebo klíčových systémů)
+    - Významný (10–50 %)
+    - Omezený (< 10 %)
+    - Individuální (1 uživatel / 1 systém)
+  - key: impact_duration
+    label: Doba výpadku / narušení (dostupnost)
+    type: select
+    editable: true
+    value: null
+    options:
+    - '> 4 hodiny'
+    - 1–4 hodiny
+    - 15 min – 1 hodina
+    - < 15 min
+    - Žádný výpadek / narušení
+  - key: impact_data
+    label: Dopad na data (důvěrnost / integrita)
+    type: select
+    editable: true
+    value: null
+    options:
+    - Exfiltrace dat potvrzena
+    - Neoprávněný přístup k datům potvrzen
+    - Integrita dat narušena
+    - Žádný dopad na data
+    - Nelze určit
+  - key: attack_type_final
+    label: Typ útoku (finální)
+    type: select
+    editable: true
+    value: null
+    options:
+    - T1498.001 – Direct Network Flood (SYN / UDP / ICMP flood)
+    - T1498.002 – Reflection Amplification (DNS / NTP / SSDP)
+    - T1499.003 – Application Exhaustion Flood (SSL/TLS exhaustion)
+    - Kombinace typů
+    - Nelze určit
+  - key: attack_volume
+    label: Objem útoku (Gbps / Mpps)
+    type: text
+    editable: true
+    is_example: true
+    value: 4,8 Gbps · 6,2 Mpps
+  - key: attack_duration
+    label: Doba trvání útoku
+    type: text
+    editable: true
+    is_example: true
+    value: 1 hod 33 min (08:11–09:44)
+  - key: vpn_outage_duration
+    label: Doba výpadku VPN
+    type: text
+    editable: true
+    is_example: true
+    value: 1 hod 12 min (08:14–09:26)
+  - key: root_cause
+    label: Root Cause
+    type: textarea
+    editable: true
+    is_example: true
+    value: Volumetrický UDP flood (botnet) zaměřený na VPN GW Cisco ASA. Útok přesáhl kapacitu internetové linky – mitigace
+      vyžadovala součinnost ISP NOC.
+  - key: actions_taken
+    label: Popis přijatých opatření
+    type: textarea
+    editable: true
+    is_example: true
+    value: Rate limiting a SYN proxy aktivovány na ASA · blokace 24 zdrojových /24 CIDR bloků na FW · geo-blocking CN/RU/UA/BR
+      · ISP upstream mitigation aktivována
+  - key: recommendations
+    label: Doporučení pro zlepšení
+    type: textarea
+    editable: true
+    is_example: true
+    value: Zvážit smluvní zajištění scrubbing centra / anti-DDoS cloudové ochrany. Prověřit možnost BGP blackhole routingu
+      u ISP. Zvýšit práh SIEM alerting pravidla pro dřívější detekci.
+  - key: related_service_requests
+    label: Související servisní požadavky
+    type: textarea
+    editable: true
+    value: null
+    hint: Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení (změny konfigurace FW, ASA, IPS apod.)
+  - key: reporter_notified
+    label: Oznamovatel informován
+    type: select
+    editable: true
+    value: null
+    options:
+    - Ano
+    - Ne
+  - key: vpn_availability_confirmed
+    label: Dostupnost VPN ověřena po obnově
+    type: select
+    editable: true
+    value: null
+    options:
+    - Ano
+    - Ne
+  - key: closed_at
+    label: Datum uzavření
+    type: datetime
+    editable: true
+    value: null
+- id: raci
+  title: RACI matice
+  type: raci_table
+  legend: R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I =
+    Informed (je informován) · (Vysoká/Kritická) = podmínka pro aktivaci role
+  columns:
+  - activity
+  - ki
+  - cirt
+  - r_dtech
+  - r_dplr
+  - garant
+  - delegat
+  - nukib
+  - ucl
+  column_labels:
+    activity: Aktivita
+    ki: Koordinátor
+    cirt: CIRT
+    r_dtech: Ř-DTECH
+    r_dplr: Ř-DPLR
+    garant: Garant
+    delegat: Delegát
+    nukib: NÚKIB
+    ucl: ÚCL
+  rows:
+  - activity: Příjem a zaevidování události
+    ki: R, A
+    cirt: C
+    r_dtech: –
+    r_dplr: –
+    garant: –
+    delegat: –
+    nukib: –
+    ucl: –
+  - activity: Posouzení, třídění a rozhodování
+    ki: A
+    cirt: R
+    r_dtech: –
+    r_dplr: –
+    garant: C
+    delegat: C
+    nukib: –
+    ucl: –
+  - activity: Odezva – lokální (FW/ASA/rate-limit)
+    ki: A
+    cirt: R
+    r_dtech: I (Vysoká/Kritická)
+    r_dplr: –
+    garant: A
+    delegat: R
+    nukib: –
+    ucl: –
+  - activity: Odezva – ISP upstream mitigation
+    ki: A
+    cirt: –
+    r_dtech: I (Kritická)
+    r_dplr: –
+    garant: –
+    delegat: R
+    nukib: –
+    ucl: –
+  - activity: Notifikace uživatelů VPN
+    ki: R, A
+    cirt: –
+    r_dtech: I
+    r_dplr: –
+    garant: I
+    delegat: –
+    nukib: –
+    ucl: –
+  - activity: Eskalace na management
+    ki: R
+    cirt: –
+    r_dtech: A
+    r_dplr: I
+    garant: –
+    delegat: –
+    nukib: –
+    ucl: –
+  - activity: Hlášení NÚKIB / ÚCL
+    ki: R
+    cirt: C
+    r_dtech: –
+    r_dplr: –
+    garant: –
+    delegat: –
+    nukib: I (Vysoká/Kritická)
+    ucl: I (Vysoká/Kritická)
+  - activity: Klasifikace a uzavření
+    ki: R, A
+    cirt: C
+    r_dtech: I (Vysoká/Kritická)
+    r_dplr: –
+    garant: I
+    delegat: –
+    nukib: –
+    ucl: –
