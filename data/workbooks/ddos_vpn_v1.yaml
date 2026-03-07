@@ -18,6 +18,7 @@ data_sources:
 - ISP telemetrie / NOC
 - SIEM
 sections:
+
 - id: header
   type: workbook_header
   title: Hlavička
@@ -74,6 +75,7 @@ sections:
     editable: false
     value: null
     auto_value: template_status
+
 - id: classification
   type: classification
   title: Klasifikace
@@ -109,6 +111,7 @@ sections:
     editable: false
     value: null
     auto_value: template_data_sources
+
 - id: contacts
   title: Kontaktní matice
   type: contact_table
@@ -178,10 +181,12 @@ sections:
     email: podatelna@nukib.cz
     phone: +420 222 362 888
     when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
+
 - id: incident_context
   title: Informace o kontextu UIB
   type: section_group
   subsections:
+
   - id: automated_detection
     title: Automatizovaná detekce
     type: form
@@ -217,6 +222,7 @@ sections:
       editable: true
       is_example: true
       value: Abnormální nárůst příchozích spojení na UDP/443 a TCP/443 – počet new connections/s překročil práh 10 000/s
+
   - id: reported_by_person
     title: Hlášeno osobou
     type: form
@@ -249,6 +255,7 @@ sections:
       editable: true
       is_example: true
       value: VPN je nedostupná, uživatelé se nemohou připojit. Problém trvá přibližně od 08:10.
+
   - id: affected_assets
     title: Dotčená aktiva
     type: assets_table
@@ -286,6 +293,7 @@ sections:
       - Ne
     editable: true
     rows: []
+
 - id: triage_investigation
   title: Posouzení, třídění a rozhodování
   type: checklist
@@ -293,6 +301,7 @@ sections:
     pro Odezva. Klasifikace (True/False Positive, Severity) se v průběhu může upřesňovat — finální klasifikace se zaznamenává
     v bloku Uzavření incidentu.
   step_groups:
+
   - id: confirm_attack
     title: Potvrzení útoku a základní diagnostika
     steps:
@@ -323,6 +332,7 @@ sections:
     classification_hints:
     - VPN nedostupná + abnormální provoz potvrzený na síťové vrstvě → True Positive · VPN nedostupná bez abnormálního provozu
       (provozní chyba, výpadek linky) → False Positive / jiný incident
+
   - id: attack_type_identification
     title: Identifikace typu útoku
     steps:
@@ -361,6 +371,7 @@ sections:
       zdroje.'
     - 'SSL/TLS Exhaustion (L7): relativně nižší objem provozu, ale vysoký počet SSL handshake pokusů – CPU ASA zatíženo TLS
       processingem.'
+
   - id: volumetric_attack
     title: Volumetrický útok (SYN / UDP / ICMP flood)
     note: Přeskoč pokud není přítomen volumetrický útok
@@ -395,6 +406,7 @@ sections:
     classification_hints:
     - 'Volumetrický útok potvrzený NetFlow + VPN nedostupná → True Positive · Severity dle dopadu: výpadek VPN pro všechny
       uživatele → High / Critical'
+
   - id: reflection_amplification
     title: Reflection / Amplification útok
     note: Přeskoč pokud není přítomen reflection/amplification útok
@@ -423,6 +435,7 @@ sections:
       Informuj Správce sítě o vedlejším efektu blokace.
     classification_hints:
     - Reflection/amplification potvrzena + VPN nedostupná → True Positive · Severity dle délky výpadku a dopadu
+
   - id: ssl_exhaustion
     title: SSL / TLS Exhaustion (aplikační DDoS)
     note: Přeskoč pokud není přítomen SSL/TLS exhaustion útok
@@ -451,6 +464,7 @@ sections:
       Klíčová je aktivace SYN proxy / SSL session rate limitingu přímo na ASA.
     classification_hints:
     - SSL exhaustion potvrzena (CPU ASA přetíženo TLS processingem) + VPN nedostupná → True Positive · Severity dle dopadu
+
   - id: source_analysis
     title: Analýza zdrojových adresních bloků
     steps:
@@ -482,6 +496,7 @@ sections:
     hints:
     - 'POZOR: Blokace je povolena výhradně na úrovni súvislých CIDR bloků (/24 nebo větší). Blokace jednotlivých per-IP adres
       není povolena – generuje nekontrolovatelný počet pravidel na firewallu.'
+
   - id: impact_scope
     title: Dopad a scope incidentu
     steps:
@@ -510,6 +525,7 @@ sections:
     - VPN nedostupná pro všechny uživatele + KI dopad → True Positive, Critical · VPN nedostupná bez KI dopadu → True Positive,
       High · Degradovaná dostupnost (část uživatelů) → True Positive, Medium · Krátkodobý výpadek < 15 min → True Positive,
       Low
+
   - id: evidence_collection
     title: Zajištění důkazů
     steps:
@@ -531,6 +547,7 @@ sections:
       analyst_note: 'cidr_blocklist.txt uložen – 24 bloků /24 · celkový objem 4,8 Gbps · typ: UDP flood + NTP amplification'
       is_example: true
       done: false
+
 - id: containment_remediation
   title: Odezva
   type: action_table
@@ -616,6 +633,7 @@ sections:
     responsible_role: null
     cooperation: null
     status: null
+
 - id: communication
   title: Komunikace a notifikace
   type: action_table
@@ -655,6 +673,7 @@ sections:
     communication_method: Datová schránka
     sla: Dle regulatorní povinnosti (NIS2 apod.)
     note: null
+
 - id: closure
   title: Klasifikace a uzavření
   type: form
@@ -840,6 +859,7 @@ sections:
     type: datetime
     editable: true
     value: null
+
 - id: raci
   title: RACI matice
   type: raci_table

@@ -85,6 +85,10 @@ LIBRARIES = {
             "mode-json.js",
         ),
         (
+            "https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.9/mode-yaml.min.js",
+            "mode-yaml.js",
+        ),
+        (
             "https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.9/theme-tomorrow.min.js",
             "theme-tomorrow.js",
         ),

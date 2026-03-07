@@ -15,6 +15,7 @@ data_sources:
 - Umbrella
 - SIEM
 sections:
+
 - id: header
   type: workbook_header
   title: Hlavička
@@ -71,6 +72,7 @@ sections:
     editable: false
     value: null
     auto_value: template_status
+
 - id: classification
   type: classification
   title: Klasifikace
@@ -105,6 +107,7 @@ sections:
     editable: false
     value: null
     auto_value: template_data_sources
+
 - id: contacts
   title: Kontaktní matice
   type: contact_table
@@ -168,10 +171,12 @@ sections:
     email: podatelna@nukib.cz
     phone: +420 222 362 888
     when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
+
 - id: incident_context
   title: Informace o kontextu UIB
   type: section_group
   subsections:
+
   - id: reported_by_person
     title: Hlášeno osobou
     type: form
@@ -235,6 +240,7 @@ sections:
       editable: true
       is_example: true
       value: Přišel podezřelý e-mail s přílohou od neznámého odesílatele.
+
   - id: automated_detection
     title: Automatizovaná detekce
     type: form
@@ -276,6 +282,7 @@ sections:
       type: textarea
       editable: true
       value: null
+
   - id: affected_assets
     title: Dotčená aktiva
     type: assets_table
@@ -314,6 +321,7 @@ sections:
       - Ne
     editable: true
     rows: []
+
 - id: triage_investigation
   title: Posouzení, třídění a rozhodování
   type: checklist
@@ -321,6 +329,7 @@ sections:
     Odezva. Klasifikace (True/False Positive, Severity) se v průběhu Posouzení, třídění a rozhodování může měnit — finální
     klasifikace se zaznamenává v bloku Uzavření incidentu.
   step_groups:
+
   - id: context_artifacts
     title: Ověření kontextu a artefaktů
     steps:
@@ -334,6 +343,7 @@ sections:
       analyst_note: 'Od: invoice@podezrely-domena.com · Předmět: "Faktura #2025-112" · Přijato: 2025-03-15 09:31'
       is_example: true
       done: false
+
   - id: email_analysis
     title: Analýza obsahu e-mailu
     steps:
@@ -347,6 +357,7 @@ sections:
       analyst_note: 'SPF: fail · DKIM: none · Doména spoofována'
       is_example: true
       done: false
+
   - id: attachment_analysis
     title: E-mail obsahuje přílohu
     note: Přeskoč pokud příloha není přítomna
@@ -377,6 +388,7 @@ sections:
     classification_hints:
     - Hash detekován na TI a příloha otevřena → True Positive, High · Hash na TI, příloha neotvřena → True Positive, Medium
       · Hash na TI nedetekován → zvaž False Positive
+
   - id: url_analysis
     title: E-mail obsahuje URL odkaz
     note: Přeskoč pokud URL není přítomna
@@ -406,6 +418,7 @@ sections:
     classification_hints:
     - URL phishing + prokliknutí potvrzeno → True Positive, High · URL phishing, prokliknutí nepotvrzeno → True Positive,
       Medium · URL legitimní → zvaž False Positive
+
   - id: bec_analysis
     title: Pouze textový e-mail – BEC / Social Engineering
     note: Přeskoč pokud příloha nebo URL jsou přítomny
@@ -422,6 +435,7 @@ sections:
     classification_hints:
     - Žádost splněna → True Positive, High/Critical · Žádost nesplněna, SPF fail → True Positive, Low/Medium · Odesílatel
       legitimní → zvaž False Positive
+
   - id: scope_correlation
     title: Rozsah kampaně a korelace
     steps:
@@ -452,6 +466,7 @@ sections:
       done: false
     hints:
     - Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v sekci Odezva).
+
   - id: lateral_evidence
     title: Laterální pohyb a zajištění důkazů
     steps:
@@ -469,6 +484,7 @@ sections:
     classification_hints:
     - Laterální pohyb nebo exfiltrace potvrzena → True Positive, Critical / High (navýšení severity) · Laterální pohyb nezjištěn
       → pokračuj dle předchozí klasifikace
+
 - id: containment_remediation
   title: Odezva
   type: action_table
@@ -535,6 +551,7 @@ sections:
     responsible_role: null
     cooperation: null
     status: null
+
 - id: communication
   title: Komunikace a notifikace
   type: action_table
@@ -574,6 +591,7 @@ sections:
     communication_method: Datová schránka
     sla: Dle regulatorní povinnosti
     note: null
+
 - id: closure
   title: Klasifikace a uzavření
   type: form
@@ -719,6 +737,7 @@ sections:
     type: datetime
     editable: true
     value: null
+
 - id: raci
   title: RACI matice
   type: raci_table
