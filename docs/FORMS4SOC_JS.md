@@ -234,6 +234,43 @@ Speciální varianta formuláře určená pro úvodní kartu incidentu. Read-onl
 | `fields[]` | ✓ | Formulářová pole – editovatelná zobrazena prominentně nahoře, read-only jako info grid pod čarou |
 | `description` | | Podnadpis v pravé části hlavičky karty |
 
+> **Poznámka:** Typ `playbook_header` je alias pro `workbook_header` a renderuje se identicky.
+
+### Klasifikace (`classification`)
+
+Panel s MITRE ATT&CK metadaty incidentu. Read-only pole (taktika, technika) jsou zobrazena jako kompaktní info grid; editovatelná pole (sub-technika, přizpůsobení) jsou zobrazena jako standardní form řádky. Pole s klíčem `data_sources` je renderováno jako seznam badge.
+
+```jsonc
+{
+  "id": "classification",
+  "type": "classification",
+  "title": "Klasifikace – MITRE ATT&CK",
+  "fields": [
+    { "key": "mitre_tactic",     "label": "Taktika",      "type": "text", "editable": false, "value": "Initial Access",
+      "auto_value": "template_mitre_tactic" },
+    { "key": "mitre_technique",  "label": "Technika",     "type": "text", "editable": false, "value": "T1566 – Phishing",
+      "auto_value": "template_mitre_technique" },
+    { "key": "mitre_sub",        "label": "Sub-technika", "type": "select", "editable": true,  "value": null,
+      "options": ["T1566.001 – Spearphishing Attachment", "T1566.002 – Spearphishing Link", "T1566.003 – Spearphishing via Service"] },
+    { "key": "data_sources",     "label": "Datové zdroje", "type": "text", "editable": false, "value": "Email Gateway, EDR, DNS",
+      "auto_value": "template_data_sources" }
+  ]
+}
+```
+
+| Klíč | ✓ | Popis |
+|------|:-:|-------|
+| `id` | ✓ | Unikátní identifikátor sekce |
+| `type` | ✓ | `"classification"` |
+| `title` | ✓ | Nadpis karty |
+| `fields[]` | ✓ | Formulářová pole – viz pravidla renderování níže |
+| `description` | | Podnadpis v pravé části hlavičky karty |
+
+Pravidla renderování polí:
+- `editable: false` → zobrazeno jako info grid (kompaktní label + hodnota)
+- `editable: true` → zobrazeno jako standardní form řádek (input/select)
+- `key: "data_sources"` → renderováno jako řada badge místo inputu (hodnota může být pole nebo CSV řetězec)
+
 ### Kontaktní tabulka (`contact_table`)
 
 Tabulka pro eskalační kontakty. Část sloupců je editovatelná inline (bez ohraničení, průhledné pozadí). Analytik může přidávat vlastní řádky přes tlačítko „Přidat řádek", pokud je `allow_append: true`. Šablonové řádky (předdefinované kontakty) nelze smazat.
@@ -348,7 +385,7 @@ Příklad komunikační matice (bez stavového dropdownu – volný textový vst
 }
 ```
 
-> Pokud `status_options` není definováno, sloupce v `editable_columns` se renderují jako volný textový vstup místo dropdownu.
+> **Poznámka k editovatelnosti:** Pokud `status_options` je definováno, sloupce v `editable_columns` se renderují jako dropdown. Bez `status_options` jsou šablonové řádky v těchto sloupcích **read-only** (text); řádky přidané analytikem (`analyst_added: true`) jsou vždy plně editovatelné jako volný text ve všech sloupcích.
 
 | Klíč | ✓ | Popis |
 |------|:-:|-------|
@@ -360,7 +397,7 @@ Příklad komunikační matice (bez stavového dropdownu – volný textový vst
 | `rows[]` | ✓ | Řádky tabulky |
 | `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
 | `description` | | Podnadpis v pravé části hlavičky karty |
-| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; jinak volný textový vstup |
+| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; bez `status_options` jsou šablonové řádky read-only (řádky analytika jsou vždy editovatelné) |
 | `allow_append` | | `true` → tlačítko „Přidat akci" |
 | `allow_delete` | | `true` → tlačítko Smazat u všech řádků (nejen analytikových) |
 | `append_row_template{}` | ◐ | Povinný pokud `allow_append: true`; vzor prázdného řádku |
@@ -661,7 +698,7 @@ Klíče každého kroku (`steps[]`):
 | `column_labels{}` | ✓ | Mapování `key → nadpis sloupce` |
 | `rows[]` | ✓ | Řádky tabulky |
 | `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
-| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; jinak volný textový vstup |
+| `status_options[]` | | Pokud definováno, `editable_columns` se renderují jako dropdown; bez `status_options` jsou šablonové řádky read-only (řádky analytika vždy editovatelné) |
 | `allow_append` | | `true` → tlačítko „Přidat akci" |
 | `allow_delete` | | `true` → tlačítko Smazat u všech řádků |
 | `append_row_template{}` | (pokud `allow_append`) | Vzor pro nový řádek |
@@ -798,8 +835,8 @@ Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle 
 
 | Interní funkce | Typ sekce |
 |----------------|-----------|
-| `renderWorkbookHeader(section)` | `workbook_header`, `playbook_header` |
-| `renderClassification(section)` | `classification` |
+| `renderWorkbookHeader(section)` | `workbook_header`, `playbook_header` (alias) |
+| `renderClassification(section)` | `classification` – MITRE ATT&CK panel |
 | `renderContactTable(section)` | `contact_table` |
 | `renderSectionGroup(section)` | `section_group` |
 | `renderFormSection(section)` | `form` |
@@ -813,6 +850,7 @@ Tyto funkce nejsou součástí veřejného API, ale jsou volány interně podle 
 | Funkce | Popis |
 |--------|-------|
 | `el(tag, cls?, html?)` | Factory pro DOM element; `html` je sanitizováno |
+| `renderForm(fields)` | Renderuje seznam polí jako dvousloupcový grid; volán interně z `renderFormSection` a `renderChecklist` (blok `result.fields`) |
 | `setHTML(element, html)` | Bezpečné přiřazení innerHTML |
 | `sanitizeHTML(html)` | DOMParser sandbox – odstraní nebezpečné elementy a atributy |
 | `buildTableHead(columns, labels?, extraCol?)` | Sestaví `<thead>` tabulky |
