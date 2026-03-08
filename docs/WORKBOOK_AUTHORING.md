@@ -1,7 +1,7 @@
 # Tvorba SOC Workbooků – Průvodce pro SOC Analytiky
 
 Tento dokument vysvětluje, jak vytvořit vlastní SOC workbook šablonu pro opakující se typy incidentů.
-Nepředpokládá se znalost programování – pracuješ jen s textovým souborem ve formátu JSON.
+Nepředpokládá se znalost programování – pracuješ jen s textovým souborem ve formátu YAML.
 
 Technická reference (pro pokročilé): [TEMPLATE_GUIDE.md](TEMPLATE_GUIDE.md)
 
@@ -13,7 +13,7 @@ SOC Workbook je strukturovaný postup práce pro konkrétní typ bezpečnostníh
 Při zakládání nového incidentu v systému vybereš šablonu workbooku – systém předvyplní formulář s příslušnými sekcemi, kroky a kontakty.
 
 ```
-Šablona workbooku (JSON soubor)
+Šablona workbooku (YAML soubor)
     │
     ▼
 Analytik zakládá incident → systém vytvoří dokument podle šablony
@@ -34,24 +34,26 @@ Analytik vyplní formulář → uloží → incident je zdokumentován
 
 ### 1. Zkopíruj Vanilla šablonu
 
-Soubor `data/workbooks/vanilla_v1.json` je připravená kostra. Zkopíruj ho a přejmenuj:
+Soubor `data/workbooks/vanilla_v1.yaml` je připravená kostra. Zkopíruj ho a přejmenuj:
 
 ```
-vanilla_v1.json  →  ransomware_v1.json
+vanilla_v1.yaml  →  ransomware_v1.yaml
 ```
 
-Konvence názvu souboru: `typ_incidentu_v{číslo}.json` (malá písmena, podtržítka).
+Konvence názvu souboru: `typ_incidentu_v{číslo}.yaml` (malá písmena, podtržítka).
 
-### 2. Uprav soubor v textovém editoru
+### 2. Uprav soubor v editoru šablon nebo textovém editoru
 
-Otevři soubor v libovolném textovém editoru (VS Code, Notepad++, ...) a uprav:
+Nejpohodlnější způsob je otevřít šablonu přímo v aplikaci – sekce **Šablony → Klonovat**.
+Alternativně uprav soubor v libovolném textovém editoru (VS Code, Notepad++, ...) a vlož ho do adresáře `data/workbooks/`.
+
+Uprav:
 - Metadata šablony (viz sekce níže)
 - Kroky vyšetřování (checklist)
 - Pole specifická pro daný typ incidentu v sekci Klasifikace a uzavření
 
-### 3. Vlož soubor do systému a otestuj
+### 3. Otestuj šablonu
 
-Zkopíruj soubor do adresáře `data/workbooks/` (nebo jiného adresáře nakonfigurovaného v Nastavení).
 V aplikaci přejdi do **Šablony** – nová šablona se objeví se stavem `draft`.
 Vytvoř zkušební incident, projdi všechny sekce a zkontroluj, zda vše vypadá správně.
 Až jsi spokojený, změň `status` na `active`.
@@ -60,19 +62,20 @@ Až jsi spokojený, změň `status` na `active`.
 
 ## Metadata šablony (začátek souboru)
 
-```json
-{
-  "template_id": "ransomware-v1",
-  "name": "Ransomware – šifrování dat",
-  "version": "1.0",
-  "category": "Malware",
-  "status": "draft",
-  "description": "Postup pro řešení ransomware útoku ...",
-  "mitre_tactic": "Impact",
-  "mitre_technique": "T1486",
-  "mitre_subtechnique": "",
-  "data_sources": ["EDR", "SIEM", "Backup systém"]
-}
+```yaml
+template_id: ransomware-v1
+name: Ransomware – šifrování dat
+version: '1.0'
+category: Malware
+status: draft
+description: Postup pro řešení ransomware útoku ...
+mitre_tactic: Impact
+mitre_technique: T1486
+mitre_subtechnique: ''
+data_sources:
+  - EDR
+  - SIEM
+  - Backup systém
 ```
 
 | Pole | Co vyplnit |
@@ -86,16 +89,16 @@ Až jsi spokojený, změň `status` na `active`.
 | `mitre_technique` | MITRE ATT&CK technika (např. `T1486`), nebo prázdný řetězec |
 | `data_sources` | Systémy, které analytik při investigaci použije |
 
-### Komentáře `_doc` – pro tvůrce šablony
+### Komentáře v YAML souboru
 
-Klíče začínající `_doc` jsou autorské komentáře – **v aplikaci se nezobrazují**. Vanilla šablona je jimi okomentovaná; po dokončení šablony je můžeš ponechat nebo smazat.
+YAML podporuje komentáře nativně pomocí znaku `#`. Používej je pro poznámky sobě nebo kolegům – v aplikaci se nezobrazují.
 
-```json
-{
-  "_doc": "Tento text vidí jen autor šablony v textovém editoru.",
-  "id": "triage",
-  "title": "Triage"
-}
+```yaml
+# Uprav kroky dle svého prostředí.
+- title: Posouzení – ověření alertu
+  steps:
+    # Tento krok odstraň pokud alert pochází z automatizace.
+    - Ověř, zda je alert validní.
 ```
 
 ---
@@ -132,34 +135,45 @@ workbook_header → classification → contact_table → [section_group s kontex
 
 Checklist je nejdůležitější část workbooku. Kroky jsou organizovány do skupin (`step_groups`).
 
+### Zkrácený a plný zápis kroků
+
+Jednoduchý krok (bez nápovědy nebo ukázky) zapíšeš jednou řádkou:
+
+```yaml
+steps:
+  - Ověř záhlaví e-mailu (SPF, DKIM, DMARC).
+  - Prověř hash přílohy na VirusTotal.
+  - Zhodnoť rozsah kompromitace.
+```
+
+Plný zápis použij pro kroky s nápovědou nebo ukázkou vyplnění (`is_example`):
+
+```yaml
+steps:
+  - action: Zjisti hash přílohy (MD5 / SHA256) – přílohu přímo neotvírej.
+    analyst_note: 'SHA256: 3a1f2b…'
+    is_example: true
+```
+
 ### Přidání nové skupiny kroků
 
-```json
-{
-  "id": "lateral_movement",
-  "title": "Analýza lateral movement",
-  "steps": [
-    {
-      "id": "lm_01",
-      "action": "Ověř přihlášení ze zasaženého účtu na jiné systémy (AD event 4624).",
-      "analyst_note": null,
-      "done": false
-    }
-  ]
-}
+```yaml
+- title: Analýza lateral movement
+  steps:
+    - Ověř přihlášení ze zasaženého účtu na jiné systémy (AD event 4624).
+    - Zkontroluj RDP / SSH připojení v SIEM za posledních 7 dní.
 ```
 
 ### Přidání nápovědy a klasifikačních vodítek
 
-```json
-{
-  "hints": [
-    "Pokud jsou zasaženy více než 3 systémy → rozšiř scope a informuj CISO."
-  ],
-  "classification_hints": [
-    "Šifrování potvrzeno na > 10 systémech → Kritická | < 10 systémů, zálohy OK → Vysoká"
-  ]
-}
+```yaml
+- title: Analýza přílohy
+  steps:
+    - Prověř hash na VirusTotal.
+  hints:
+    - Pokud je příloha otevřena na více zařízeních → rozšiř scope.
+  classification_hints:
+    - 'Hash detekován na TI + příloha otevřena → True Positive, High'
 ```
 
 - **`hints`** (šedé) – operační poznámky, varování, podmínky pro rozšíření scope
@@ -167,31 +181,28 @@ Checklist je nejdůležitější část workbooku. Kroky jsou organizovány do s
 
 ### Pravidla pro kroky
 
-- `id` musí být unikátní v celém souboru (doporučený formát: `skupina_číslo`, např. `lm_01`)
+- **`id` kroků i skupin nemusíš uvádět** – systém je vygeneruje automaticky z názvu skupiny.
+  Pokud chceš mít kontrolu nad ID (např. pro referenci v jiném dokumentu), zadej `id` ručně.
 - `action` – instrukce pro analytika formulovaná jako „co má udělat"
-- `analyst_note` – vždy začínáš jako `null`; přidej `"is_example": true` pro ukázku vyplnění
-- `done` – vždy `false`
+- `analyst_note` – pokud necháš prázdné, aplikace doplní automaticky `null`; přidej `is_example: true` pro ukázku vyplnění
 
 ---
 
 ## Pole `is_example` – ukázky vyplnění
 
-Pole nebo kroky s `"is_example": true` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota stane placeholderem a analytik ji přepíše vlastní hodnotou.
+Pole nebo kroky s `is_example: true` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota stane placeholderem a analytik ji přepíše vlastní hodnotou.
 
-```json
-{
-  "key": "root_cause",
-  "label": "Root Cause",
-  "type": "textarea",
-  "editable": true,
-  "is_example": true,
-  "value": "Uživatel otevřel přílohu phishingového e-mailu → spuštění dropperu → šifrování disku"
-}
+```yaml
+- key: root_cause
+  label: Root Cause
+  type: textarea
+  is_example: true
+  value: Uživatel otevřel přílohu phishingového e-mailu → spuštění dropperu → šifrování disku
 ```
 
 Dobré pro: `root_cause`, `actions_taken`, kroky checklistu – všude, kde chceš ukázat, jak správně vyplněné pole vypadá.
 
-> **`is_example` v kontaktní tabulce nepoužívej.** Řádky `contact_table` jsou předvyplněné jako běžný editovatelný text; `"is_example": true` v jejich řádcích nemá efekt.
+> **`is_example` v kontaktní tabulce nepoužívej.** Řádky `contact_table` jsou předvyplněné jako běžný editovatelný text; `is_example: true` v jejich řádcích nemá efekt.
 
 ---
 
@@ -216,7 +227,6 @@ Před změnou `status` z `draft` na `active` ověř:
 - [ ] `template_id` je unikátní – zkontroluj ostatní soubory v `data/workbooks/`
 - [ ] `name`, `category`, `description` jsou srozumitelně vyplněny
 - [ ] MITRE taktika a technika odpovídají typu incidentu
-- [ ] Všechna `id` sekcí a kroků jsou unikátní v rámci souboru
 - [ ] Kroky checklistu dávají smysl v logickém pořadí
 - [ ] Sekce Klasifikace a uzavření obsahuje všechna standardní pole
 - [ ] Testovací incident byl vytvořen a všechny sekce se správně zobrazily
@@ -226,12 +236,15 @@ Před změnou `status` z `draft` na `active` ověř:
 
 ## Časté chyby a tipy
 
-**JSON je citlivý na formátování.** Chybějící čárka nebo závorka způsobí, že soubor nelze načíst.
-Použij validátor: vlož soubor na [jsonlint.com](https://jsonlint.com) – chyba se ukáže okamžitě.
+**YAML je citlivý na odsazení.** Každá úroveň se odsazuje o 2 mezery. Nikdy nesměšuj mezery a tabulátory.
+V editoru šablon (v aplikaci) máš zvýraznění syntaxe a validaci přímo v reálném čase.
 
-**Unikátnost ID.** Každé `id` (sekce, krok) musí být unikátní v celém souboru.
-Doporučená konvence: `prefix_číslo` (např. `t_01`, `i_03`, `lm_01`).
+**Speciální znaky v hodnotách.** Pokud hodnota obsahuje dvojtečku, uvozovky nebo začíná zvláštním znakem, ohraň ji apostrofy nebo uvozovkami:
+```yaml
+hint: 'Lhůty: do 24 h · do 72 h · do 30 dní'
+value: "Faktura #2025-112"
+```
 
-**Verzování.** Pokud výrazně měníš existující šablonu, vytvoř novou verzi souboru (`ransomware_v2.json`) a starý soubor označ jako `deprecated`. Existující incidenty zůstanou funkční.
+**Verzování.** Pokud výrazně měníš existující šablonu, vytvoř novou verzi souboru (`ransomware_v2.yaml`) a starý soubor označ jako `deprecated`. Existující incidenty zůstanou funkční.
 
 **Testovací incident nevyplňuj doopravdy.** Zkušební incident po ověření smaž – funkce dostupná pro admina.
