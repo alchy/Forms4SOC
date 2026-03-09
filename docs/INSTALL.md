@@ -9,7 +9,7 @@ Forms4SOC je webová aplikace pro správu SOC incidentů. Analytici vyplňují s
 ## Jak to funguje?
 
 ```
-data/workbooks/*.json   – JSON šablony workbooků (commitovány v gitu)
+data/workbooks/*.yaml   – YAML šablony workbooků (commitovány v gitu)
 data/events/*.json      – JSON soubory incidentů (mimo git)
 data/forms4soc.db       – SQLite databáze (users + settings)
 
@@ -98,7 +98,7 @@ Volitelné klíče:
 # DEFAULT_TEMPLATES_DIR=data/workbooks
 ```
 
-> Po prvním spuštění se admin účet uloží do databáze. Hodnoty `ADMIN_USERNAME` a `ADMIN_PASSWORD` se použijí znovu jen pokud databáze neexistuje.
+> Po prvním spuštění se admin účet uloží do databáze. Hodnoty `ADMIN_USERNAME` a `ADMIN_PASSWORD` se použijí znovu jen pokud databáze neexistuje. Podrobnosti o seedování a resetu hesla viz [AUTH.md](AUTH.md).
 
 ---
 
@@ -138,11 +138,11 @@ Forms4SOC/
 ├── app/                  – zdrojový kód aplikace
 ├── data/
 │   ├── events/           – JSON soubory UIB (vytvořeno automaticky)
-│   ├── workbooks/        – JSON šablony workbooků
-│   │   ├── phishing_v2.json
-│   │   ├── ddos_vpn_v1.json
-│   │   └── vanilla_v1.json
-│   ├── tisk/             – PDF exporty (vytvořeno automaticky)
+│   ├── workbooks/        – YAML šablony workbooků
+│   │   ├── phishing_v2.yaml
+│   │   ├── phishing_v3.yaml
+│   │   ├── ddos_vpn_v1.yaml
+│   │   └── vanilla_v1.yaml
 │   └── forms4soc.db      – SQLite databáze (vytvořena automaticky)
 ├── docs/                 – tato dokumentace
 ├── scripts/

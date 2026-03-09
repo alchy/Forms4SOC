@@ -17,7 +17,7 @@ FastAPI app  →  JWT middleware  →  route handler
     │
     ├── /api/v1/auth/*       – přihlášení / odhlášení / info o uživateli
     ├── /api/v1/cases/*      – CRUD incidentů + zámky
-    ├── /api/v1/templates/*  – CRUD šablon (JSON workbooků)
+    ├── /api/v1/templates/*  – CRUD šablon (YAML workbooků)
     ├── /api/v1/settings/*   – nastavení aplikace (admin)
     └── /api/v1/users/*      – správa uživatelů (admin)
 ```
@@ -37,6 +37,8 @@ POST /auth/login  →  nastaví cookie  →  všechny /api/v1/* endpointy
 ```
 
 > Přímé volání z externího klienta (curl, Python): pošli přihlašovací požadavek, ulož cookie a přikládej ji k dalším voláním.
+
+> Podrobný popis celého přihlašovacího procesu, JWT, cookies a bezpečnostních doporučení viz [AUTH.md](AUTH.md).
 
 ---
 
@@ -173,14 +175,14 @@ Stránka `/cases/{case_id}/print` zobrazí incident ve formátu optimalizovaném
 
 ## TEMPLATES – `/api/v1/templates`
 
-Šablony jsou JSON soubory v adresáři `data/workbooks/` (konfigurovatelné). Každá šablona definuje strukturu jednoho typu incidentu.
+Šablony jsou YAML soubory v adresáři `data/workbooks/` (konfigurovatelné). Každá šablona definuje strukturu jednoho typu incidentu.
 
 | Metoda | Endpoint | Popis | Auth |
 |--------|----------|-------|------|
 | GET | `/templates/` | Seznam všech šablon | ✓ |
 | POST | `/templates/` | Vytvoření nové šablony 🔒 | admin |
 | GET | `/templates/{template_id}` | Detail šablony | ✓ |
-| GET | `/templates/{template_id}/source` | Zdrojový JSON (pro editor) 🔒 | admin |
+| GET | `/templates/{template_id}/source` | Zdrojový YAML (pro editor) 🔒 | admin |
 | PUT | `/templates/{template_id}` | Uložení upraveného obsahu 🔒 | admin |
 | DELETE | `/templates/{template_id}` | Smazání šablony 🔒 | admin |
 
@@ -199,7 +201,7 @@ Stránka `/cases/{case_id}/print` zobrazí incident ve formátu optimalizovaném
     "mitre_technique": "T1566",
     "data_sources": ["Inbound SMTP Mail Gateway", "Proxy", "SIEM"],
     "sections": [...],
-    "filename": "phishing_v2.json"
+    "filename": "phishing_v2.yaml"
   }
 ]
 ```
@@ -210,13 +212,13 @@ Dostupné šablony: `phishing-v2` (Phishing / podezřelý e-mail) · `ddos-vpn-v
 
 ```json
 // Tělo požadavku
-{ "filename": "ransomware_v1.json", "content": "{...}" }
+{ "filename": "ransomware_v1.yaml", "content": "..." }
 
 // Odpověď 200
-{ "ok": true, "template_id": "ransomware-v1", "filename": "ransomware_v1.json" }
+{ "ok": true, "template_id": "ransomware-v1", "filename": "ransomware_v1.yaml" }
 
 // Odpověď 409 – soubor již existuje
-// Odpověď 400 – neplatný JSON
+// Odpověď 400 – neplatný YAML
 ```
 
 ### `PUT /templates/{template_id}` – uložení šablony
@@ -226,7 +228,7 @@ Dostupné šablony: `phishing-v2` (Phishing / podezřelý e-mail) · `ddos-vpn-v
 { "content": "{...}" }
 
 // Odpověď 200
-{ "ok": true, "filename": "ransomware_v1.json" }
+{ "ok": true, "filename": "ransomware_v1.yaml" }
 ```
 
 ---
@@ -245,7 +247,7 @@ Nastavení aplikace – adresáře pro incidenty a šablony. Změny se projeví 
 | Klíč | Popis | Výchozí hodnota |
 |------|-------|-----------------|
 | `incidents_dir` | Adresář pro JSON soubory incidentů | `data/events` |
-| `templates_dir` | Adresář pro JSON šablony workbooků | `data/workbooks` |
+| `templates_dir` | Adresář pro YAML šablony workbooků | `data/workbooks` |
 
 ### `PATCH /settings/`
 
@@ -334,7 +336,7 @@ Implementace: `app/auth/auth_provider.py` (ABC rozhraní) · `app/auth/simple_au
 | `200 OK` | Úspěch (GET, PATCH, PUT) |
 | `201 Created` | Incident nebo uživatel vytvořen |
 | `204 No Content` | Smazání nebo uvolnění zámku |
-| `400 Bad Request` | Neplatné tělo požadavku (např. neplatný JSON šablony) |
+| `400 Bad Request` | Neplatné tělo požadavku (např. neplatný YAML šablony) |
 | `401 Unauthorized` | Chybí nebo vypršel JWT token |
 | `403 Forbidden` | Nedostatečná oprávnění (vyžaduje admin) |
 | `404 Not Found` | Incident nebo šablona nenalezena |

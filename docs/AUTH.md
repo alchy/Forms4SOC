@@ -31,7 +31,7 @@ SimpleAuthProvider.authenticate()
     ├─ selhání → asyncio.sleep(1) → HTTP 401
     │
     ▼
-create_access_token(sub=username, role=role)
+create_access_token({"sub": username, "role": role})
     │  HS256, podepsáno JWT_SECRET_KEY
     │  claim exp = now + JWT_EXPIRE_MINUTES
     ▼
@@ -104,13 +104,18 @@ potřebuje výrazně více času na prolomení než u MD5 nebo SHA.
 Po úspěšném ověření `auth.py` zavolá `create_access_token()`:
 
 ```python
-def create_access_token(sub: str, role: str) -> str:
-    payload = {
-        "sub": sub,
-        "role": role,
-        "exp": datetime.now(UTC) + timedelta(minutes=settings.jwt_expire_minutes),
-    }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    to_encode["exp"] = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=settings.jwt_expire_minutes)
+    )
+    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+```
+
+Volání při přihlášení (`auth.py`):
+
+```python
+token = create_access_token({"sub": user.username, "role": user.role})
 ```
 
 Token je podepsán algoritmem **HS256** klíčem `JWT_SECRET_KEY`. Obsahuje tři claimy:
@@ -214,7 +219,7 @@ Postup pro reset hesla admina v produkci:
 
 ```bash
 # Možnost A – přes API (doporučeno, nevyžaduje výpadek)
-curl -b cookies.txt -X PATCH http://localhost:8080/api/v1/users/1 \
+curl -b cookies.txt -X PATCH http://localhost:8080/api/v1/users/admin \
      -H "Content-Type: application/json" \
      -d '{"password": "nove-bezpecne-heslo"}'
 
@@ -283,7 +288,7 @@ Atribut `Secure` na cookie není nastaven – doporučujeme přidat po nasazení
 | `Settings` | `app/config.py` | pydantic-settings singleton; načteno z `.env` při importu |
 | `hash_password(plain)` | `app/core/security.py` | bcrypt hash hesla |
 | `verify_password(plain, hashed)` | `app/core/security.py` | bcrypt porovnání |
-| `create_access_token(sub, role)` | `app/core/security.py` | vydá HS256 JWT s `exp` |
+| `create_access_token(data, expires_delta)` | `app/core/security.py` | vydá HS256 JWT s `exp`; `data` = `{"sub": username, "role": role}` |
 | `decode_token(token)` | `app/core/security.py` | ověří podpis + exp, vrátí `TokenPayload` |
 | `require_auth` | `app/core/security.py` | FastAPI Depends – čte cookie, vrátí `User` nebo HTTP 401 |
 | `require_admin` | `app/core/security.py` | FastAPI Depends – navazuje na `require_auth`, HTTP 403 pokud role != admin |
