@@ -93,6 +93,12 @@ LIBRARIES = {
             "theme-tomorrow.js",
         ),
     ],
+    "js-yaml": [
+        (
+            "https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js",
+            "js-yaml.min.js",
+        ),
+    ],
 }
 
 

@@ -139,6 +139,7 @@
 
 {% block scripts %}
 <script src="/static/vendor/ace/ace.js"></script>
+<script src="/static/vendor/js-yaml/js-yaml.min.js"></script>
 <script>
 const MODE       = '{{ mode }}';
 const TMPL_ID    = '{{ template_id or "" }}';
@@ -233,11 +234,33 @@ function getYamlField(text, key) {
     return m ? m[1].trim() : '–';
 }
 
+function validateYaml() {
+    try {
+        jsyaml.load(editor.getValue());
+        return null;
+    } catch (e) {
+        return e;
+    }
+}
+
+function updateYamlIndicator() {
+    const err = validateYaml();
+    const el = document.getElementById('sb-yaml-ok');
+    if (!err) {
+        el.innerHTML = '<i class="bi bi-check-circle me-1 text-success"></i><span class="text-success fw-semibold">YAML OK</span>';
+    } else {
+        const line = err.mark ? err.mark.line + 1 : '?';
+        el.title = err.reason || err.message || '';
+        el.innerHTML = `<i class="bi bi-x-circle me-1 text-danger"></i><span class="text-danger fw-semibold">YAML chyba ř. ${line}</span>`;
+    }
+}
+
 function updateStatusBar() {
     const raw = editor.getValue();
     document.getElementById('sb-template-id').querySelector('span').textContent = getYamlField(raw, 'template_id');
     document.getElementById('sb-name').querySelector('span').textContent        = getYamlField(raw, 'name');
     document.getElementById('sb-status').querySelector('span').textContent      = getYamlField(raw, 'status');
+    updateYamlIndicator();
 }
 
 // ── Uložit ────────────────────────────────────────────────────────────────
@@ -255,6 +278,12 @@ async function saveTemplate() {
 }
 
 async function doSaveExisting() {
+    const yamlErr = validateYaml();
+    if (yamlErr) {
+        const line = yamlErr.mark ? ` (řádek ${yamlErr.mark.line + 1})` : '';
+        showError(`YAML chyba${line}: ${yamlErr.reason || yamlErr.message} – uložení zablokováno.`);
+        return;
+    }
     setSaving(true);
     try {
         const resp = await apiFetch(`/api/v1/templates/${currentTemplateId}`, {
@@ -284,6 +313,13 @@ async function doCreateTemplate() {
     }
     if (!/^[a-z0-9_\-]+$/.test(filename)) {
         errEl.textContent = 'Povoleny jen malá písmena, číslice, _ a -.';
+        errEl.classList.remove('d-none');
+        return;
+    }
+    const yamlErr = validateYaml();
+    if (yamlErr) {
+        const line = yamlErr.mark ? ` (řádek ${yamlErr.mark.line + 1})` : '';
+        errEl.textContent = `YAML chyba${line}: ${yamlErr.reason || yamlErr.message}`;
         errEl.classList.remove('d-none');
         return;
     }
