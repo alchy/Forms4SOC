@@ -96,6 +96,12 @@ Volitelné klíče:
 # Výchozí adresáře – lze změnit také v GUI → Nastavení
 # DEFAULT_INCIDENTS_DIR=data/events
 # DEFAULT_TEMPLATES_DIR=data/workbooks
+
+# Branding aplikace – název, verze a podtitulek
+# Hodnoty se při prvním spuštění uloží do SQLite; lze pak upravit v GUI → Nastavení
+# APP_NAME=Forms4SOC
+# APP_VERSION=0.2.0
+# APP_SUBTITLE=SOC Incident Management Portal
 ```
 
 > Po prvním spuštění se admin účet uloží do databáze. Hodnoty `ADMIN_USERNAME` a `ADMIN_PASSWORD` se použijí znovu jen pokud databáze neexistuje. Podrobnosti o seedování a resetu hesla viz [AUTH.md](AUTH.md).

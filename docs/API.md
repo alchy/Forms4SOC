@@ -16,6 +16,7 @@ Prohlížeč / klient
 FastAPI app  →  JWT middleware  →  route handler
     │
     ├── /api/v1/auth/*       – přihlášení / odhlášení / info o uživateli
+    ├── /api/v1/info         – název a verze aplikace (veřejné)
     ├── /api/v1/cases/*      – CRUD incidentů + zámky
     ├── /api/v1/templates/*  – CRUD šablon (YAML workbooků)
     ├── /api/v1/settings/*   – nastavení aplikace (admin)
@@ -72,6 +73,27 @@ POST /auth/login  →  nastaví cookie  →  všechny /api/v1/* endpointy
   "role": "admin",
   "is_active": true,
   "created_at": "2026-01-01T00:00:00"
+}
+```
+
+---
+
+## INFO – `/api/v1/info`
+
+Veřejný endpoint – nevyžaduje autentizaci. Vrací aktuální branding aplikace (hodnoty z SQLite, seedy z `.env`).
+
+| Metoda | Endpoint | Popis | Auth |
+|--------|----------|-------|------|
+| GET | `/info/` | Název, verze a podtitulek aplikace | — |
+
+### `GET /info/`
+
+```json
+// Odpověď 200
+{
+  "app_name": "Forms4SOC",
+  "app_version": "0.2.0",
+  "app_subtitle": "SOC Incident Management Portal"
 }
 ```
 
@@ -248,6 +270,11 @@ Nastavení aplikace – adresáře pro incidenty a šablony. Změny se projeví 
 |------|-------|-----------------|
 | `incidents_dir` | Adresář pro JSON soubory incidentů | `data/events` |
 | `templates_dir` | Adresář pro YAML šablony workbooků | `data/workbooks` |
+| `app_name` | Název aplikace zobrazovaný v UI | `Forms4SOC` |
+| `app_version` | Verze zobrazovaná v sidebaru | `0.2.0` |
+| `app_subtitle` | Podtitulek na přihlašovací stránce | `SOC Incident Management Portal` |
+
+> **Poznámka:** Klíče `app_name`, `app_version`, `app_subtitle` se projeví okamžitě v `GET /api/v1/info`. V Jinja2 šablonách (server-side rendering) se projeví až po restartu serveru – Jinja2 globals se nastavují jednou při startu z `config.py`.
 
 ### `PATCH /settings/`
 
