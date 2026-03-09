@@ -1,3 +1,5 @@
+import asyncio
+
 import aiosqlite
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
@@ -38,6 +40,7 @@ async def login(
     user = await provider.authenticate(credentials.username, credentials.password)
 
     if not user:
+        await asyncio.sleep(1)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nesprávné přihlašovací údaje",

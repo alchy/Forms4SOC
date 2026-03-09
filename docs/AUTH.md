@@ -27,6 +27,9 @@ SimpleAuthProvider.authenticate()
     │  načte řádek z SQLite users
     │  zkontroluje is_active
     │  bcrypt.checkpw(password, hashed_password)
+    │
+    ├─ selhání → asyncio.sleep(1) → HTTP 401
+    │
     ▼
 create_access_token(sub=username, role=role)
     │  HS256, podepsáno JWT_SECRET_KEY
@@ -253,6 +256,13 @@ Při odhlášení (`POST /api/v1/auth/logout`) backend smaže cookie – token p
 Token samotný ale zůstane technicky platný do `exp`. Aplikace neimplementuje seznam
 odvolaných tokenů (token blacklist) – pokud je nutná okamžitá revokace, změň `JWT_SECRET_KEY`
 (invaliduje **všechny** aktivní sessions).
+
+### Ochrana proti brute-force
+
+Při neúspěšném přihlášení backend čeká `asyncio.sleep(1)` před vrácením HTTP 401.
+Jedno vlákno tak může otestovat nejvýše ~60 hesel za minutu. Útočník s paralelními
+požadavky z jedné IP může toto obejít – pro produkční nasazení exponované do sítě zvažte
+přidání rate limiteru per-IP (např. `slowapi`).
 
 ### Deaktivace uživatele
 

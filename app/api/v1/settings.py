@@ -1,5 +1,7 @@
+from pathlib import Path
+
 import aiosqlite
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.database import get_db
 from app.core.security import require_admin
@@ -31,6 +33,21 @@ async def update_settings(
 ) -> dict[str, str]:
     allowed_keys = {"incidents_dir", "templates_dir"}
     for key, value in updates.items():
-        if key in allowed_keys:
-            await set_setting(db, key, value)
+        if key not in allowed_keys:
+            continue
+        if not value or not value.strip():
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Hodnota pro '{key}' nesmí být prázdná.")
+        try:
+            p = Path(value)
+        except Exception:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Hodnota pro '{key}' není platná cesta.")
+        if ".." in p.parts:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Hodnota pro '{key}' nesmí obsahovat '..'.")
+        if not p.exists():
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail=f"Adresář '{value}' neexistuje.")
+        await set_setting(db, key, value)
     return await get_all_settings(db)
