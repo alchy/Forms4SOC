@@ -213,7 +213,7 @@
             document.getElementById('open-cases-count').textContent =
                 cases.filter(c => c.status === 'open' || c.status === 'in_progress').length;
             document.getElementById('closed-cases-count').textContent =
-                cases.filter(c => c.status === 'closed' || c.status === 'false_positive').length;
+                cases.filter(c => c.status === 'closed').length;
         } catch { }
     }
 

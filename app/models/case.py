@@ -3,7 +3,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
 
-CaseStatus = Literal["open", "in_progress", "closed", "false_positive"]
+CaseStatus = Literal["open", "in_progress", "closed", "on_hold"]
 
 
 class IncidentCase(BaseModel):

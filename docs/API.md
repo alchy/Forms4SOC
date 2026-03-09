@@ -106,7 +106,7 @@ Příklad: UIB-06032026-0954-3712
 | `open` | Přiřazeno |
 | `in_progress` | V řešení |
 | `closed` | Uzavřený |
-| `false_positive` | False Positive |
+| `on_hold` | Pozastaveno |
 
 ### `POST /cases/` – vytvoření incidentu
 
