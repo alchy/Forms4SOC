@@ -90,13 +90,13 @@
             <table class="table table-hover mb-0" id="cases-table">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-3">Stav</th>
+                        <th class="ps-3">Vytvořeno</th>
+                        <th>Stav</th>
                         <th>ID</th>
                         <th>Popis události</th>
-                        <th>Koordinátor</th>
-                        <th>Vytvořeno</th>
-                        <th>Zámek</th>
                         <th>Šablona</th>
+                        <th>Koordinátor</th>
+                        <th>Zámek</th>
                         <th></th>
                         <th></th>
                     </tr>
@@ -186,15 +186,15 @@
             ` : '';
 
             tr.innerHTML = `
-                <td class="ps-3 align-middle"><span class="badge ${st.cls}">${st.label}</span></td>
+                <td class="ps-3 align-middle small text-muted">${new Date(c.created_at).toLocaleString('cs-CZ')}</td>
+                <td class="align-middle"><span class="badge ${st.cls}">${st.label}</span></td>
                 <td class="align-middle">
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">${c.case_id}</span>
                 </td>
                 <td class="align-middle small">${title ? `<span>${title}</span>` : '<span class="text-muted fst-italic">nevyplněno</span>'}</td>
-                <td class="align-middle small text-muted">${coordinator || '<span class="text-muted fst-italic">–</span>'}</td>
-                <td class="align-middle small text-muted">${new Date(c.created_at).toLocaleString('cs-CZ')}</td>
-                <td class="align-middle">${lockBadge}</td>
                 <td class="align-middle small text-muted">${c.data?.template_name || c.template_id}</td>
+                <td class="align-middle small text-muted">${coordinator || '<span class="text-muted fst-italic">–</span>'}</td>
+                <td class="align-middle">${lockBadge}</td>
                 <td class="d-none">${st.priority ?? 9}</td>
                 <td class="align-middle text-end pe-3">
                     <div class="d-flex gap-1 justify-content-end">
@@ -214,10 +214,10 @@
     function applyFilter() {
         if (!dt) return;
         if (activeFilter === 'all') {
-            dt.column(0).search('').draw();
+            dt.column(1).search('').draw();
         } else {
             const label = STATUS_CONFIG[activeFilter]?.label || activeFilter;
-            dt.column(0).search('^' + label + '$', true, false).draw();
+            dt.column(1).search('^' + label + '$', true, false).draw();
         }
     }
 
@@ -272,7 +272,7 @@
                 zeroRecords: 'Žádné incidenty nenalezeny',
                 paginate: {first: 'První', last: 'Poslední', next: 'Další', previous: 'Předchozí'},
             },
-            order: [[7, 'asc'], [4, 'desc']],
+            order: [[7, 'asc'], [0, 'desc']],
             columnDefs: [
                 {orderable: false, targets: [8]},
                 {visible: false, targets: [7]},
