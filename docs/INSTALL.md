@@ -370,16 +370,83 @@ curl -sk https://127.0.0.1/ -o /dev/null -w "%{http_code}"
 # Očekávaný výsledek: 302 (přesměrování na login)
 ```
 
----
+### 10. První přihlášení a změna hesla
 
-## Záloha dat
+Přihlas se na `https://<IP-serveru>` výchozími přihlašovacími údaji:
 
-Veškerá data aplikace jsou v adresáři `data/`:
+```
+Uživatel: admin
+Heslo:    admin   (nebo dle ADMIN_PASSWORD v .env)
+```
+
+Po přihlášení okamžitě změň heslo: **menu vpravo nahoře → Uživatelé → upravit účet admin**.
+
+> Výchozí heslo `admin` je funkční pouze do první změny. Po změně se hodnota `ADMIN_PASSWORD` v `.env` již nepoužívá – heslo je uloženo jako bcrypt hash v databázi.
+
+### 11. Zálohy
+
+Vytvoř zálohovací skript `/opt/forms4soc/backup.sh`:
 
 ```bash
-# Jednorázová záloha
-tar -czf forms4soc-backup-$(date +%Y%m%d).tar.gz /opt/forms4soc/app/data/
+#!/bin/bash
+# Forms4SOC – zálohovací skript
+set -euo pipefail
 
-# Cron – denní záloha
-0 2 * * * tar -czf /backup/forms4soc-$(date +\%Y\%m\%d).tar.gz /opt/forms4soc/app/data/
+BACKUP_DIR="/opt/forms4soc/backups"
+APP_DIR="/opt/forms4soc/app"
+DATE=$(date +%Y%m%d_%H%M%S)
+ARCHIVE="${BACKUP_DIR}/forms4soc_${DATE}.tar.gz"
+KEEP_DAYS=30
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Spouštím zálohu Forms4SOC..."
+
+tar -czf "${ARCHIVE}" \
+    --ignore-failed-read \
+    "${APP_DIR}/data" \
+    "${APP_DIR}/.env" \
+    /etc/nginx/conf.d/forms4soc.conf \
+    /etc/nginx/ssl/forms4soc.crt \
+    /etc/nginx/ssl/forms4soc.key \
+    /etc/systemd/system/forms4soc.service
+
+SIZE=$(du -sh "${ARCHIVE}" | cut -f1)
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Záloha vytvořena: ${ARCHIVE} (${SIZE})"
+
+# Rotace – smaž zálohy starší než KEEP_DAYS dní
+DELETED=$(find "${BACKUP_DIR}" -name "forms4soc_*.tar.gz" -mtime +${KEEP_DAYS} -print -delete | wc -l)
+if [ "${DELETED}" -gt 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Smazáno ${DELETED} starých záloh (>${KEEP_DAYS} dní)"
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Hotovo."
 ```
+
+```bash
+# Vytvořit adresář pro zálohy a nastavit práva
+mkdir -p /opt/forms4soc/backups
+chmod +x /opt/forms4soc/backup.sh
+
+# Provést první zálohu
+/opt/forms4soc/backup.sh
+
+# Nastavit cron – denní záloha ve 2:00, log do souboru
+(crontab -l 2>/dev/null; echo "0 2 * * * /opt/forms4soc/backup.sh >> /opt/forms4soc/backups/backup.log 2>&1") | crontab -
+```
+
+Záloha obsahuje: data aplikace (`data/`), konfiguraci (`.env`), nginx konfiguraci a SSL certifikát, systemd service soubor. Zálohy starší 30 dní se automaticky mažou. Log zálohování: `/opt/forms4soc/backups/backup.log`.
+
+---
+
+## Checklist po dokončení instalace
+
+Po provedení všech kroků ověř:
+
+- [ ] Aplikace běží: `systemctl is-active forms4soc`
+- [ ] Nginx běží: `systemctl is-active nginx`
+- [ ] HTTPS odpovídá: `curl -sk https://127.0.0.1/ -o /dev/null -w "%{http_code}"` → `302`
+- [ ] SELinux povolen: `setsebool -P httpd_can_network_connect 1`
+- [ ] Silný JWT klíč nastaven v `.env`
+- [ ] Admin heslo změněno v GUI aplikace
+- [ ] Vendor knihovny staženy: `ls app/static/vendor/`
+- [ ] První záloha provedena: `ls /opt/forms4soc/backups/`
+- [ ] Cron nastaven: `crontab -l`
