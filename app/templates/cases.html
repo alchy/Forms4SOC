@@ -94,7 +94,8 @@
                         <th>Šablona</th>
                         <th>Popis události</th>
                         <th>Stav</th>
-                        <th>Vytvořil</th>
+                        <th>Založil</th>
+                        <th>Koordinátor</th>
                         <th>Vytvořeno</th>
                         <th>Zámek</th>
                         <th></th>
@@ -146,6 +147,12 @@
         return f?.value || null;
     }
 
+    function getCaseCoordinator(c) {
+        const headerSec = (c.data?.sections || []).find(s => s.type === 'workbook_header' || s.type === 'playbook_header');
+        const f = (headerSec?.fields || []).find(f => f.key === 'incident_coordinator');
+        return f?.value || null;
+    }
+
     const STATUS_CONFIG = {
         'open':           {label: 'Přiřazeno',     cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
         'in_progress':    {label: 'V řešení',       cls: 'bg-success-subtle text-success border border-success-subtle'},
@@ -166,6 +173,7 @@
             const st = STATUS_CONFIG[c.status] || {label: c.status, cls: 'bg-secondary-subtle text-secondary'};
             const tr = document.createElement('tr');
             const title = getCaseTitle(c);
+            const coordinator = getCaseCoordinator(c);
             const lockBadge = c.locked_by
                 ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-lock-fill me-1"></i>${c.locked_by}</span>`
                 : '<span class="text-muted small">–</span>';
@@ -183,6 +191,7 @@
                 <td class="align-middle small">${title ? `<span>${title}</span>` : '<span class="text-muted fst-italic">nevyplněno</span>'}</td>
                 <td class="align-middle"><span class="badge ${st.cls}">${st.label}</span></td>
                 <td class="align-middle small text-muted">${c.created_by}</td>
+                <td class="align-middle small text-muted">${coordinator || '<span class="text-muted fst-italic">–</span>'}</td>
                 <td class="align-middle small text-muted">${new Date(c.created_at).toLocaleString('cs-CZ')}</td>
                 <td class="align-middle">${lockBadge}</td>
                 <td class="align-middle text-end pe-3">
@@ -263,9 +272,9 @@
                 zeroRecords: 'Žádné incidenty nenalezeny',
                 paginate: {first: 'První', last: 'Poslední', next: 'Další', previous: 'Předchozí'},
             },
-            order: [[5, 'desc']],
+            order: [[6, 'desc']],
             columnDefs: [
-                {orderable: false, targets: [7]},
+                {orderable: false, targets: [8]},
             ],
             pageLength: 25,
         });
