@@ -13,7 +13,9 @@ data_sources:
 - Antivirus / EDR
 - Umbrella
 - SIEM
+
 sections:
+
 - id: header
   type: workbook_header
   title: Hlavička
@@ -23,49 +25,23 @@ sections:
     is_example: true
     value: Stručný popis pro vyhledání události
     hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
-  - key: ticket_id
-    label: Ticket ID
-    editable: false
-    auto_value: case_id
-  - key: workbook_name
-    label: Název workbooku
-    editable: false
-    auto_value: template_name
-  - key: workbook_id
-    label: Workbook ID
-    editable: false
-    value: 2026-002
-  - key: version
-    label: Verze
-    editable: false
-    auto_value: template_version
-  - key: last_updated
-    label: Datum poslední aktualizace
-    editable: false
-    value: '2026-03-05'
-  - key: author
-    label: Autor / vlastník šablony
-    editable: false
-    value: SOC Analytický tým
+  - {key: ticket_id, label: Ticket ID, editable: false, auto_value: case_id}
+  - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
+  - {key: workbook_id, label: Workbook ID, editable: false, value: 2026-002}
+  - {key: version, label: Verze, editable: false, auto_value: template_version}
+  - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-05'}
+  - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým}
   - key: incident_coordinator
     label: Koordinátor incidentu
     hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
-  - key: workbook_status
-    label: Status
-    editable: false
-    auto_value: template_status
+  - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
+
 - id: classification
   type: classification
   title: Klasifikace
   fields:
-  - key: mitre_tactic
-    label: MITRE Tactic
-    editable: false
-    auto_value: template_mitre_tactic
-  - key: mitre_technique
-    label: MITRE Technique
-    editable: false
-    auto_value: template_mitre_technique
+  - {key: mitre_tactic, label: MITRE Tactic, editable: false, auto_value: template_mitre_tactic}
+  - {key: mitre_technique, label: MITRE Technique, editable: false, auto_value: template_mitre_technique}
   - key: mitre_subtechnique
     label: MITRE Sub-technique
     type: select
@@ -76,10 +52,8 @@ sections:
     - T1566.004 – Spearphishing Voice
     - Nelze určit
     hint: Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku.
-  - key: data_sources
-    label: Doporučené zdroje dat pro investigaci
-    editable: false
-    auto_value: template_data_sources
+  - {key: data_sources, label: Doporučené zdroje dat pro investigaci, editable: false, auto_value: template_data_sources}
+
 - id: contacts
   title: Kontaktní matice
   type: contact_table
@@ -143,6 +117,7 @@ sections:
     email: podatelna@nukib.cz
     phone: +420 222 362 888
     when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
+    
 - id: incident_context
   title: Informace o kontextu UIB
   type: section_group
@@ -153,23 +128,10 @@ sections:
     note: Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci
     condition: source_type == 'person'
     fields:
-    - key: reported_at
-      label: Datum a čas nahlášení
-      type: datetime
-      is_example: true
-      value: 2025-03-15T09:42
-    - key: reporter_name
-      label: Jméno oznamovatele
-      is_example: true
-      value: Jan Novák
-    - key: reporter_department
-      label: Oddělení / organizační jednotka
-      is_example: true
-      value: Účetní oddělení
-    - key: reporter_contact
-      label: Kontakt (e-mail / telefon)
-      is_example: true
-      value: novakj@ans.cz / +420 123 456 789
+    - {key: reported_at, label: Datum a čas nahlášení, type: datetime, is_example: true, value: '2025-03-15T09:42'}
+    - {key: reporter_name, label: Jméno oznamovatele, is_example: true, value: Jan Novák}
+    - {key: reporter_department, label: Oddělení / organizační jednotka, is_example: true, value: Účetní oddělení}
+    - {key: reporter_contact, label: Kontakt (e-mail / telefon), is_example: true, value: novakj@ans.cz / +420 123 456 789}
     - key: affected_user
       label: Postižený uživatel (pokud jiný než oznamovatel)
       is_example: true
@@ -197,23 +159,17 @@ sections:
       type: textarea
       is_example: true
       value: Přišel podezřelý e-mail s přílohou od neznámého odesílatele.
+
   - id: automated_detection
     title: Automatizovaná detekce
     type: form
     note: Vyplní SOC Analytik — přeskoč pokud hlásila osoba
     condition: source_type == 'automated'
     fields:
-    - key: alert_timestamp
-      label: Datum a čas alertu
-      type: datetime
-      is_example: true
-      value: 2025-03-15T09:38
-    - key: detection_tool
-      label: Identifikace detekčního nástroje
-    - key: alert_id
-      label: ID alertu / Identifikace pravidla
-    - key: affected_asset_auto
-      label: Postižené aktivum (hostname, IP, IS)
+    - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, is_example: true, value: '2025-03-15T09:38'}
+    - {key: detection_tool, label: Identifikace detekčního nástroje}
+    - {key: alert_id, label: ID alertu / Identifikace pravidla}
+    - {key: affected_asset_auto, label: 'Postižené aktivum (hostname, IP, IS)'}
     - key: target_type
       label: Cíl události
       type: select
@@ -224,6 +180,7 @@ sections:
     - key: alert_description
       label: Popis alertu
       type: textarea
+
   - id: affected_assets
     title: Dotčená aktiva
     type: assets_table
@@ -262,6 +219,7 @@ sections:
       - Ne
     editable: true
     rows: []
+
 - id: triage_investigation
   title: Posouzení, třídění a rozhodování
   type: checklist
@@ -306,6 +264,7 @@ sections:
     - Pokud byla příloha otevřena nebo nalezena na více zařízeních → zaznamenej všechna zasažená zařízení a rozšiř scope.
     classification_hints:
     - Hash detekován na TI a příloha otevřena → True Positive, High · Hash na TI, příloha neotvřena → True Positive, Medium · Hash na TI nedetekován → zvaž False Positive
+
   - id: url_analysis
     title: E-mail obsahuje URL odkaz
     note: Přeskoč pokud URL není přítomna
@@ -357,6 +316,7 @@ sections:
       is_example: true
     hints:
     - Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v sekci Odezva).
+
   - id: lateral_evidence
     title: Laterální pohyb a zajištění důkazů
     steps:
@@ -434,6 +394,7 @@ sections:
     responsible_role: null
     cooperation: null
     status: null
+
 - id: communication
   title: Komunikace a notifikace
   type: action_table
@@ -473,6 +434,7 @@ sections:
     communication_method: Datová schránka
     sla: Dle regulatorní povinnosti
     note: null
+
 - id: closure
   title: Klasifikace a uzavření
   type: form
@@ -579,9 +541,8 @@ sections:
     options:
     - Ano
     - Ne
-  - key: closed_at
-    label: Datum uzavření
-    type: datetime
+  - {key: closed_at, label: Datum uzavření, type: datetime}
+
 - id: raci
   title: RACI matice
   type: raci_table

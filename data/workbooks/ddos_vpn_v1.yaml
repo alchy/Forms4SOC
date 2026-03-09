@@ -24,49 +24,22 @@ sections:
     is_example: true
     value: DDoS útok na VPN – zahlcení služby Cisco AnyConnect
     hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
-  - key: ticket_id
-    label: Ticket ID
-    editable: false
-    auto_value: case_id
-  - key: workbook_name
-    label: Název workbooku
-    editable: false
-    auto_value: template_name
-  - key: workbook_id
-    label: Workbook ID
-    editable: false
-    value: 2026-003
-  - key: version
-    label: Verze
-    editable: false
-    auto_value: template_version
-  - key: last_updated
-    label: Datum poslední aktualizace
-    editable: false
-    value: '2026-03-06'
-  - key: author
-    label: Autor / vlastník šablony
-    editable: false
-    value: SOC Analytický tým
+  - {key: ticket_id, label: Ticket ID, editable: false, auto_value: case_id}
+  - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
+  - {key: workbook_id, label: Workbook ID, editable: false, value: 2026-003}
+  - {key: version, label: Verze, editable: false, auto_value: template_version}
+  - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-06'}
+  - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým}
   - key: incident_coordinator
     label: Koordinátor incidentu
     hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
-  - key: workbook_status
-    label: Status
-    editable: false
-    auto_value: template_status
+  - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
 - id: classification
   type: classification
   title: Klasifikace
   fields:
-  - key: mitre_tactic
-    label: MITRE Tactic
-    editable: false
-    auto_value: template_mitre_tactic
-  - key: mitre_technique
-    label: MITRE Technique
-    editable: false
-    auto_value: template_mitre_technique
+  - {key: mitre_tactic, label: MITRE Tactic, editable: false, auto_value: template_mitre_tactic}
+  - {key: mitre_technique, label: MITRE Technique, editable: false, auto_value: template_mitre_technique}
   - key: mitre_subtechnique
     label: MITRE Sub-technique
     type: select
@@ -77,10 +50,7 @@ sections:
     - Kombinace typů
     - Nelze určit
     hint: Vyplň po Posouzení, třídění a rozhodování, kdy je znám konkrétní typ útoku. Pokud jde o kombinaci typů (např. volumetrický + SSL exhaustion), vyber 'Kombinace typů'.
-  - key: data_sources
-    label: Doporučené zdroje dat pro investigaci
-    editable: false
-    auto_value: template_data_sources
+  - {key: data_sources, label: Doporučené zdroje dat pro investigaci, editable: false, auto_value: template_data_sources}
 - id: contacts
   title: Kontaktní matice
   type: contact_table
@@ -159,17 +129,12 @@ sections:
     note: Vyplní SOC Analytik — DDoS je typicky detekován automaticky (SIEM alert, monitoring nedostupnosti VPN)
     condition: source_type == 'automated'
     fields:
-    - key: alert_timestamp
-      label: Datum a čas alertu
-      type: datetime
-      is_example: true
-      value: 2026-03-06T08:15
+    - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, is_example: true, value: '2026-03-06T08:15'}
     - key: detection_tool
       label: Detekční nástroj / zdroj alertu
       is_example: true
       value: SIEM – pravidlo 'VPN_HIGH_CONN_RATE'
-    - key: alert_id
-      label: ID alertu / Identifikace pravidla
+    - {key: alert_id, label: ID alertu / Identifikace pravidla}
     - key: affected_asset_auto
       label: Postižené aktivum (hostname, IP)
       is_example: true
@@ -185,15 +150,10 @@ sections:
     note: Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci
     condition: source_type == 'person'
     fields:
-    - key: reported_at
-      label: Datum a čas nahlášení
-      type: datetime
-    - key: reporter_name
-      label: Jméno oznamovatele
-    - key: reporter_department
-      label: Oddělení / organizační jednotka
-    - key: reporter_contact
-      label: Kontakt (e-mail / telefon)
+    - {key: reported_at, label: Datum a čas nahlášení, type: datetime}
+    - {key: reporter_name, label: Jméno oznamovatele}
+    - {key: reporter_department, label: Oddělení / organizační jednotka}
+    - {key: reporter_contact, label: Kontakt (e-mail / telefon)}
     - key: description_by_reporter
       label: Popis události slovy oznamovatele
       type: textarea
@@ -585,18 +545,9 @@ sections:
     - T1499.003 – Application Exhaustion Flood (SSL/TLS exhaustion)
     - Kombinace typů
     - Nelze určit
-  - key: attack_volume
-    label: Objem útoku (Gbps / Mpps)
-    is_example: true
-    value: 4,8 Gbps · 6,2 Mpps
-  - key: attack_duration
-    label: Doba trvání útoku
-    is_example: true
-    value: 1 hod 33 min (08:11–09:44)
-  - key: vpn_outage_duration
-    label: Doba výpadku VPN
-    is_example: true
-    value: 1 hod 12 min (08:14–09:26)
+  - {key: attack_volume, label: Objem útoku (Gbps / Mpps), is_example: true, value: '4,8 Gbps · 6,2 Mpps'}
+  - {key: attack_duration, label: Doba trvání útoku, is_example: true, value: '1 hod 33 min (08:11–09:44)'}
+  - {key: vpn_outage_duration, label: Doba výpadku VPN, is_example: true, value: '1 hod 12 min (08:14–09:26)'}
   - key: root_cause
     label: Root Cause
     type: textarea
@@ -628,9 +579,7 @@ sections:
     options:
     - Ano
     - Ne
-  - key: closed_at
-    label: Datum uzavření
-    type: datetime
+  - {key: closed_at, label: Datum uzavření, type: datetime}
 - id: raci
   title: RACI matice
   type: raci_table
