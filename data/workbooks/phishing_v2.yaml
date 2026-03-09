@@ -204,7 +204,7 @@ sections:
 - id: triage_investigation
   title: Posouzení, třídění a rozhodování
   type: checklist
-  description: Cílem je potvrdit nebo vyvrátit bezpečnostní incident, stanovit rozsah kompromitace a připravit podklady pro Odezva. Klasifikace (True/False Positive, Severity) se v průběhu Posouzení, třídění a rozhodování může měnit — finální klasifikace se zaznamenává v bloku Uzavření incidentu.
+  description: Cílem je potvrdit nebo vyvrátit bezpečnostní incident, stanovit rozsah kompromitace a připravit podklady pro Odezvu. Klasifikace (True/False Positive, Severity) se v průběhu Posouzení, třídění a rozhodování může měnit — finální klasifikace se zaznamenává v bloku Uzavření incidentu.
   step_groups:
   - id: context_artifacts
     title: Ověření kontextu a artefaktů
