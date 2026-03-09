@@ -1,6 +1,6 @@
-template_id: phishing-v2
-name: Podezřelý e-mail / Phishing v2
-version: '2.0'
+template_id: phishing-v3
+name: Podezřelý e-mail / Phishing v3
+version: '3.0'
 category: Phishing
 status: active
 description: Workbook pro řešení incidentů typu phishing – podezřelý nebo škodlivý e-mail (spearphishing, BEC, škodlivá příloha, URL). Posouzení, třídění a rozhodování jsou sloučeny do jednoho bloku.
@@ -24,9 +24,9 @@ sections:
     example: Stručný popis pro vyhledání události
   - {key: ticket_id, label: Ticket ID, editable: false, auto_value: case_id}
   - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
-  - {key: workbook_id, label: Workbook ID, editable: false, value: 2026-002}
+  - {key: workbook_id, label: Workbook ID, editable: false, value: 2026-003}
   - {key: version, label: Verze, editable: false, auto_value: template_version}
-  - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-05'}
+  - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-09'}
   - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým}
   - key: incident_coordinator
     label: Koordinátor incidentu
@@ -236,8 +236,8 @@ sections:
     steps:
     - action: Zjisti hash přílohy (MD5 / SHA256) — přílohu přímo neotvírej
       example: 'SHA256: 3a1f2b…'
-    - action: Ověř hash na VirusTotal nebo interním Threat Intelligence zdroji
-      example: 'VT: 12/72 detekcí – malicious'
+    - action: Ověř hash na VirusTotal nebo interním Threat Intelligence zdroji. Pokud je detekce nízká nebo nulová a sandbox je k dispozici → odešli přílohu do sandboxu pro behaviorální analýzu (Any.Run, Joe Sandbox nebo interní sandbox)
+      example: 'VT: 2/72 detekcí · sandbox: navázáno C2 spojení na 185.234.x.x'
     - action: Zjisti z AV / EDR, zda byla příloha otevřena, kým a kdy
       example: Příloha otevřena uživatelem PC-NOVAK-01 ve 09:38
     - action: Vyhledej stejný hash na ostatních endpointech přes AV / EDR — kontaktuj Správce AV/EDR (viz Kontaktní matice)
@@ -253,22 +253,27 @@ sections:
     steps:
     - action: Extrahuj URL z e-mailu — neotevírej odkaz přímo, použij defangovaný formát (např. hxxps://)
       example: hxxps://podezrely-domena[.]com/faktura
-    - action: Ověř URL na VirusTotal / URLScan.io nebo interním TI zdroji
-      example: Kategorizováno jako phishing
+    - action: 'Ověř URL a cílovou doménu na VirusTotal / URLScan.io nebo interním TI zdroji — pro doménovou reputaci použij rovněž Talos: https://talosintelligence.com/reputation_center/ · IPVoid: https://www.ipvoid.com/domain-reputation-check/'
+      example: 'URLScan.io: phishing · Talos – Poor · doména registrována před 5 dny'
     - action: Zkontroluj proxy logy — byl odkaz prokliknut? Kým? Kdy? Kontaktuj Správce Proxy (viz Kontaktní matice)
       example: 'Prokliknutí zaznamenáno 09:39 · uživatel: novakj · PC-NOVAK-01'
+    - action: Zjisti, zda URL vedla na přihlašovací formulář. Pokud ano → zkontroluj přihlašovací logy (AD / Azure AD / SSO) pro postiženého uživatele v relevantním časovém okně — hledej neobvyklé nebo nové přihlášení těsně po prokliknutí
+      example: 'URL vedla na falešnou O365 přihlašovací stránku · AD logy: přihlášení z neznámé IP 09:41 → kompromitace přihlašovacích údajů'
     - Zkontroluj logy z Umbrella DNS Protection pro zjištěné destinace
     hints:
     - Pokud bylo prokliknutí potvrzeno → rozšiř scope.
+    - Pokud URL vedla na přihlašovací formulář a přihlášení z neznámé IP je potvrzeno → ihned resetuj heslo a zkontroluj aktivní sessions (MFA tokeny, app passwords).
     classification_hints:
-    - URL phishing + prokliknutí potvrzeno → True Positive, High · URL phishing, prokliknutí nepotvrzeno → True Positive, Medium · URL legitimní → zvaž False Positive
+    - URL phishing + prokliknutí + přihlášení z neznámé IP → True Positive, Critical · URL phishing + prokliknutí, přihlášení nezjištěno → True Positive, High · URL phishing, prokliknutí nepotvrzeno → True Positive, Medium · URL legitimní → zvaž False Positive
   - id: bec_analysis
     title: Pouze textový e-mail – BEC / Social Engineering
     note: Přeskoč pokud příloha nebo URL jsou přítomny
     condition: has_attachment == false && has_url == false
     steps:
-    - action: Zhodnoť povahu žádosti — o co odesílatel žádá. Zkontaktuj postiženého uživatele — byla žádost splněna? Pokud splněna → zjisti rozsah (výše transakce, sdílené údaje, …)
-      example: Žádost o převod platby na "nový účet dodavatele". Uživatel žádost nesplnil, nahlásil ihned.
+    - action: Zhodnoť povahu žádosti — o co odesílatel žádá (převod platby, přihlašovací údaje, osobní data, sdílení souborů…)
+      example: Žádost o převod platby na "nový účet dodavatele"
+    - action: Zkontaktuj postiženého uživatele — byla žádost splněna? Pokud splněna → zjisti rozsah (výše transakce, sdílené údaje, přístupy)
+      example: Uživatel žádost nesplnil, nahlásil ihned
     hints:
     - Pokud uživatel žádost splnil → kontaktuj CISO (viz Kontaktní matice).
     classification_hints:
@@ -280,10 +285,8 @@ sections:
       example: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
     - action: Na inbound mail gateway ověř, kolik příjemců e-mail obdrželo — kontaktuj Správce Exchange (viz Kontaktní matice)
       example: E-mail doručen 18 uživatelům ve 3 odděleních
-    - action: Zhodnoť, zda jde o cílenou nebo plošnou kampaň; zaznamenej seznam postižených mailboxů
-      example: Plošná kampaň – seznam příjemců přiložen k ticketu
-    - action: Identifikuj scope — počet postižených uživatelů, zařízení, systémů, dat
-      example: 3 PC · 18 mailboxů · 1 sdílený síťový disk
+    - action: 'Zhodnoť rozsah — cílená nebo plošná kampaň? Identifikuj scope: počet postižených uživatelů, zařízení, systémů a dat; zaznamenej seznam postižených mailboxů'
+      example: 'Plošná kampaň · 3 PC · 18 mailboxů · 1 sdílený síťový disk · seznam příjemců přiložen k ticketu'
     - action: Sestav timeline události — od doručení e-mailu po aktuální stav
       example: Timeline přiložena k ticketu
     hints:
