@@ -62,16 +62,16 @@
 <div class="d-flex gap-2 mb-3 flex-wrap">
     <button class="btn btn-sm filter-btn active" data-filter="all">Všechny</button>
     <button class="btn btn-sm filter-btn" data-filter="open">
-        <i class="bi bi-circle me-1 text-primary"></i>Přiřazeno
+        <i class="bi bi-circle me-1"></i>Přiřazeno
     </button>
     <button class="btn btn-sm filter-btn" data-filter="in_progress">
-        <i class="bi bi-play-circle me-1 text-success"></i>V řešení
+        <i class="bi bi-play-circle me-1"></i>V řešení
     </button>
     <button class="btn btn-sm filter-btn" data-filter="closed">
-        <i class="bi bi-check-circle me-1 text-dark"></i>Uzavřené
+        <i class="bi bi-check-circle me-1"></i>Uzavřené
     </button>
     <button class="btn btn-sm filter-btn" data-filter="on_hold">
-        <i class="bi bi-pause-circle me-1 text-warning"></i>Pozastaveno
+        <i class="bi bi-pause-circle me-1"></i>Pozastaveno
     </button>
 </div>
 
@@ -86,7 +86,7 @@
             <i class="bi bi-folder2 fs-1 mb-3 d-block opacity-50"></i>
             <p class="mb-0">Žádné incidenty nenalezeny</p>
         </div>
-        <div class="table-responsive d-none" id="cases-table-wrap">
+        <div class="d-none" id="cases-table-wrap">
             <table class="table table-hover mb-0" id="cases-table">
                 <thead class="table-light">
                     <tr>
@@ -133,6 +133,8 @@
   #cases-table_wrapper .dataTables_filter { padding: 0.6rem 1rem 0.25rem; }
   #cases-table_wrapper .dataTables_info,
   #cases-table_wrapper .dataTables_paginate { padding: 0.25rem 1rem 0.6rem; }
+  /* Neutralize Bootstrap row negative margins inside the card (no container padding to compensate) */
+  #cases-table_wrapper > .row { --bs-gutter-x: 0; }
 </style>
 <script src="/static/vendor/jquery/jquery.min.js"></script>
 <script src="/static/vendor/datatables/js/jquery.dataTables.min.js"></script>

@@ -7,9 +7,31 @@
     --soc-border:        #dee2e6;
 }
 
-body {
+html, body {
+    height: 100%;
+    overflow: hidden;
     background-color: #f8f9fa;
     color: #212529;
+}
+
+/* App shell: navbar (flex-shrink:0) + app-shell (flex:1) */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-shell {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.app-main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 /* Navbar */
@@ -22,6 +44,8 @@ body {
 .sidebar {
     background-color: #ffffff;
     border-right: 1px solid var(--soc-border);
+    flex-shrink: 0;
+    overflow-y: auto;
 }
 
 .sidebar .nav-link {

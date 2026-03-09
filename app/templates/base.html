@@ -12,7 +12,7 @@
 <body>
 
 {% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+<nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold text-primary" href="/dashboard">
             <i class="bi bi-shield-lock-fill me-2"></i>Forms4SOC
@@ -42,14 +42,12 @@
 </nav>
 {% endblock %}
 
-<div class="container-fluid">
-    <div class="row">
-        {% block sidebar %}{% endblock %}
+<div class="app-shell">
+    {% block sidebar %}{% endblock %}
 
-        <main class="{% block main_class %}col{% endblock %} py-4 px-4">
-            {% block content %}{% endblock %}
-        </main>
-    </div>
+    <main class="app-main {% block main_class %}{% endblock %} py-4 px-4">
+        {% block content %}{% endblock %}
+    </main>
 </div>
 
 <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
