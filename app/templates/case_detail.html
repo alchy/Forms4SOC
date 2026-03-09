@@ -373,15 +373,19 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
     }
 
     async function changeStatus(newStatus) {
+        if (!caseDocument) return;
         const resp = await apiFetch(`/api/v1/cases/${CASE_ID}`, {
             method: 'PATCH',
-            body: JSON.stringify({status: newStatus}),
+            body: JSON.stringify({status: newStatus, data: caseDocument.data}),
         });
         if (resp.ok) {
             const updated = await resp.json();
             caseDocument.status = updated.status;
             caseDocument.updated_at = updated.updated_at;
             renderCaseHeader(caseDocument);
+            const ind = document.getElementById('save-indicator');
+            ind.classList.remove('d-none');
+            setTimeout(() => ind.classList.add('d-none'), 3000);
         }
     }
 
