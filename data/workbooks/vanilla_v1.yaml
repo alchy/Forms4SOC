@@ -44,11 +44,10 @@ sections:
     type: workbook_header
     fields:
       # case_title: krátký popis konkrétní události – vyplňuje analytik při zakládání incidentu.
-      # is_example: value slouží jako příklad/placeholder, smaže se při klonování.
+      # example: value slouží jako příklad/placeholder, smaže se při klonování.
       - key: case_title
         label: Stručný popis události
-        is_example: true
-        value: 'Zde analytik napíše krátký popis, např.: Podezřelý přihlášení ze zahraničí – uživatel jan.novak'
+        example: 'Zde analytik napíše krátký popis, např.: Podezřelý přihlášení ze zahraničí – uživatel jan.novak'
         hint: Výstižný popis pro odlišení od ostatních incidentů – viditelný v seznamu.
 
       # Systémová pole – nevyplňuje se ručně, hodnoty doplní aplikace automaticky.
@@ -166,8 +165,9 @@ sections:
   #   Zkrácený zápis (pro jednoduché kroky):
   #     - Text instrukce pro analytika.
   #
-  #   Plný zápis (pro kroky s hinty, klasifikačními vodítky nebo is_example):
+  #   Plný zápis (pro kroky s hinty, klasifikačními vodítky nebo příkladem):
   #     - action: Text instrukce.
+  #       example: Ukázka vyplněné poznámky analytika.
   #       hints:
   #         - Vodítko pro analytika
   #       classification_hints:
@@ -184,8 +184,7 @@ sections:
         steps:
           - Ověř, zda je alert validní – potvrď základní fakta (kdo, kdy, odkud, co).
           - action: Prověř kontext uživatele / systému v SIEM – porovnej s historickým baselineem.
-            analyst_note: Analytik zapíše výsledek zde.
-            is_example: true
+            example: Analytik zapíše výsledek zde.
           - Urči předběžnou závažnost (Kritická / Vysoká / Střední / Nízká) a scope.
         hints:
           - Pokud alert nelze ověřit nebo je zřejmě falešný, uzavři jako False Positive v sekci Uzavření incidentu.
@@ -277,8 +276,7 @@ sections:
       - key: final_classification
         label: Klasifikace výsledku
         type: select
-        is_example: true
-        value: True Positive
+        example: True Positive
         options:
           - True Positive
           - False Positive
@@ -375,20 +373,17 @@ sections:
       - key: root_cause
         label: Root Cause
         type: textarea
-        is_example: true
-        value: Popis kořenové příčiny incidentu
+        example: Popis kořenové příčiny incidentu
 
       - key: actions_taken
         label: Popis přijatých opatření
         type: textarea
-        is_example: true
-        value: Stručný souhrn provedených containment a remediation kroků
+        example: Stručný souhrn provedených containment a remediation kroků
 
       - key: recommendations
         label: Doporučení pro zlepšení
         type: textarea
-        is_example: true
-        value: Doporučení pro snížení rizika opakování incidentu
+        example: Doporučení pro snížení rizika opakování incidentu
 
       - key: related_service_requests
         label: Související servisní požadavky

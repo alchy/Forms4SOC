@@ -13,18 +13,15 @@ data_sources:
 - Antivirus / EDR
 - Umbrella
 - SIEM
-
 sections:
-
 - id: header
   type: workbook_header
   title: Hlavička
   fields:
   - key: case_title
     label: Stručný popis události
-    is_example: true
-    value: Stručný popis pro vyhledání události
     hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
+    example: Stručný popis pro vyhledání události
   - {key: ticket_id, label: Ticket ID, editable: false, auto_value: case_id}
   - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
   - {key: workbook_id, label: Workbook ID, editable: false, value: 2026-002}
@@ -35,7 +32,6 @@ sections:
     label: Koordinátor incidentu
     hint: SOC Analytik odpovědný za řešení incidentu – vyplní se tlačítkem Převzít.
   - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
-
 - id: classification
   type: classification
   title: Klasifikace
@@ -53,7 +49,6 @@ sections:
     - Nelze určit
     hint: Vyplň po Posouzení, třídění a rozhodování, kdy je zřejmý konkrétní vektor útoku.
   - {key: data_sources, label: Doporučené zdroje dat pro investigaci, editable: false, auto_value: template_data_sources}
-
 - id: contacts
   title: Kontaktní matice
   type: contact_table
@@ -117,7 +112,6 @@ sections:
     email: podatelna@nukib.cz
     phone: +420 222 362 888
     when_to_contact: Dle regulatorní povinnosti (NIS2 apod.)
-    
 - id: incident_context
   title: Informace o kontextu UIB
   type: section_group
@@ -128,24 +122,18 @@ sections:
     note: Vyplní SOC Analytik — přeskoč pokud jde o automatizovanou detekci
     condition: source_type == 'person'
     fields:
-    - {key: reported_at, label: Datum a čas nahlášení, type: datetime, is_example: true, value: '2025-03-15T09:42'}
-    - {key: reporter_name, label: Jméno oznamovatele, is_example: true, value: Jan Novák}
-    - {key: reporter_department, label: Oddělení / organizační jednotka, is_example: true, value: Účetní oddělení}
-    - {key: reporter_contact, label: Kontakt (e-mail / telefon), is_example: true, value: novakj@ans.cz / +420 123 456 789}
-    - key: affected_user
-      label: Postižený uživatel (pokud jiný než oznamovatel)
-      is_example: true
-      value: (oznamovatel = postižený)
+    - {key: reported_at, label: Datum a čas nahlášení, type: datetime, example: '2025-03-15T09:42'}
+    - {key: reporter_name, label: Jméno oznamovatele, example: Jan Novák}
+    - {key: reporter_department, label: Oddělení / organizační jednotka, example: Účetní oddělení}
+    - {key: reporter_contact, label: Kontakt (e-mail / telefon), example: novakj@ans.cz / +420 123 456 789}
+    - {key: affected_user, label: Postižený uživatel (pokud jiný než oznamovatel), example: (oznamovatel = postižený)}
     - key: affected_asset
       label: Postižené aktivum
-      is_example: true
-      value: 'PC-NOVAK-01 · mailbox: novakj@ans.cz'
       hint: Uveď hostname počítače, IP adresu, název systému nebo mailbox
+      example: 'PC-NOVAK-01 · mailbox: novakj@ans.cz'
     - key: target_type
       label: Cíl události
       type: select
-      is_example: true
-      value: Uživatel
       options:
       - Uživatel
       - Informační systém
@@ -154,19 +142,18 @@ sections:
         Uživatel: Útok cílí na konkrétního uživatele nebo skupinu
         Informační systém: Cílem je konkrétní IS nebo infrastruktura
         Kombinace: Obojí
+      example: Uživatel
     - key: description_by_reporter
       label: Popis události slovy oznamovatele
       type: textarea
-      is_example: true
-      value: Přišel podezřelý e-mail s přílohou od neznámého odesílatele.
-
+      example: Přišel podezřelý e-mail s přílohou od neznámého odesílatele.
   - id: automated_detection
     title: Automatizovaná detekce
     type: form
     note: Vyplní SOC Analytik — přeskoč pokud hlásila osoba
     condition: source_type == 'automated'
     fields:
-    - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, is_example: true, value: '2025-03-15T09:38'}
+    - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, example: '2025-03-15T09:38'}
     - {key: detection_tool, label: Identifikace detekčního nástroje}
     - {key: alert_id, label: ID alertu / Identifikace pravidla}
     - {key: affected_asset_auto, label: 'Postižené aktivum (hostname, IP, IS)'}
@@ -180,7 +167,6 @@ sections:
     - key: alert_description
       label: Popis alertu
       type: textarea
-
   - id: affected_assets
     title: Dotčená aktiva
     type: assets_table
@@ -219,7 +205,6 @@ sections:
       - Ne
     editable: true
     rows: []
-
 - id: triage_investigation
   title: Posouzení, třídění a rozhodování
   type: checklist
@@ -229,56 +214,44 @@ sections:
     title: Ověření kontextu a artefaktů
     steps:
     - action: Vyžádej si podezřelý e-mail ve formátu .eml nebo jako forward na dedikovanou SOC schránku
-      analyst_note: E-mail přijat jako .eml
-      is_example: true
+      example: E-mail přijat jako .eml
     - action: Zaznamenej odesílatele, předmět a časové razítko e-mailu
-      analyst_note: 'Od: invoice@podezrely-domena.com · Předmět: "Faktura #2025-112" · Přijato: 2025-03-15 09:31'
-      is_example: true
+      example: 'Od: invoice@podezrely-domena.com · Předmět: "Faktura #2025-112" · Přijato: 2025-03-15 09:31'
   - id: email_analysis
     title: Analýza obsahu e-mailu
     steps:
     - action: Zkontroluj obsah e-mailu — identifikuj přítomnost přílohy, hyperlinku nebo pouze textu
-      analyst_note: 'Příloha: faktura_2025.xlsx · Hyperlink přítomen v těle e-mailu'
-      is_example: true
+      example: 'Příloha: faktura_2025.xlsx · Hyperlink přítomen v těle e-mailu'
     - action: Ověř záhlaví e-mailu (SPF, DKIM, DMARC)
-      analyst_note: 'SPF: fail · DKIM: none · Doména spoofována'
-      is_example: true
+      example: 'SPF: fail · DKIM: none · Doména spoofována'
   - id: attachment_analysis
     title: E-mail obsahuje přílohu
     note: Přeskoč pokud příloha není přítomna
     condition: has_attachment == true
     steps:
     - action: Zjisti hash přílohy (MD5 / SHA256) — přílohu přímo neotvírej
-      analyst_note: 'SHA256: 3a1f2b…'
-      is_example: true
+      example: 'SHA256: 3a1f2b…'
     - action: Ověř hash na VirusTotal nebo interním Threat Intelligence zdroji
-      analyst_note: 'VT: 12/72 detekcí – malicious'
-      is_example: true
+      example: 'VT: 12/72 detekcí – malicious'
     - action: Zjisti z AV / EDR, zda byla příloha otevřena, kým a kdy
-      analyst_note: Příloha otevřena uživatelem PC-NOVAK-01 ve 09:38
-      is_example: true
+      example: Příloha otevřena uživatelem PC-NOVAK-01 ve 09:38
     - action: Vyhledej stejný hash na ostatních endpointech přes AV / EDR — kontaktuj Správce AV/EDR (viz Kontaktní matice)
-      analyst_note: Hash nalezen na PC-SVOBODA-02 a PC-KRAL-05
-      is_example: true
+      example: Hash nalezen na PC-SVOBODA-02 a PC-KRAL-05
     hints:
     - Pokud byla příloha otevřena nebo nalezena na více zařízeních → zaznamenej všechna zasažená zařízení a rozšiř scope.
     classification_hints:
     - Hash detekován na TI a příloha otevřena → True Positive, High · Hash na TI, příloha neotvřena → True Positive, Medium · Hash na TI nedetekován → zvaž False Positive
-
   - id: url_analysis
     title: E-mail obsahuje URL odkaz
     note: Přeskoč pokud URL není přítomna
     condition: has_url == true
     steps:
     - action: Extrahuj URL z e-mailu — neotevírej odkaz přímo, použij defangovaný formát (např. hxxps://)
-      analyst_note: hxxps://podezrely-domena[.]com/faktura
-      is_example: true
+      example: hxxps://podezrely-domena[.]com/faktura
     - action: Ověř URL na VirusTotal / URLScan.io nebo interním TI zdroji
-      analyst_note: Kategorizováno jako phishing
-      is_example: true
+      example: Kategorizováno jako phishing
     - action: Zkontroluj proxy logy — byl odkaz prokliknut? Kým? Kdy? Kontaktuj Správce Proxy (viz Kontaktní matice)
-      analyst_note: 'Prokliknutí zaznamenáno 09:39 · uživatel: novakj · PC-NOVAK-01'
-      is_example: true
+      example: 'Prokliknutí zaznamenáno 09:39 · uživatel: novakj · PC-NOVAK-01'
     - Zkontroluj logy z Umbrella DNS Protection pro zjištěné destinace
     hints:
     - Pokud bylo prokliknutí potvrzeno → rozšiř scope.
@@ -290,8 +263,7 @@ sections:
     condition: has_attachment == false && has_url == false
     steps:
     - action: Zhodnoť povahu žádosti — o co odesílatel žádá. Zkontaktuj postiženého uživatele — byla žádost splněna? Pokud splněna → zjisti rozsah (výše transakce, sdílené údaje, …)
-      analyst_note: Žádost o převod platby na "nový účet dodavatele". Uživatel žádost nesplnil, nahlásil ihned.
-      is_example: true
+      example: Žádost o převod platby na "nový účet dodavatele". Uživatel žádost nesplnil, nahlásil ihned.
     hints:
     - Pokud uživatel žádost splnil → kontaktuj CISO (viz Kontaktní matice).
     classification_hints:
@@ -300,32 +272,24 @@ sections:
     title: Rozsah kampaně a korelace
     steps:
     - action: Koreluj události napříč dostupnými zdroji, pokud je relevantní (proxy, EDR, mail gateway, SIEM)
-      analyst_note: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
-      is_example: true
+      example: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
     - action: Na inbound mail gateway ověř, kolik příjemců e-mail obdrželo — kontaktuj Správce Exchange (viz Kontaktní matice)
-      analyst_note: E-mail doručen 18 uživatelům ve 3 odděleních
-      is_example: true
+      example: E-mail doručen 18 uživatelům ve 3 odděleních
     - action: Zhodnoť, zda jde o cílenou nebo plošnou kampaň; zaznamenej seznam postižených mailboxů
-      analyst_note: Plošná kampaň – seznam příjemců přiložen k ticketu
-      is_example: true
+      example: Plošná kampaň – seznam příjemců přiložen k ticketu
     - action: Identifikuj scope — počet postižených uživatelů, zařízení, systémů, dat
-      analyst_note: 3 PC · 18 mailboxů · 1 sdílený síťový disk
-      is_example: true
+      example: 3 PC · 18 mailboxů · 1 sdílený síťový disk
     - action: Sestav timeline události — od doručení e-mailu po aktuální stav
-      analyst_note: Timeline přiložena k ticketu
-      is_example: true
+      example: Timeline přiložena k ticketu
     hints:
     - Pokud počet příjemců přesáhne 5 nebo jde o plošnou kampaň → zvaž rozeslání bezpečnostního upozornění (akce v sekci Odezva).
-
   - id: lateral_evidence
     title: Laterální pohyb a zajištění důkazů
     steps:
     - action: Ověř, zda došlo k laterálnímu pohybu nebo exfiltraci dat
-      analyst_note: Laterální pohyb nezaznamenán · exfiltrace dat nezjištěna
-      is_example: true
+      example: Laterální pohyb nezaznamenán · exfiltrace dat nezjištěna
     - action: Zajisti důkazy (evidence collection) — logy, .eml soubor, hash, screenshoty a ulož odkaz na umístění těchto souborů
-      analyst_note: 'Uloženo: /evidence/INC-2025-0042/'
-      is_example: true
+      example: 'Uloženo: /evidence/INC-2025-0042/'
     classification_hints:
     - Laterální pohyb nebo exfiltrace potvrzena → True Positive, Critical / High (navýšení severity) · Laterální pohyb nezjištěn → pokračuj dle předchozí klasifikace
 - id: containment_remediation
@@ -394,7 +358,6 @@ sections:
     responsible_role: null
     cooperation: null
     status: null
-
 - id: communication
   title: Komunikace a notifikace
   type: action_table
@@ -434,7 +397,6 @@ sections:
     communication_method: Datová schránka
     sla: Dle regulatorní povinnosti
     note: null
-
 - id: closure
   title: Klasifikace a uzavření
   type: form
@@ -444,13 +406,12 @@ sections:
   - key: final_classification
     label: Klasifikace výsledku
     type: select
-    is_example: true
-    value: True Positive
     options:
     - True Positive
     - False Positive
     - Benign True Positive
     hint: Klasifikace odráží celkový výsledek Posouzení, třídění a rozhodování a může se lišit od průběžného hodnocení.
+    example: True Positive
   - key: impact_level
     label: Úroveň dopadu
     type: select
@@ -519,18 +480,15 @@ sections:
   - key: root_cause
     label: Root Cause
     type: textarea
-    is_example: true
-    value: Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem
+    example: Škodlivá příloha distribuována plošnou phishingovou kampaní, otevřena jedním uživatelem
   - key: actions_taken
     label: Popis přijatých opatření
     type: textarea
-    is_example: true
-    value: Izolace 3 zařízení, blokace domény na mail serveru, AV scan
+    example: Izolace 3 zařízení, blokace domény na mail serveru, AV scan
   - key: recommendations
     label: Doporučení pro zlepšení
     type: textarea
-    is_example: true
-    value: Zvážit implementaci sandboxingu příloh na inbound mail gateway
+    example: Zvážit implementaci sandboxingu příloh na inbound mail gateway
   - key: related_service_requests
     label: Související servisní požadavky
     type: textarea
@@ -542,7 +500,6 @@ sections:
     - Ano
     - Ne
   - {key: closed_at, label: Datum uzavření, type: datetime}
-
 - id: raci
   title: RACI matice
   type: raci_table

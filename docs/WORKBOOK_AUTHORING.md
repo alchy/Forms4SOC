@@ -146,13 +146,12 @@ steps:
   - Zhodnoť rozsah kompromitace.
 ```
 
-Plný zápis použij pro kroky s nápovědou nebo ukázkou vyplnění (`is_example`):
+Plný zápis použij pro kroky s nápovědou nebo ukázkou vyplnění (`example`):
 
 ```yaml
 steps:
   - action: Zjisti hash přílohy (MD5 / SHA256) – přílohu přímo neotvírej.
-    analyst_note: 'SHA256: 3a1f2b…'
-    is_example: true
+    example: 'SHA256: 3a1f2b…'
 ```
 
 ### Přidání nové skupiny kroků
@@ -184,25 +183,31 @@ steps:
 - **`id` kroků i skupin nemusíš uvádět** – systém je vygeneruje automaticky z názvu skupiny.
   Pokud chceš mít kontrolu nad ID (např. pro referenci v jiném dokumentu), zadej `id` ručně.
 - `action` – instrukce pro analytika formulovaná jako „co má udělat"
-- `analyst_note` – pokud necháš prázdné, aplikace doplní automaticky `null`; přidej `is_example: true` pro ukázku vyplnění
+- `analyst_note` – pokud necháš prázdné, aplikace doplní automaticky `null`; pro ukázku vyplnění použij klíč `example` (viz níže)
 
 ---
 
-## Pole `is_example` – ukázky vyplnění
+## Klíč `example` – ukázky vyplnění
 
-Pole nebo kroky s `is_example: true` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota stane placeholderem a analytik ji přepíše vlastní hodnotou.
+Klíč `example` slouží jako **ukázka vyplnění**. Při vytvoření nového incidentu se hodnota zobrazí jako šedý placeholder a analytik ji přepíše vlastní hodnotou.
 
+Použití v poli formuláře:
 ```yaml
 - key: root_cause
   label: Root Cause
   type: textarea
-  is_example: true
-  value: Uživatel otevřel přílohu phishingového e-mailu → spuštění dropperu → šifrování disku
+  example: Uživatel otevřel přílohu phishingového e-mailu → spuštění dropperu → šifrování disku
+```
+
+Použití v kroku checklistu:
+```yaml
+- action: Zjisti hash přílohy (MD5 / SHA256) – přílohu přímo neotvírej.
+  example: 'SHA256: 3a1f2b…'
 ```
 
 Dobré pro: `root_cause`, `actions_taken`, kroky checklistu – všude, kde chceš ukázat, jak správně vyplněné pole vypadá.
 
-> **`is_example` v kontaktní tabulce nepoužívej.** Řádky `contact_table` jsou předvyplněné jako běžný editovatelný text; `is_example: true` v jejich řádcích nemá efekt.
+> **`example` v kontaktní tabulce nepoužívej.** Řádky `contact_table` jsou předvyplněné jako běžný editovatelný text; `example` v jejich řádcích nemá efekt.
 
 ---
 

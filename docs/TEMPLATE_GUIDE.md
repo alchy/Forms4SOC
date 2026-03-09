@@ -15,7 +15,7 @@ data/workbooks/phishing_v2.yaml      – šablona (commitována v gitu)
     │  Backend při vytvoření incidentu:
     │  1. normalizace šablony (doplnění výchozích hodnot, rozbalení zkratek)
     │  2. hluboká kopie sections
-    │  3. is_example: value → example (placeholder), value = null
+    │  3. example: → is_example: true + value/analyst_note; value → example (placeholder)
     │  4. auto_value pole vyplněna (case_id, template_name, ...)
     ▼
 data/events/UIB-DDMMYYYY-HHMM-RRRR.json  – incident (mimo git)
@@ -109,10 +109,9 @@ steps:
   - Ověř záhlaví e-mailu (SPF, DKIM, DMARC).
   - Prověř hash přílohy na VirusTotal.
 
-  # Plný zápis – nutný pro is_example, hints nebo classification_hints na kroku
+  # Plný zápis – nutný pro example, hints nebo classification_hints na kroku
   - action: Zjisti hash přílohy.
-    analyst_note: 'SHA256: 3a1f2b…'
-    is_example: true
+    example: 'SHA256: 3a1f2b…'
 ```
 
 ### Auto-generovaná ID sekcí, skupin a kroků
@@ -170,7 +169,7 @@ Pole se používají v sekcích `workbook_header`, `form` a podsekci `form` uvni
 | `editable` | | bool | `true` = analytik může editovat; `false` = read-only. Výchozí `true` |
 | `value` | | any | Výchozí hodnota; pokud chybí nebo je `null`, pole je prázdné |
 | `hint` | | string | Nápověda pod labelem (nikdy jako placeholder) |
-| `is_example` | | bool | `true` → hodnota se při klonování přesune do `example` (placeholder). Nepodporováno v `contact_table`. |
+| `example` | | any | Ukázková hodnota; normalizátor rozbalí na `is_example: true` + `value`. Nepodporováno v `contact_table`. |
 | `auto_value` | | string | Automaticky vyplní backend při vytvoření (viz tabulka níže) |
 
 ### Typy polí (`type`)
@@ -217,20 +216,27 @@ Pole se používají v sekcích `workbook_header`, `form` a podsekci `form` uvni
 
 ---
 
-## `is_example` – příkladové hodnoty
+## `example` – příkladové hodnoty
 
-Pole nebo kroky označené `is_example: true` slouží jako ukázka vyplnění.
-Při vytvoření nového incidentu se hodnota přesune do klíče `example` a použije jako placeholder.
+Klíč `example` definuje ukázku vyplnění. Při načtení šablony ho normalizátor rozbalí na
+`is_example: true` + `value` (u polí) nebo `analyst_note` (u kroků).
+Při vytvoření incidentu se hodnota přesune do klíče `example` v JSON dokumentu a zobrazí se jako placeholder.
 
+Použití v poli formuláře:
 ```yaml
 - key: description
   label: Popis události
   type: textarea
-  is_example: true
-  value: Uživatel obdržel podezřelý e-mail s přílohou.
+  example: Uživatel obdržel podezřelý e-mail s přílohou.
 ```
 
-Výsledek: pole se zobrazí prázdné s placeholderem „Uživatel obdržel podezřelý e-mail s přílohou."
+Použití v kroku checklistu:
+```yaml
+- action: Zjisti hash přílohy.
+  example: 'SHA256: 3a1f2b…'
+```
+
+Výsledek: pole nebo krok se zobrazí prázdné s placeholderem nastaveným na příkladovou hodnotu.
 
 ---
 
@@ -245,8 +251,7 @@ Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominen
   fields:
     - key: case_title
       label: Stručný popis události
-      is_example: true
-      value: Příklad vyplnění
+      example: Příklad vyplnění
       hint: Výstižný popis pro odlišení od ostatních případů
 
     - key: incident_coordinator
@@ -362,7 +367,7 @@ Tabulka kontaktů pro investigaci a eskalaci. Analytik edituje vybrané sloupce 
 | `allow_append` | | `true` = analytik přidá řádek tlačítkem `+` |
 | `append_row_template{}` | ◐ | Povinný pokud `allow_append: true` |
 
-> Řádky `contact_table` **nepodporují** `is_example`. Hodnoty jsou předvyplněné jako běžný editovatelný text.
+> Řádky `contact_table` **nepodporují** `example`. Hodnoty jsou předvyplněné jako běžný editovatelný text.
 
 ---
 
@@ -542,8 +547,7 @@ Kontrolní seznam kroků organizovaný do skupin. Analytik označuje kroky jako 
 
         # Plný zápis – krok s ukázkou analyst_note
         - action: Zjisti hash přílohy.
-          analyst_note: 'SHA256: příklad…'
-          is_example: true
+          example: 'SHA256: příklad…'
 ```
 
 ### Klíče `step_group`
@@ -568,8 +572,7 @@ Krok lze zapsat jako prostý řetězec nebo jako mapování:
 | `id` | | string | Identifikátor kroku – auto-generováno pokud chybí |
 | `done` | | bool | Výchozí stav checkboxu – výchozí `false`, nemusíš uvádět |
 | `analyst_note` | | string \| null | Předvyplněná poznámka – výchozí `null`, nemusíš uvádět |
-| `is_example` | | bool | `true` = `analyst_note` je ukázka, přesune se do `example` |
-| `example` | | string | Placeholder v textarea poznámky |
+| `example` | | string | Ukázka poznámky; normalizátor rozbalí na `is_example: true` + `analyst_note` |
 
 ---
 
@@ -758,7 +761,7 @@ Lhůty hlášení NÚKIB dle vyhl. č. 82/2018 Sb.: **do 24 h** (první hlášen
 
 | Klíč | Umístění | Popis |
 |------|----------|-------|
-| `is_example: true` | pole, kroky checklistu | Hodnota = ukázka; při klonování se stane placeholderem. Nepodporováno v `contact_table`. |
+| `example: "..."` | pole, kroky checklistu | Ukázka vyplnění; normalizátor rozbalí a při klonování se stane placeholderem. Nepodporováno v `contact_table`. |
 | `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu (viz tabulka výše) |
 | `always_expanded: true` | podsekce v `section_group` | Podsekce se nezbaluje |
 | `allow_append: true` | tabulky | Analytik přidá řádek tlačítkem `+` |

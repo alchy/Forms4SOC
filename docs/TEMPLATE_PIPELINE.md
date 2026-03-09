@@ -64,7 +64,7 @@ Systém:
 1. Načte `data/workbooks/phishing_v2.yaml`, spustí normalizaci.
 2. Vygeneruje `case_id` ve formátu `UIB-DDMMYYYY-HHMM-RRRR` (např. `UIB-09032026-1045-3712`).
 3. Hluboce zkopíruje `sections` ze šablony.
-4. Příkladové hodnoty (`is_example: true`) přesune do `example` klíčů, `value` nastaví na `null`.
+4. `example:` zkratku rozbalí na `is_example: true` + `value`/`analyst_note`, pak přesune do placeholderů.
 5. `auto_value` pole (ticket_id, workbook_name, …) vyplní runtime hodnotami.
 6. Uloží `UIB-09032026-1045-3712.json` do `data/incidents/`.
 7. Vrátí `IncidentCase` jako JSON s HTTP 201.
@@ -176,23 +176,23 @@ Hluboká kopie zajišťuje, že úpravy v incidentu nikdy neovlivní šablonu an
 
 #### Zpracování příkladových hodnot (`_strip_examples`)
 
-Pole a kroky označené `is_example: true` v YAML šabloně slouží jako ukázky správného
-vyplnění. Při klonování se příkladová hodnota nepřenáší přímo – místo toho se přesune
-do klíče `example`, kde ji frontend zobrazí jako šedý placeholder, a `value` se vynuluje.
+Pole a kroky se zkratkou `example:` v YAML šabloně slouží jako ukázky správného vyplnění.
+Normalizátor zkratku rozbalí na `is_example: true` + `value` resp. `analyst_note`.
+Při klonování pak `_strip_examples` přesune hodnotu do klíče `example` v JSON incidentu,
+kde ji frontend zobrazí jako šedý placeholder, a `value`/`analyst_note` nastaví na `null`.
 
 Chování závisí na typu záznamu:
 
-**Formulářové pole** (`value` je přítomno):
+**Formulářové pole:**
 ```yaml
-# v šabloně
+# v šabloně (YAML zkratka)
 - key: root_cause
   label: Root Cause
   type: textarea
-  is_example: true
-  value: Uživatel otevřel přílohu phishingového e-mailu
+  example: Uživatel otevřel přílohu phishingového e-mailu
 ```
 ```json
-// v novém incidentu
+// v novém incidentu (po normalizaci + klonování)
 {
   "key": "root_cause",
   "label": "Root Cause",
@@ -203,15 +203,14 @@ Chování závisí na typu záznamu:
 }
 ```
 
-**Krok checklistu** (`analyst_note` je přítomno):
+**Krok checklistu:**
 ```yaml
-# v šabloně
+# v šabloně (YAML zkratka)
 - action: Ověř záhlaví e-mailu (SPF, DKIM, DMARC)
-  analyst_note: 'SPF: fail · DKIM: none · Doména spoofována'
-  is_example: true
+  example: 'SPF: fail · DKIM: none · Doména spoofována'
 ```
 ```json
-// v novém incidentu
+// v novém incidentu (po normalizaci + klonování)
 {
   "action": "Ověř záhlaví e-mailu (SPF, DKIM, DMARC)",
   "analyst_note": null,
@@ -221,7 +220,7 @@ Chování závisí na typu záznamu:
 }
 ```
 
-> **Pozor:** `is_example: true` v řádcích `contact_table` nemá efekt – kontaktní tabulky
+> **Pozor:** `example:` v řádcích `contact_table` nemá efekt – kontaktní tabulky
 > jsou vždy editovatelné přímo a příkladový mechanismus se na ně nevztahuje.
 
 #### Vyplnění automatických hodnot (`_fill_auto_values`)
@@ -270,7 +269,7 @@ Pole s `auto_value` mají v šabloně typicky `editable: false` – analytik je 
 | `TemplateService` | `template_service.py` | CRUD pro YAML soubory šablon |
 | `get_template_service(db)` | `template_service.py` | FastAPI dependency – vrátí `TemplateService` s cestou z DB |
 | `generate_case_id(username)` | `case_service.py` | Vygeneruje `UIB-DDMMYYYY-HHMM-RRRR` |
-| `_strip_examples(obj)` | `case_service.py` | Přesune `is_example` hodnoty do `example` placeholderů |
+| `_strip_examples(obj)` | `case_service.py` | Přesune hodnoty označené `is_example: true` do `example` placeholderů |
 | `_fill_auto_values(obj, auto_values)` | `case_service.py` | Vyplní `auto_value` pole runtime hodnotami |
 | `_clone_template_sections(sections)` | `case_service.py` | Hluboká kopie + strip examples |
 | `create_case(storage, template, username)` | `case_service.py` | Kompletní pipeline: klon → auto_values → uložení |

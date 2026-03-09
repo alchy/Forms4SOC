@@ -43,6 +43,10 @@ def _norm_field(field: dict) -> dict:
     """Doplní výchozí hodnoty pro pole formuláře."""
     field.setdefault("type", "text")
     field.setdefault("editable", True)
+    # Zkratka: example: "val"  →  is_example: true, value: "val"
+    if "example" in field:
+        field["is_example"] = True
+        field["value"] = field.pop("example")
     field.setdefault("value", None)
     return field
 
@@ -51,6 +55,10 @@ def _norm_step(step, idx: int, prefix: str) -> dict:
     """Rozbalí string krok nebo doplní výchozí hodnoty dict kroku."""
     if isinstance(step, str):
         step = {"action": step}
+    # Zkratka: example: "val"  →  is_example: true, analyst_note: "val"
+    if "example" in step:
+        step["is_example"] = True
+        step["analyst_note"] = step.pop("example")
     step.setdefault("id", f"{prefix}_{idx + 1:02d}")
     step.setdefault("analyst_note", None)
     step.setdefault("done", False)
