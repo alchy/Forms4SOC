@@ -176,83 +176,168 @@ Aplikace obsahuje následující vrstvy aktivní ve výchozím nastavení:
 ## Aktualizace
 
 ```bash
-git pull
-source .venv/bin/activate
-pip install -r requirements.txt
-python start.py
+cd /opt/forms4soc/app
+sudo -u forms4soc git pull
+sudo -u forms4soc .venv/bin/pip install -r requirements.txt
+sudo systemctl restart forms4soc
+```
+
+### Přepnutí na jinou větev
+
+```bash
+cd /opt/forms4soc/app
+sudo -u forms4soc git fetch
+sudo -u forms4soc git checkout <nazev-vetve>
+sudo -u forms4soc .venv/bin/pip install -r requirements.txt
+sudo -u forms4soc .venv/bin/python scripts/download_vendors.py
+sudo systemctl restart forms4soc
 ```
 
 ---
 
-## Produkční nasazení na Linuxu
+## Produkční nasazení na Linuxu (Rocky Linux 9 / RHEL)
 
-### 1. Příprava
+Ověřeno na **Rocky Linux 9.2**. Postup je stejný pro RHEL 9, AlmaLinux 9 a kompatibilní distribuce. Na Debian/Ubuntu nahraď `dnf` za `apt` a `python3.11` může být dostupný přímo bez přidání repozitáře.
+
+### 1. Systémové závislosti
+
+Rocky Linux 9 dodává Python 3.9 jako výchozí. Python 3.11 je dostupný v AppStream repozitáři:
 
 ```bash
-# Systémový uživatel bez login shellu
-sudo useradd -r -s /sbin/nologin -d /opt/forms4soc forms4soc
-
-# Klonovat do /opt
-sudo git clone https://github.com/alchy/Forms4SOC.git /opt/forms4soc
-sudo chown -R forms4soc:forms4soc /opt/forms4soc
-cd /opt/forms4soc
-
-# Závislosti
-sudo -u forms4soc python3 -m venv .venv
-sudo -u forms4soc .venv/bin/pip install -r requirements.txt
-
-# Konfigurace
-sudo -u forms4soc cp .env.example .env
-sudo nano .env   # nastavit JWT_SECRET_KEY a ADMIN_PASSWORD
+dnf install -y git python3.11 python3.11-pip
+python3.11 --version   # ověření: Python 3.11.x
 ```
 
-### 2. systemd service
+### 2. Uživatel a adresář
+
+Aplikace běží pod vlastním uživatelem `forms4soc` s omezenými právy:
+
+```bash
+useradd -m -s /bin/bash -d /opt/forms4soc forms4soc
+```
+
+### 3. Klonování repozitáře
+
+```bash
+sudo -u forms4soc git clone https://github.com/alchy/Forms4SOC.git /opt/forms4soc/app
+```
+
+### 4. Virtuální prostředí a závislosti
+
+```bash
+sudo -u forms4soc python3.11 -m venv /opt/forms4soc/app/.venv
+sudo -u forms4soc bash -c "cd /opt/forms4soc/app && .venv/bin/pip install -r requirements.txt"
+```
+
+### 5. Konfigurace
+
+```bash
+sudo -u forms4soc cp /opt/forms4soc/app/.env.example /opt/forms4soc/app/.env
+
+# Generovat silný JWT klíč
+openssl rand -hex 32
+
+# Upravit .env
+nano /opt/forms4soc/app/.env
+```
+
+Nastav minimálně `JWT_SECRET_KEY` na vygenerovaný klíč a změň `ADMIN_PASSWORD`.
+
+### 6. Stažení vendor knihoven
+
+```bash
+sudo -u forms4soc bash -c "cd /opt/forms4soc/app && .venv/bin/python scripts/download_vendors.py"
+```
+
+Stáhne Bootstrap, Bootstrap Icons, jQuery, DataTables a Ace Editor do `app/static/vendor/`.
+
+### 7. systemd service
 
 Vytvořte `/etc/systemd/system/forms4soc.service`:
 
 ```ini
 [Unit]
-Description=Forms4SOC – SOC Incident Forms
+Description=Forms4SOC - SOC Incident Management
 After=network.target
 
 [Service]
 Type=simple
 User=forms4soc
-WorkingDirectory=/opt/forms4soc
-ExecStart=/opt/forms4soc/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8080 --log-level info
+Group=forms4soc
+WorkingDirectory=/opt/forms4soc/app
+ExecStart=/opt/forms4soc/app/.venv/bin/python start.py
 Restart=on-failure
 RestartSec=5
-EnvironmentFile=/opt/forms4soc/.env
+
+# Omezení práv
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=yes
+ReadWritePaths=/opt/forms4soc/app/data
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable forms4soc
-sudo systemctl start forms4soc
-sudo systemctl status forms4soc
+systemctl daemon-reload
+systemctl enable forms4soc
+systemctl start forms4soc
+systemctl status forms4soc
 
 # Logy
-sudo journalctl -u forms4soc -f
+journalctl -u forms4soc -f
 ```
 
-### 3. Nginx reverse proxy
+### 8. Nginx jako reverse proxy
+
+Instalace:
+
+```bash
+dnf install -y nginx
+```
+
+#### Varianta A – Self-signed certifikát (testovací prostředí)
+
+```bash
+mkdir -p /etc/nginx/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/forms4soc.key \
+  -out /etc/nginx/ssl/forms4soc.crt \
+  -subj "/C=CZ/ST=Czech Republic/L=Prague/O=SOC/CN=forms4soc"
+chmod 600 /etc/nginx/ssl/forms4soc.key
+```
+
+#### Varianta B – Let's Encrypt (produkce s vlastní doménou)
+
+```bash
+dnf install -y certbot python3-certbot-nginx
+certbot --nginx -d forms4soc.vas-soc.cz
+```
+
+#### Konfigurace nginx
+
+Odstraňte výchozí server block z `/etc/nginx/nginx.conf` (sekce `server { listen 80; ... }` uvnitř bloku `http`) a vytvořte `/etc/nginx/conf.d/forms4soc.conf`:
 
 ```nginx
+# Přesměrování HTTP → HTTPS
 server {
     listen 80;
-    server_name forms4soc.vas-soc.cz;
+    server_name _;
     return 301 https://$host$request_uri;
 }
 
+# HTTPS reverse proxy pro Forms4SOC
 server {
     listen 443 ssl;
-    server_name forms4soc.vas-soc.cz;
+    server_name _;
 
-    ssl_certificate     /etc/letsencrypt/live/forms4soc.vas-soc.cz/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/forms4soc.vas-soc.cz/privkey.pem;
+    # Self-signed certifikát (pro produkci nahraď cestami Let's Encrypt)
+    ssl_certificate     /etc/nginx/ssl/forms4soc.crt;
+    ssl_certificate_key /etc/nginx/ssl/forms4soc.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
 
     location / {
         proxy_pass         http://127.0.0.1:8080;
@@ -265,18 +350,36 @@ server {
 ```
 
 ```bash
-sudo nginx -t
-sudo systemctl reload nginx
+nginx -t
+systemctl enable nginx
+systemctl start nginx
 ```
 
-### 4. Záloha dat
+### 9. SELinux (Rocky Linux / RHEL)
+
+Na systémech s aktivním SELinux (výchozí stav na RHEL/Rocky) nginx nesmí bez povolení navazovat síťová spojení. Bez tohoto nastavení nginx vrací **502 Bad Gateway**:
+
+```bash
+setsebool -P httpd_can_network_connect 1
+```
+
+Ověření:
+
+```bash
+curl -sk https://127.0.0.1/ -o /dev/null -w "%{http_code}"
+# Očekávaný výsledek: 302 (přesměrování na login)
+```
+
+---
+
+## Záloha dat
 
 Veškerá data aplikace jsou v adresáři `data/`:
 
 ```bash
 # Jednorázová záloha
-tar -czf forms4soc-backup-$(date +%Y%m%d).tar.gz /opt/forms4soc/data/
+tar -czf forms4soc-backup-$(date +%Y%m%d).tar.gz /opt/forms4soc/app/data/
 
 # Cron – denní záloha
-0 2 * * * tar -czf /backup/forms4soc-$(date +\%Y\%m\%d).tar.gz /opt/forms4soc/data/
+0 2 * * * tar -czf /backup/forms4soc-$(date +\%Y\%m\%d).tar.gz /opt/forms4soc/app/data/
 ```
