@@ -676,24 +676,24 @@ Read-only RACI matice. Buňky obsahující `R` jsou zvýrazněny tučně červen
   legend: R = Responsible · A = Accountable · C = Consulted · I = Informed
   columns:
     - activity
-    - ki
+    - koordinator
     - cirt
     - ciso
     - garant
   column_labels:
     activity: Aktivita
-    ki: Koordinátor incidentu
+    koordinator: Koordinátor incidentu
     cirt: CIRT
     ciso: CISO
     garant: Garant aktiva
   rows:
     - activity: Posouzení, třídění a rozhodování
-      ki: R, A
+      koordinator: R, A
       cirt: R
       ciso: C
       garant: C
     - activity: Klasifikace a uzavření
-      ki: R, A
+      koordinator: R, A
       cirt: C
       ciso: I
       garant: I

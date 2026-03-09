@@ -543,7 +543,7 @@ sections:
   legend: R = Responsible (provádí) · A = Accountable (zodpovídá za výsledek) · C = Consulted (poskytuje součinnost) · I = Informed (je informován) · (Vysoká/Kritická) = podmínka pro aktivaci role
   columns:
   - activity
-  - ki
+  - koordinator
   - cirt
   - r_dtech
   - r_dplr
@@ -553,7 +553,7 @@ sections:
   - ucl
   column_labels:
     activity: Aktivita
-    ki: Koordinátor
+    koordinator: Koordinátor
     cirt: CIRT
     r_dtech: Ř-DTECH
     r_dplr: Ř-DPLR
@@ -563,7 +563,7 @@ sections:
     ucl: ÚCL
   rows:
   - activity: Příjem a zaevidování události
-    ki: R, A
+    koordinator: R, A
     cirt: C
     r_dtech: –
     r_dplr: –
@@ -572,7 +572,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Posouzení, třídění a rozhodování
-    ki: A
+    koordinator: A
     cirt: R
     r_dtech: –
     r_dplr: –
@@ -581,7 +581,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Odezva – lokální (FW/ASA/rate-limit)
-    ki: A
+    koordinator: A
     cirt: R
     r_dtech: I (Vysoká/Kritická)
     r_dplr: –
@@ -590,7 +590,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Odezva – ISP upstream mitigation
-    ki: A
+    koordinator: A
     cirt: –
     r_dtech: I (Kritická)
     r_dplr: –
@@ -599,7 +599,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Notifikace uživatelů VPN
-    ki: R, A
+    koordinator: R, A
     cirt: –
     r_dtech: I
     r_dplr: –
@@ -608,7 +608,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Eskalace na management
-    ki: R
+    koordinator: R
     cirt: –
     r_dtech: A
     r_dplr: I
@@ -617,7 +617,7 @@ sections:
     nukib: –
     ucl: –
   - activity: Hlášení NÚKIB / ÚCL
-    ki: R
+    koordinator: R
     cirt: C
     r_dtech: –
     r_dplr: –
@@ -626,7 +626,7 @@ sections:
     nukib: I (Vysoká/Kritická)
     ucl: I (Vysoká/Kritická)
   - activity: Klasifikace a uzavření
-    ki: R, A
+    koordinator: R, A
     cirt: C
     r_dtech: I (Vysoká/Kritická)
     r_dplr: –
