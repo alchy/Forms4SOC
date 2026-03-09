@@ -128,13 +128,6 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
         <button class="btn btn-outline-success btn-sm" id="btn-takeover" onclick="takeover()" title="Převzít incident">
             <i class="bi bi-person-check me-1"></i>Převzít
         </button>
-        <a href="/cases/{{ case_id }}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
-            <i class="bi bi-printer me-1"></i>Tisk
-        </a>
-        <button class="btn btn-outline-success btn-sm" id="btn-save" onclick="saveCase()">
-            <span id="save-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
-            <i class="bi bi-floppy me-1"></i>Uložit
-        </button>
         <div class="dropdown">
             <button class="btn btn-outline-warning btn-sm dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="bi bi-arrow-repeat me-1"></i>Změnit stav
@@ -155,6 +148,17 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                 </a></li>
             </ul>
         </div>
+        <a href="/cases/{{ case_id }}/print" target="_blank" class="btn btn-outline-secondary btn-sm" title="Tisk">
+            <i class="bi bi-printer me-1"></i>Tisk
+        </a>
+        <button class="btn btn-outline-primary btn-sm" id="btn-save" onclick="saveCase()">
+            <span id="save-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+            <i class="bi bi-floppy me-1" id="save-icon"></i>Uložit
+        </button>
+        <button class="btn btn-primary btn-sm" id="btn-save-leave" onclick="saveAndLeave()">
+            <span id="save-leave-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+            <i class="bi bi-box-arrow-right me-1" id="save-leave-icon"></i>Uložit a odejít
+        </button>
     </div>
 </div>
 
@@ -312,11 +316,13 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
     }
 
     async function saveCase() {
-        if (!caseDocument) return;
+        if (!caseDocument) return false;
         const btn = document.getElementById('btn-save');
         const spinner = document.getElementById('save-spinner');
+        const icon = document.getElementById('save-icon');
         btn.disabled = true;
         spinner.classList.remove('d-none');
+        icon.classList.add('d-none');
 
         try {
             const resp = await apiFetch(`/api/v1/cases/${CASE_ID}`, {
@@ -335,14 +341,35 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                 const ind = document.getElementById('save-indicator');
                 ind.classList.remove('d-none');
                 setTimeout(() => ind.classList.add('d-none'), 3000);
-                // Release lock after save
-                await releaseLock();
+                return true;
             } else {
                 showPageAlert('Uložení selhalo.');
+                return false;
             }
         } finally {
             btn.disabled = false;
             spinner.classList.add('d-none');
+            icon.classList.remove('d-none');
+        }
+    }
+
+    async function saveAndLeave() {
+        const btn = document.getElementById('btn-save-leave');
+        const spinner = document.getElementById('save-leave-spinner');
+        const icon = document.getElementById('save-leave-icon');
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        icon.classList.add('d-none');
+        try {
+            const ok = await saveCase();
+            if (ok) {
+                await releaseLock();
+                window.location.href = '/cases';
+            }
+        } finally {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+            icon.classList.remove('d-none');
         }
     }
 
