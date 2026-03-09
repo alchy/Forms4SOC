@@ -281,10 +281,10 @@ sections:
   - id: scope_correlation
     title: Rozsah kampaně a korelace
     steps:
-    - action: Koreluj události napříč dostupnými zdroji, pokud je relevantní (proxy, EDR, mail gateway, SIEM)
-      example: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
-    - action: Na inbound mail gateway ověř, kolik příjemců e-mail obdrželo — kontaktuj Správce Exchange (viz Kontaktní matice)
+    - action: Na inbound mail gateway ověř dle adresy odesílatele, kolik příjemců e-mail obdrželo — kontaktuj Správce Exchange (viz Kontaktní matice)
       example: E-mail doručen 18 uživatelům ve 3 odděleních
+    - action: Koreluj událost napříč dalšími dostupnými zdroji (proxy, EDR, SIEM)
+      example: Korelace potvrdila aktivitu na 3 zařízeních, 1 s potvrzeným spuštěním přílohy
     - action: 'Zhodnoť rozsah — cílená nebo plošná kampaň? Identifikuj scope: počet postižených uživatelů, zařízení, systémů a dat; zaznamenej seznam postižených mailboxů'
       example: 'Plošná kampaň · 3 PC · 18 mailboxů · 1 sdílený síťový disk · seznam příjemců přiložen k ticketu'
     - action: Sestav timeline události — od doručení e-mailu po aktuální stav
