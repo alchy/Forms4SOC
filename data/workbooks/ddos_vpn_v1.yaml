@@ -154,26 +154,22 @@ sections:
     title: Dotčená aktiva
     type: assets_table
     note: Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope
-    hint: Pokud je VPN brána nebo infrastruktura za ní součástí kritické infrastruktury (KI) → ihned informuj CISO.
+    hint: Pokud je VPN brána nebo infrastruktura za ní součástí regulované služby → ihned informuj CISO.
     always_expanded: true
     columns:
     - asset_name
     - asset_ip
     - asset_type
-    - critical_infrastructure
-    - contact_owner
+    - regulated_service
     - guarantor
-    - email
-    - phone
+    - contacts
     column_labels:
       asset_name: Název aktiva (hostname, IS)
       asset_ip: IP adresa / CIDR
       asset_type: Typ aktiva
-      critical_infrastructure: KI
-      contact_owner: Kontakt vlastníka
+      regulated_service: Regulovaná služba
       guarantor: Garant
-      email: E-mail
-      phone: Telefon
+      contacts: Kontakty
     column_options:
       asset_type:
       - VPN brána
@@ -182,7 +178,7 @@ sections:
       - Server
       - Informační systém
       - Jiné aktivum
-      critical_infrastructure:
+      regulated_service:
       - Ano
       - Ne
     editable: true
