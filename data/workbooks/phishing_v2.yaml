@@ -171,7 +171,7 @@ sections:
     title: Dotčená aktiva
     type: assets_table
     note: Vyplní SOC Analytik – doplňuj průběžně při každém rozšíření scope
-    hint: Pokud je některé aktivum součástí regulované služby → ihned informuj CISO.
+    hint: 'Pokud je některé aktivum součástí regulované služby → ihned informuj CISO.<br><br>Do pole Poznámky uveď důležitá zjištění a v případě potřeby kontakty na odpovědné zaměstnance.'
     always_expanded: true
     columns:
     - asset_name
@@ -179,14 +179,14 @@ sections:
     - asset_ip
     - asset_type
     - regulated_service
-    - contacts
+    - notes
     column_labels:
       asset_name: Název aktiva
       fqdn: FQDN
-      asset_ip: IP adresa nebo subnet
+      asset_ip: IP/Netmask
       asset_type: Typ aktiva
       regulated_service: Regulovaná služba
-      contacts: Kontakty
+      notes: Poznámky
     column_options:
       asset_type:
       - Endpoint
@@ -197,8 +197,8 @@ sections:
       - Sdílené úložiště
       - Jiné aktivum
       regulated_service:
-      - Ano
       - Ne
+      - Ano
     editable: true
     rows: []
 - id: triage_investigation
