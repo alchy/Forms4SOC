@@ -46,6 +46,18 @@ async def init_db() -> None:
             "INSERT OR IGNORE INTO settings (key, value) VALUES ('templates_dir', ?)",
             (settings.default_templates_dir,),
         )
+        await db.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('app_name', ?)",
+            (settings.app_name,),
+        )
+        await db.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('app_version', ?)",
+            (settings.app_version,),
+        )
+        await db.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES ('app_subtitle', ?)",
+            (settings.app_subtitle,),
+        )
 
         # Seed admin uživatele pokud žádný neexistuje
         async with db.execute("SELECT COUNT(*) FROM users") as cursor:

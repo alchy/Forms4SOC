@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Správa uživatelů – Forms4SOC{% endblock %}
+{% block title %}Správa uživatelů – {{ app_name }}{% endblock %}
 
 {% block sidebar %}
 <nav class="col-auto sidebar d-flex flex-column py-3 px-2" style="min-width: 220px; min-height: calc(100vh - 57px);">
@@ -38,7 +38,7 @@
     </div>
     <div class="mt-auto">
         <div class="text-muted small px-2 pb-1 border-top pt-3">
-            <i class="bi bi-info-circle me-1"></i>v0.2.0
+            <i class="bi bi-info-circle me-1"></i>{{ app_version }}
         </div>
     </div>
 </nav>

@@ -31,7 +31,7 @@ async def update_settings(
     current_user: User = Depends(require_admin),
     db: aiosqlite.Connection = Depends(get_db),
 ) -> dict[str, str]:
-    allowed_keys = {"incidents_dir", "templates_dir"}
+    allowed_keys = {"incidents_dir", "templates_dir", "app_name", "app_version", "app_subtitle"}
     for key, value in updates.items():
         if key not in allowed_keys:
             continue

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1 import auth, cases, settings, templates, users
+from app.api.v1 import auth, cases, info, settings, templates, users
 from app.config import settings as app_settings
 from app.core.database import init_db
 from app.core.security import WebAdminRequired, WebLoginRequired
@@ -48,6 +48,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # API – verze v1
 _API_V1 = "/api/v1"
 app.include_router(auth.router, prefix=_API_V1)
+app.include_router(info.router, prefix=_API_V1)
 app.include_router(templates.router, prefix=_API_V1)
 app.include_router(cases.router, prefix=_API_V1)
 app.include_router(settings.router, prefix=_API_V1)

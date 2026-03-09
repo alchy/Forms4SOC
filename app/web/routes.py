@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.config import settings as app_settings
 from app.core.database import get_db
 from app.core.security import COOKIE_NAME, WebAdminRequired, WebLoginRequired, decode_token
 from app.models.user import TokenPayload
@@ -12,6 +13,11 @@ from app.services.template_service import TemplateService, get_template_service
 
 router = APIRouter(tags=["Web"])
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals.update({
+    "app_name": app_settings.app_name,
+    "app_version": app_settings.app_version,
+    "app_subtitle": app_settings.app_subtitle,
+})
 
 
 # ---------------------------------------------------------------------------

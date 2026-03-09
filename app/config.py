@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     # Aplikace
     app_name: str = "Forms4SOC"
     app_version: str = "0.2.0"
+    app_subtitle: str = "SOC Incident Management Portal"
     debug: bool = False
 
     # JWT
