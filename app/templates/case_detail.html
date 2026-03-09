@@ -243,9 +243,8 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
     }
 
     function setReadOnly(readonly) {
-        const saveBtn = document.getElementById('btn-save');
-        saveBtn.disabled = readonly;
-        // Disable all inputs/selects/textareas in sections container
+        document.getElementById('btn-save').disabled = readonly;
+        document.getElementById('btn-save-leave').disabled = readonly;
         document.querySelectorAll('#sections-container input, #sections-container select, #sections-container textarea').forEach(el => {
             el.disabled = readonly;
         });
@@ -415,16 +414,8 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
         });
     }
 
-    // Release lock when navigating away
-    window.addEventListener('beforeunload', () => {
-        if (lockAcquired) {
-            fetch(`/api/v1/cases/${CASE_ID}/lock`, {
-                method: 'DELETE',
-                credentials: 'include',
-                keepalive: true,
-            });
-        }
-    });
+    // Zámek se uvolňuje pouze explicitně přes "Uložit a odejít".
+    // beforeunload handler záměrně chybí – lock přetrvá i při navigaci jinam.
 
     async function takeover() {
         if (!caseDocument) return;
