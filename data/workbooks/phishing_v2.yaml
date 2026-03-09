@@ -175,17 +175,17 @@ sections:
     always_expanded: true
     columns:
     - asset_name
+    - fqdn
     - asset_ip
     - asset_type
     - regulated_service
-    - guarantor
     - contacts
     column_labels:
-      asset_name: Název aktiva (hostname, mailbox, IS)
-      asset_ip: IP adresa
+      asset_name: Název aktiva
+      fqdn: FQDN
+      asset_ip: IP adresa nebo subnet
       asset_type: Typ aktiva
       regulated_service: Regulovaná služba
-      guarantor: Garant
       contacts: Kontakty
     column_options:
       asset_type:

@@ -154,7 +154,7 @@ sections:
         name: Podatelna NÚKIB
         email: podatelna@nukib.cz
         phone: ''
-        when_to_contact: Dle ZOKB §8 (KI/KII, Závažnost Kritická/Vysoká)
+        when_to_contact: Dle ZOKB §8 (Regulovaná služba, Závažnost Kritická/Vysoká)
 
   # SEKCE 4 – Posouzení, třídění a rozhodování (checklist). Jádro workbooku.
   # Uprav krok po kroku dle svého typu incidentu.

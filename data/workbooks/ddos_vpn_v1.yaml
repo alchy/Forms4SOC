@@ -158,17 +158,17 @@ sections:
     always_expanded: true
     columns:
     - asset_name
+    - fqdn
     - asset_ip
     - asset_type
     - regulated_service
-    - guarantor
     - contacts
     column_labels:
-      asset_name: Název aktiva (hostname, IS)
-      asset_ip: IP adresa / CIDR
+      asset_name: Název aktiva
+      fqdn: FQDN
+      asset_ip: IP adresa nebo subnet
       asset_type: Typ aktiva
       regulated_service: Regulovaná služba
-      guarantor: Garant
       contacts: Kontakty
     column_options:
       asset_type:
@@ -285,12 +285,12 @@ sections:
       example: 820 unikátních uživatelů se pokusilo připojit a neuspělo v intervalu 08:12–09:45
     - action: Identifikuj business dopad – které systémy, aplikace nebo procesy jsou nedostupné v důsledku nedostupnosti VPN
       example: 'Nedostupné přes VPN: ERP systém, sdílené úložiště, interní portál – postiženi vzdáleně pracující uživatelé'
-    - action: Ověř, zda VPN brána nebo infrastruktura za ní je součástí kritické infrastruktury (KI) dle interního registru aktiv
-      example: 'VPN GW není v registru KI · systémy za VPN: ERP (KI: Ne) · SCADA přístup přes VPN (KI: ověřit!)'
+    - action: Ověř, zda VPN brána nebo infrastruktura za ní je součástí regulované služby dle interního registru aktiv
+      example: 'VPN GW není v registru regulovaných služeb · systémy za VPN: ERP (Reg. služba: Ne) · SCADA přístup přes VPN (Reg. služba: ověřit!)'
     - action: Sestav timeline útoku od prvního detekovaného signálu po aktuální stav
       example: 08:11 první NetFlow anomálie · 08:12 SIEM alert · 08:14 VPN nedostupná · 08:20 SOC incident otevřen
     classification_hints:
-    - VPN nedostupná pro všechny uživatele + KI dopad → True Positive, Critical · VPN nedostupná bez KI dopadu → True Positive, High · Degradovaná dostupnost (část uživatelů) → True Positive, Medium · Krátkodobý výpadek < 15 min → True Positive, Low
+    - VPN nedostupná pro všechny uživatele + dopad na regulovanou službu → True Positive, Critical · VPN nedostupná bez dopadu na regulovanou službu → True Positive, High · Degradovaná dostupnost (část uživatelů) → True Positive, Medium · Krátkodobý výpadek < 15 min → True Positive, Low
   - id: evidence_collection
     title: Zajištění důkazů
     steps:

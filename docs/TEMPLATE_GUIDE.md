@@ -487,17 +487,21 @@ Sloupce v `column_options` se zobrazí jako `<select>`; ostatní jako textový v
 - id: affected_assets
   type: assets_table
   title: Dotčená aktiva
-  hint: Pokud je aktivum součástí kritické infrastruktury → ihned informuj CISO.
+  hint: Pokud je aktivum součástí regulované služby → ihned informuj CISO.
   columns:
     - asset_name
+    - fqdn
     - asset_ip
     - asset_type
-    - critical_infrastructure
+    - regulated_service
+    - contacts
   column_labels:
-    asset_name: Název aktiva (hostname, mailbox, IS)
-    asset_ip: IP adresa
+    asset_name: Název aktiva
+    fqdn: FQDN
+    asset_ip: IP adresa nebo subnet
     asset_type: Typ aktiva
-    critical_infrastructure: Kritická infrastruktura
+    regulated_service: Regulovaná služba
+    contacts: Kontakty
   column_options:
     asset_type:
       - Endpoint
@@ -505,7 +509,7 @@ Sloupce v `column_options` se zobrazí jako `<select>`; ostatní jako textový v
       - Mailbox
       - Informační systém
       - Síťový prvek
-    critical_infrastructure:
+    regulated_service:
       - Ano
       - Ne
   rows: []
