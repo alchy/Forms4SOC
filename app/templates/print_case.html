@@ -38,6 +38,7 @@
     font-size: 9pt; font-weight: bold;
     border: 1px solid currentColor;
   }
+  .status-new     { color: #6c757d; background: #f0f0f0; }
   .status-open    { color: #0d6efd; background: #e7f1ff; }
   .status-in_progress { color: #166534; background: #dcfce7; }
   .status-closed  { color: #333; background: #e5e7eb; }
@@ -125,10 +126,11 @@
 const CASE_ID = '{{ case_id }}';
 
 const STATUS_CONFIG = {
+  'new':            {label: 'Založeno',       cls: 'status-new'},
   'open':           {label: 'Přiřazeno',     cls: 'status-open'},
   'in_progress':    {label: 'V řešení',       cls: 'status-in_progress'},
   'closed':         {label: 'Uzavřený',       cls: 'status-closed'},
-  'on_hold':        {label: 'Pozastaveno',   cls: 'status-on_hold'},
+  'on_hold':        {label: 'Pozastaveno',    cls: 'status-on_hold'},
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

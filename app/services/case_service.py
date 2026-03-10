@@ -114,7 +114,7 @@ async def create_case(
     case = IncidentCase(
         case_id=case_id,
         template_id=template.template_id,
-        status="open",
+        status="new",
         created_by=username,
         created_at=now,
         updated_at=now,

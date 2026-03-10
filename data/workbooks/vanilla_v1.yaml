@@ -316,10 +316,10 @@ sections:
         label: Povinnost hlášení ÚCL
         type: select
         options:
-          - Povinná – Regulovaná letecká služba + P1/P2
+          - Povinná – Regulovaná letecká služba + Vysoká/Kritická
           - Zvážit – hraniční případ
           - Není vyžadována
-        hint: ÚCL (Úřad pro civilní letectví) – hlášení povinné při Vysokém nebo Kritickém dopadu (P1/P2) na regulovanou leteckou službu.
+        hint: ÚCL (Úřad pro civilní letectví) – hlášení povinné při Vysokém nebo Kritickém dopadu na regulovanou leteckou službu.
 
       # MÍSTO PRO ŠABLONOVĚ SPECIFICKÁ POLE.
       # Příklad:
@@ -388,7 +388,16 @@ sections:
       - key: related_service_requests
         label: Související servisní požadavky
         type: textarea
-        hint: Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení.
+        hint: Čísla nebo odkazy na servisní požadavky vytvořené v průběhu řešení (blokace, konfigurace, požadavky na změnu apod.)
+        example: 'SR-2026-XXXX – popis požadavku'
+
+      - key: related_security_events
+        label: Navázané bezpečnostní události (UIB/IIB)
+        type: textarea
+        hint: >
+          Reference na další šetřené bezpečnostní události otevřené v rámci tohoto incidentu nebo s ním související
+          (eskalace do jiného workbooku, paralelně šetřené události, stejná kampaň apod.)
+        example: 'UIB-10032026-1045-XXXX – Kompromitace účtu (paralelně šetřeno)'
 
       - key: reporter_notified
         label: Oznamovatel informován
@@ -403,9 +412,10 @@ sections:
 
   # SEKCE 7 – RACI matice. Volitelná, ale doporučená.
   # Uprav sloupce a řádky dle struktury tvé organizace.
-  # Standardní sloupce: koordinator, cirt, r_dtech, r_dplr, garant, delegat, nukib, ucl.
+  # Standardní sloupce: l1_its, koordinator, cirt, r_dtech, r_dplr, garant, delegat, nukib, ucl.
   # Přidej specifické role (např. isp_noc, cloud_provider) dle potřeby.
-  # DPO: zařaď sloupec jen pokud hrozí únik osobních dat (phishing, data breach).
+  # l1_its: zařaď pokud organizace používá L1/L2 strukturu dle SM/25/0100/P5 – L1 eviduje a předává, L2 řídí.
+  # DPO: zařaď sloupec jen pokud hrozí únik osobních dat (phishing, data breach, kompromitace účtu).
   - id: raci
     title: RACI matice
     type: raci_table
@@ -415,6 +425,7 @@ sections:
       (Vysoká/Kritická) = podmínka pro aktivaci role
     columns:
       - activity
+      - l1_its
       - koordinator
       - cirt
       - r_dtech
@@ -425,6 +436,7 @@ sections:
       - ucl
     column_labels:
       activity: Aktivita
+      l1_its: L1 (ITS)
       koordinator: Koordinátor
       cirt: CIRT
       r_dtech: Ř-DTECH
@@ -434,66 +446,83 @@ sections:
       nukib: NÚKIB
       ucl: ÚCL
     rows:
-      - activity: Příjem a zaevidování události
-        koordinator: R, A
-        cirt: C
-        r_dtech: –
-        r_dplr: –
-        garant: –
-        delegat: –
-        nukib: –
-        ucl: –
+      - activity: Příjem UIB/IIB a evidence v TIS
+        l1_its: R, A
+        koordinator: I
+        cirt: '–'
+        r_dtech: '–'
+        r_dplr: '–'
+        garant: '–'
+        delegat: '–'
+        nukib: '–'
+        ucl: '–'
+      - activity: Předání incidentu Koordinátorovi CSIRT (L2)
+        l1_its: R
+        koordinator: A
+        cirt: '–'
+        r_dtech: '–'
+        r_dplr: '–'
+        garant: '–'
+        delegat: '–'
+        nukib: '–'
+        ucl: '–'
       - activity: Posouzení, třídění a rozhodování
+        l1_its: '–'
         koordinator: A
         cirt: R
-        r_dtech: –
-        r_dplr: –
+        r_dtech: '–'
+        r_dplr: '–'
         garant: C
         delegat: C
-        nukib: –
-        ucl: –
+        nukib: '–'
+        ucl: '–'
       - activity: Odezva
+        l1_its: '–'
         koordinator: A
         cirt: R
         r_dtech: I (Vysoká/Kritická)
-        r_dplr: –
+        r_dplr: '–'
         garant: A
         delegat: R
-        nukib: –
-        ucl: –
+        nukib: '–'
+        ucl: '–'
       - activity: Notifikace dotčených stran
+        l1_its: '–'
         koordinator: R, A
-        cirt: –
+        cirt: '–'
         r_dtech: I
-        r_dplr: –
+        r_dplr: '–'
         garant: I
-        delegat: –
-        nukib: –
-        ucl: –
+        delegat: '–'
+        nukib: '–'
+        ucl: '–'
       - activity: Eskalace na management
+        l1_its: '–'
         koordinator: R
-        cirt: –
+        cirt: '–'
         r_dtech: A
         r_dplr: I
-        garant: –
-        delegat: –
-        nukib: –
-        ucl: –
+        garant: '–'
+        delegat: '–'
+        nukib: '–'
+        ucl: '–'
       - activity: Hlášení NÚKIB / ÚCL
+        l1_its: '–'
         koordinator: R
         cirt: C
-        r_dtech: –
-        r_dplr: –
-        garant: –
-        delegat: –
+        r_dtech: '–'
+        r_dplr: '–'
+        garant: '–'
+        delegat: '–'
         nukib: I (Vysoká/Kritická)
         ucl: I (Vysoká/Kritická)
       - activity: Klasifikace a uzavření
+        l1_its: '–'
         koordinator: R, A
         cirt: C
         r_dtech: I (Vysoká/Kritická)
-        r_dplr: –
+        r_dplr: '–'
         garant: I
-        delegat: –
-        nukib: –
-        ucl: –
+        delegat: '–'
+        nukib: '–'
+        ucl: '–'

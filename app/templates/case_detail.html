@@ -133,6 +133,9 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                 <i class="bi bi-arrow-repeat me-1"></i>Změnit stav
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" onclick="changeStatus('new')">
+                    <i class="bi bi-plus-circle me-2 text-secondary"></i>Založeno
+                </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('open')">
                     <i class="bi bi-circle me-2 text-primary"></i>Přiřazeno
                 </a></li>
@@ -140,11 +143,11 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
                     <i class="bi bi-play-circle me-2 text-success"></i>V řešení
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#" onclick="changeStatus('closed')">
-                    <i class="bi bi-check-circle me-2 text-dark"></i>Uzavřený
-                </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('on_hold')">
                     <i class="bi bi-pause-circle me-2 text-warning"></i>Pozastaveno
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="changeStatus('closed')">
+                    <i class="bi bi-check-circle me-2 text-dark"></i>Uzavřený
                 </a></li>
             </ul>
         </div>
@@ -189,10 +192,11 @@ body.print-mode main { flex: 0 0 100% !important; max-width: 100% !important; }
     let lockAcquired = false;
 
     const STATUS_CONFIG = {
+        'new':            {label: 'Založeno',       cls: 'bg-secondary-subtle text-secondary border border-secondary-subtle'},
         'open':           {label: 'Přiřazeno',     cls: 'bg-primary-subtle text-primary border border-primary-subtle'},
         'in_progress':    {label: 'V řešení',       cls: 'bg-success-subtle text-success border border-success-subtle'},
         'closed':         {label: 'Uzavřený',       cls: 'bg-dark-subtle text-dark border border-dark-subtle'},
-        'on_hold':        {label: 'Pozastaveno',   cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
+        'on_hold':        {label: 'Pozastaveno',    cls: 'bg-warning-subtle text-warning border border-warning-subtle'},
     };
 
     async function acquireLock() {

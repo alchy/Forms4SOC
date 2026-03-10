@@ -3,13 +3,13 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel
 
-CaseStatus = Literal["open", "in_progress", "closed", "on_hold"]
+CaseStatus = Literal["new", "open", "in_progress", "closed", "on_hold"]
 
 
 class IncidentCase(BaseModel):
     case_id: str
     template_id: str
-    status: CaseStatus = "open"
+    status: CaseStatus = "new"
     created_by: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
