@@ -298,13 +298,32 @@ journalctl -u forms4soc -f
 
 ### 8. Nginx jako reverse proxy
 
-Instalace:
+Nejprve nainstalujte nginx a odstraňte výchozí server block z `/etc/nginx/nginx.conf` (sekce `server { listen 80; ... }` uvnitř bloku `http`), aby nedocházelo ke konfliktům s konfigurací aplikace:
 
 ```bash
 dnf install -y nginx
 ```
 
-#### Varianta A – Self-signed certifikát (testovací prostředí)
+V souboru `/etc/nginx/nginx.conf` smažte nebo zakomentujte celý blok:
+
+```nginx
+server {
+    listen       80;
+    listen       [::]:80;
+    server_name  _;
+    ...
+}
+```
+
+Poté vytvořte `/etc/nginx/conf.d/forms4soc.conf` dle zvolené varianty níže.
+
+---
+
+#### Varianta A – Self-signed certifikát (interní/testovací prostředí)
+
+Vhodné pro nasazení v interní síti nebo testovací prostředí bez veřejné domény. Prohlížeč zobrazí varování o nedůvěryhodném certifikátu – to je očekávané chování.
+
+**Generování self-signed certifikátu:**
 
 ```bash
 mkdir -p /etc/nginx/ssl
@@ -315,21 +334,13 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 chmod 600 /etc/nginx/ssl/forms4soc.key
 ```
 
-#### Varianta B – Let's Encrypt (produkce s vlastní doménou)
-
-```bash
-dnf install -y certbot python3-certbot-nginx
-certbot --nginx -d forms4soc.vas-soc.cz
-```
-
-#### Konfigurace nginx
-
-Odstraňte výchozí server block z `/etc/nginx/nginx.conf` (sekce `server { listen 80; ... }` uvnitř bloku `http`) a vytvořte `/etc/nginx/conf.d/forms4soc.conf`:
+**Konfigurace `/etc/nginx/conf.d/forms4soc.conf`:**
 
 ```nginx
 # Přesměrování HTTP → HTTPS
 server {
     listen 80;
+    listen [::]:80;
     server_name _;
     return 301 https://$host$request_uri;
 }
@@ -337,9 +348,9 @@ server {
 # HTTPS reverse proxy pro Forms4SOC
 server {
     listen 443 ssl;
+    listen [::]:443 ssl;
     server_name _;
 
-    # Self-signed certifikát (pro produkci nahraď cestami Let's Encrypt)
     ssl_certificate     /etc/nginx/ssl/forms4soc.crt;
     ssl_certificate_key /etc/nginx/ssl/forms4soc.key;
     ssl_protocols       TLSv1.2 TLSv1.3;
@@ -361,6 +372,78 @@ systemctl enable nginx
 systemctl start nginx
 ```
 
+Aplikace bude dostupná na `https://<IP-serveru>`.
+
+---
+
+#### Varianta B – Let's Encrypt (produkce s vlastní doménou)
+
+Vhodné pro veřejně dostupné nasazení s vlastní DNS doménou. Certifikát je důvěryhodný, bezplatný a obnovuje se automaticky.
+
+**Předpoklady:**
+- Server je dostupný z internetu na portu 80 a 443
+- DNS záznam domény směřuje na IP adresu serveru
+- Doménové jméno je připraveno (např. `forms4soc.vas-soc.cz`)
+
+**Instalace certbotu:**
+
+Na Rocky Linux / RHEL je certbot dostupný v repozitáři EPEL:
+
+```bash
+dnf install -y epel-release
+dnf install -y certbot python3-certbot-nginx
+```
+
+**Příprava nginx před vydáním certifikátu:**
+
+Certbot potřebuje před vydáním certifikátu funkční nginx s nastaveným `server_name`. Vytvořte dočasnou konfiguraci `/etc/nginx/conf.d/forms4soc.conf`:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name forms4soc.vas-soc.cz;
+
+    location / {
+        proxy_pass         http://127.0.0.1:8080;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```bash
+nginx -t
+systemctl enable nginx
+systemctl start nginx
+```
+
+**Vydání certifikátu:**
+
+```bash
+certbot --nginx -d forms4soc.vas-soc.cz --redirect
+```
+
+Certbot automaticky:
+- ověří vlastnictví domény přes HTTP challenge
+- stáhne a nainstaluje certifikát do `/etc/letsencrypt/live/<domena>/`
+- upraví konfiguraci nginx (přidá SSL direktivy a HTTP→HTTPS přesměrování)
+- nastaví systemd timer pro automatické obnovování certifikátu
+
+Po dokončení bude konfigurace `/etc/nginx/conf.d/forms4soc.conf` obsahovat platné SSL direktivy spravované certbotem.
+
+**Ověření automatického obnovování:**
+
+```bash
+certbot renew --dry-run
+```
+
+> Certifikát Let's Encrypt je platný 90 dní. Certbot automaticky obnoví certifikát před vypršením. Certifikát a jeho klíče nejsou součástí zálohy dat aplikace – při obnově serveru stačí znovu spustit `certbot --nginx -d <domena>`.
+
+---
+
 ### 9. SELinux (Rocky Linux / RHEL)
 
 Na systémech s aktivním SELinux (výchozí stav na RHEL/Rocky) nginx nesmí bez povolení navazovat síťová spojení. Bez tohoto nastavení nginx vrací **502 Bad Gateway**:
@@ -378,7 +461,7 @@ curl -sk https://127.0.0.1/ -o /dev/null -w "%{http_code}"
 
 ### 10. První přihlášení a změna hesla
 
-Přihlas se na `https://<IP-serveru>` výchozími přihlašovacími údaji:
+Přihlas se na adresu aplikace výchozími přihlašovacími údaji:
 
 ```
 Uživatel: admin
@@ -391,11 +474,17 @@ Po přihlášení okamžitě změň heslo: **menu vpravo nahoře → Uživatelé
 
 ### 11. Zálohy
 
-Vytvoř zálohovací skript `/opt/forms4soc/backup.sh`:
+Vytvoř zálohovací skript `/opt/forms4soc/backup.sh`.
+
+Obsah zálohy se liší podle zvolené SSL varianty:
+- **Varianta A (self-signed):** záloha zahrnuje certifikát a klíč z `/etc/nginx/ssl/`
+- **Varianta B (Let's Encrypt):** certifikát není součástí zálohy – spravuje ho certbot a při obnově serveru se vydá znovu
+
+**Varianta A – se self-signed certifikátem:**
 
 ```bash
 #!/bin/bash
-# Forms4SOC – zálohovací skript
+# Forms4SOC – zálohovací skript (self-signed SSL)
 set -euo pipefail
 
 BACKUP_DIR="/opt/forms4soc/backups"
@@ -418,7 +507,39 @@ tar -czf "${ARCHIVE}" \
 SIZE=$(du -sh "${ARCHIVE}" | cut -f1)
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Záloha vytvořena: ${ARCHIVE} (${SIZE})"
 
-# Rotace – smaž zálohy starší než KEEP_DAYS dní
+DELETED=$(find "${BACKUP_DIR}" -name "forms4soc_*.tar.gz" -mtime +${KEEP_DAYS} -print -delete | wc -l)
+if [ "${DELETED}" -gt 0 ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Smazáno ${DELETED} starých záloh (>${KEEP_DAYS} dní)"
+fi
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Hotovo."
+```
+
+**Varianta B – s Let's Encrypt certifikátem:**
+
+```bash
+#!/bin/bash
+# Forms4SOC – zálohovací skript (Let's Encrypt SSL)
+set -euo pipefail
+
+BACKUP_DIR="/opt/forms4soc/backups"
+APP_DIR="/opt/forms4soc/app"
+DATE=$(date +%Y%m%d_%H%M%S)
+ARCHIVE="${BACKUP_DIR}/forms4soc_${DATE}.tar.gz"
+KEEP_DAYS=30
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Spouštím zálohu Forms4SOC..."
+
+tar -czf "${ARCHIVE}" \
+    --ignore-failed-read \
+    "${APP_DIR}/data" \
+    "${APP_DIR}/.env" \
+    /etc/nginx/conf.d/forms4soc.conf \
+    /etc/systemd/system/forms4soc.service
+
+SIZE=$(du -sh "${ARCHIVE}" | cut -f1)
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Záloha vytvořena: ${ARCHIVE} (${SIZE})"
+
 DELETED=$(find "${BACKUP_DIR}" -name "forms4soc_*.tar.gz" -mtime +${KEEP_DAYS} -print -delete | wc -l)
 if [ "${DELETED}" -gt 0 ]; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Smazáno ${DELETED} starých záloh (>${KEEP_DAYS} dní)"
@@ -428,18 +549,16 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Hotovo."
 ```
 
 ```bash
-# Vytvořit adresář pro zálohy a nastavit práva
+# Vytvořit adresář pro zálohy, nastavit práva a provést první zálohu
 mkdir -p /opt/forms4soc/backups
 chmod +x /opt/forms4soc/backup.sh
-
-# Provést první zálohu
 /opt/forms4soc/backup.sh
 
 # Nastavit cron – denní záloha ve 2:00, log do souboru
 (crontab -l 2>/dev/null; echo "0 2 * * * /opt/forms4soc/backup.sh >> /opt/forms4soc/backups/backup.log 2>&1") | crontab -
 ```
 
-Záloha obsahuje: data aplikace (`data/`), konfiguraci (`.env`), nginx konfiguraci a SSL certifikát, systemd service soubor. Zálohy starší 30 dní se automaticky mažou. Log zálohování: `/opt/forms4soc/backups/backup.log`.
+Zálohy starší 30 dní se automaticky mažou. Log zálohování: `/opt/forms4soc/backups/backup.log`.
 
 ---
 
@@ -450,9 +569,10 @@ Po provedení všech kroků ověř:
 - [ ] Aplikace běží: `systemctl is-active forms4soc`
 - [ ] Nginx běží: `systemctl is-active nginx`
 - [ ] HTTPS odpovídá: `curl -sk https://127.0.0.1/ -o /dev/null -w "%{http_code}"` → `302`
-- [ ] SELinux povolen: `setsebool -P httpd_can_network_connect 1`
+- [ ] SELinux nastaven: `getsebool httpd_can_network_connect` → `on`
 - [ ] Silný JWT klíč nastaven v `.env`
 - [ ] Admin heslo změněno v GUI aplikace
-- [ ] Vendor knihovny staženy: `ls app/static/vendor/`
+- [ ] Vendor knihovny staženy: `ls /opt/forms4soc/app/app/static/vendor/`
 - [ ] První záloha provedena: `ls /opt/forms4soc/backups/`
 - [ ] Cron nastaven: `crontab -l`
+- [ ] **(Varianta B)** Auto-obnova certifikátu ověřena: `certbot renew --dry-run`
