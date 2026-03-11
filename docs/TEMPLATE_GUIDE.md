@@ -213,6 +213,9 @@ Pole se používají v sekcích `workbook_header`, `form` a podsekci `form` uvni
 | `template_mitre_tactic` | `mitre_tactic` ze šablony |
 | `template_mitre_technique` | `mitre_technique` ze šablony |
 | `template_data_sources` | `data_sources` jako CSV řetězec |
+| `last_saved` | Timestamp posledního uložení (konfigurovaná timezone, formát `YYYY-MM-DDTHH:MM`) |
+
+> Pole s `auto_value: last_saved` se aktualizuje při **každém uložení** incidentu. Timezone se čte z konfigurace (`TIMEZONE` v `.env`), výchozí hodnota je `Europe/Prague`.
 
 ---
 
@@ -242,7 +245,9 @@ Výsledek: pole nebo krok se zobrazí prázdné s placeholderem nastaveným na p
 
 ## Typ `workbook_header`
 
-Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominentně nahoře; read-only pole (case_id, verze, autor) zobrazena jako kompaktní info-grid pod čarou.
+Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominentně nahoře; read-only pole (case_id, last_saved) zobrazena jako kompaktní info-grid pod čarou.
+
+Hlavička obsahuje pouze nezbytná pole – nepřidávej metadata šablony (název workbooku, verze, autor), ta jsou uložena v datech incidentu a dostupná přes API.
 
 ```yaml
 - id: header
@@ -251,6 +256,7 @@ Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominen
   fields:
     - key: case_title
       label: Stručný popis události
+      type: textarea
       example: Příklad vyplnění
       hint: Výstižný popis pro odlišení od ostatních případů
 
@@ -258,15 +264,10 @@ Povinná první sekce každého workbooku. Editovatelná pole zobrazena prominen
       label: Koordinátor incidentu
       hint: Analytik zodpovědný za koordinaci. Lze vyplnit tlačítkem Převzít.
 
-    - key: ticket_id
-      label: ID UIB
+    - key: last_saved
+      label: Datum poslední aktualizace
       editable: false
-      auto_value: case_id
-
-    - key: version
-      label: Verze workbooku
-      editable: false
-      auto_value: template_version
+      auto_value: last_saved
 ```
 
 | Klíč | ✓ | Popis |
@@ -659,13 +660,16 @@ Příklad komunikační matice (bez `status_options` – volný textový vstup):
 | `column_labels{}` | ✓ | Zobrazované názvy sloupců |
 | `rows[]` | ✓ | Předdefinované řádky |
 | `editable_columns[]` | ✓ | Sloupce editovatelné analytikem |
-| `status_options[]` | | Pokud definováno → dropdown; jinak volný textový vstup |
+| `status_options[]` | | Pokud definováno → dropdown pro `status_column`; ostatní editovatelné sloupce zůstávají textovým vstupem |
+| `status_column` | | Název sloupce, který se renderuje jako dropdown se `status_options`. Výchozí: `status` |
 | `allow_append` | | `true` = analytik přidá vlastní řádek |
 | `allow_delete` | | `true` = analytik smaže libovolný řádek |
 | `append_row_template{}` | ◐ | Povinný pokud `allow_append: true` |
 | `hints[]` | | Informační texty zobrazené pod tabulkou |
 
 > **Konvence formulace akcí:** používej oznamovací tvrzení popisující co bylo provedeno (např. „Blokována doména odesílatele na mail serveru"), nikoli imperativ.
+
+> **Dropdown pouze pro status sloupec:** `status_options` se aplikuje výhradně na sloupec pojmenovaný v `status_column` (výchozí `status`). Ostatní sloupce v `editable_columns` (např. `action`, `cooperation`) se vždy renderují jako textový vstup, i když je `status_options` definováno.
 
 ---
 
@@ -766,7 +770,7 @@ Lhůty hlášení NÚKIB dle vyhl. č. 82/2018 Sb.: **do 24 h** (první hlášen
 | Klíč | Umístění | Popis |
 |------|----------|-------|
 | `example: "..."` | pole, kroky checklistu | Ukázka vyplnění; normalizátor rozbalí a při klonování se stane placeholderem. Nepodporováno v `contact_table`. |
-| `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu (viz tabulka výše) |
+| `auto_value` | pole | Automaticky vyplněno při vytvoření incidentu; `last_saved` se navíc aktualizuje při každém uložení (viz tabulka výše) |
 | `always_expanded: true` | podsekce v `section_group` | Podsekce se nezbaluje |
 | `allow_append: true` | tabulky | Analytik přidá řádek tlačítkem `+` |
 | `allow_delete: true` | tabulky | Analytik smaže libovolný řádek |

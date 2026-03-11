@@ -102,6 +102,11 @@ Volitelné klíče:
 # APP_NAME=Forms4SOC
 # APP_VERSION=0.2.0
 # APP_SUBTITLE=SOC Incident Management Portal
+
+# Časová zóna pro timestampy v incidentech (IANA název, výchozí: Europe/Prague)
+# Používá se pro pole last_saved – datum poslední aktualizace workbooku
+# Přehled platných hodnot: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+# TIMEZONE=Europe/Prague
 ```
 
 > Po prvním spuštění se admin účet uloží do databáze. Hodnoty `ADMIN_USERNAME` a `ADMIN_PASSWORD` se použijí znovu jen pokud databáze neexistuje. Podrobnosti o seedování a resetu hesla viz [AUTH.md](AUTH.md).
@@ -145,9 +150,11 @@ Forms4SOC/
 ├── data/
 │   ├── events/           – JSON soubory UIB (vytvořeno automaticky)
 │   ├── workbooks/        – YAML šablony workbooků
-│   │   ├── phishing_v2.yaml
-│   │   ├── phishing_v3.yaml
-│   │   ├── ddos_vpn_v1.yaml
+│   │   ├── uib_malware_v1.yaml
+│   │   ├── uib_phishing_v1.yaml
+│   │   ├── uib_account_compromise_v1.yaml
+│   │   ├── uib_bec_v1.yaml
+│   │   ├── uib_vpn_attack_v1.yaml
 │   │   └── vanilla_v1.yaml
 │   └── forms4soc.db      – SQLite databáze (vytvořena automaticky)
 ├── docs/                 – tato dokumentace

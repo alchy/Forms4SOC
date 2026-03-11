@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "admin"
 
+    # Časová zóna pro zobrazení timestampů v UI (IANA název, např. Europe/Prague)
+    timezone: str = "Europe/Prague"
+
     # Cesty
     database_path: str = "data/forms4soc.db"
 

@@ -2,6 +2,14 @@ import copy
 import random
 from datetime import datetime, timezone
 from typing import Optional
+from zoneinfo import ZoneInfo
+
+from app.config import settings
+
+
+def _now_local_str() -> str:
+    """Aktuální čas v nakonfigurované časové zóně (settings.timezone) ve formátu YYYY-MM-DDTHH:MM."""
+    return datetime.now(ZoneInfo(settings.timezone)).strftime("%Y-%m-%dT%H:%M")
 
 from app.models.case import IncidentCase, UpdateCaseRequest
 from app.models.template import SOCTemplate
@@ -110,7 +118,7 @@ async def create_case(
         "template_mitre_tactic":    template.mitre_tactic or "",
         "template_mitre_technique": template.mitre_technique or "",
         "template_data_sources":    ", ".join(template.data_sources) if template.data_sources else "",
-        "last_saved":               now.strftime("%Y-%m-%dT%H:%M"),
+        "last_saved":               _now_local_str(),
     }
 
     document = {
@@ -165,7 +173,7 @@ async def update_case(
         case.data = request.data
         sections = case.data.get("sections")
         if sections:
-            _update_last_saved(sections, now.strftime("%Y-%m-%dT%H:%M"))
+            _update_last_saved(sections, _now_local_str())
     case.updated_at = now
 
     await storage.save_case(case)
