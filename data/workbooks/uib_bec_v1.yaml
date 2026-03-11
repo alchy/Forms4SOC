@@ -3,7 +3,7 @@
 # Terminologie a postup odpovídají interním playbookům CSIRT.
 
 template_id: uib-bec-v1
-name: 'UIB – BEC / Podvodný e-mail (Business Email Compromise)'
+name: 'BEC / Podvodný e-mail (Business Email Compromise)'
 version: '1.0'
 category: BEC
 status: active

@@ -5,7 +5,7 @@
 # Volumetrické DDoS útoky na VPN infrastrukturu řeší workbook ddos_vpn_v1 (DDoS útok na VPN).
 
 template_id: uib-vpn-attack-v1
-name: 'UIB – Útok na VPN / Remote Access Threat'
+name: 'Útok na VPN / Remote Access Threat'
 version: '1.0'
 category: Network
 status: active

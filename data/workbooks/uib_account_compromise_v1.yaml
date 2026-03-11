@@ -3,7 +3,7 @@
 # Terminologie a postup odpovídají interním playbookům CSIRT.
 
 template_id: uib-account-compromise-v1
-name: 'UIB – Kompromitace účtu'
+name: 'Kompromitace účtu'
 version: '1.0'
 category: Identity
 status: active
