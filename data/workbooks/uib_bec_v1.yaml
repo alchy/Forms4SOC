@@ -151,7 +151,7 @@ sections:
         when_to_contact: 'Dle regulatorní povinnosti (NIS2 – KBI, pouze při dopadu na regulovanou službu)'
 
   - id: incident_context
-    title: Informace o kontextu UIB
+    title: 'Detekce a hlášení (L1 ITS)'
     type: section_group
     subsections:
       - id: reported_by_person
@@ -197,39 +197,6 @@ sections:
             example: >
               M365 Defender detekoval e-mail jako potenciální impersonation útok –
               odesílatel napodobuje doménu dodavatele (typo-squatting: dodavatel-platby[.]cz vs dodavatel[.]cz).
-      - id: l2_initial_assessment
-        title: Prvotní posouzení Koordinátora CSIRT (L2)
-        type: form
-        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
-        fields:
-          - key: bec_action_taken
-            label: Byla žádost splněna? (platba provedena / změna IBAN)
-            type: select
-            options:
-              - Ano – platba provedena
-              - Ano – změna platebních údajů provedena, platba zatím neproběhla
-              - Ne – žádost nesplněna, nahlášeno ihned
-              - Nelze zjistit
-            hint: >
-              Pokud platba provedena → okamžitě kontaktuj finanční útvar (viz Kontaktní matice),
-              aby kontaktoval banku. Čas je kritický – transakce lze zastavit jen v omezeném okně (1–4 h).
-          - key: payment_stoppable
-            label: Je platba ještě zastavitelná?
-            type: select
-            options:
-              - Ano – platba dosud nebyla odeslána
-              - Možná – kontaktuj banku okamžitě
-              - Ne – platba již odešla
-              - Netýká se
-          - key: l2_initial_priority
-            label: Předběžná priorita (L2)
-            type: select
-            options:
-              - P1 – Kritická (kompromitace reg. služby nebo masivní finanční škoda)
-              - P2 – Vysoká (provedená platba / kompromitace interního účtu)
-              - P3 – Střední (pokus o BEC, platba nezastavitelná)
-              - P4 – Nízká (pokus odhalen včas, žádná škoda)
-            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
@@ -265,6 +232,44 @@ sections:
             - Ano
         editable: true
         rows: []
+
+  - id: l2_assessment
+    title: 'Prvotní posouzení koordinátora (CSIRT – L2)'
+    type: section_group
+    subsections:
+      - id: l2_initial_assessment
+        title: Prvotní posouzení Koordinátora CSIRT (L2)
+        type: form
+        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
+        fields:
+          - key: bec_action_taken
+            label: Byla žádost splněna? (platba provedena / změna IBAN)
+            type: select
+            options:
+              - Ano – platba provedena
+              - Ano – změna platebních údajů provedena, platba zatím neproběhla
+              - Ne – žádost nesplněna, nahlášeno ihned
+              - Nelze zjistit
+            hint: >
+              Pokud platba provedena → okamžitě kontaktuj finanční útvar (viz Kontaktní matice),
+              aby kontaktoval banku. Čas je kritický – transakce lze zastavit jen v omezeném okně (1–4 h).
+          - key: payment_stoppable
+            label: Je platba ještě zastavitelná?
+            type: select
+            options:
+              - Ano – platba dosud nebyla odeslána
+              - Možná – kontaktuj banku okamžitě
+              - Ne – platba již odešla
+              - Netýká se
+          - key: l2_initial_priority
+            label: Předběžná priorita (L2)
+            type: select
+            options:
+              - P1 – Kritická (kompromitace reg. služby nebo masivní finanční škoda)
+              - P2 – Vysoká (provedená platba / kompromitace interního účtu)
+              - P3 – Střední (pokus o BEC, platba nezastavitelná)
+              - P4 – Nízká (pokus odhalen včas, žádná škoda)
+            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
 
   - id: triage_investigation
     title: Posouzení, třídění a rozhodování

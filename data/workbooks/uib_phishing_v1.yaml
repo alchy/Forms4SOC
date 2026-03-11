@@ -145,7 +145,7 @@ sections:
         when_to_contact: 'Dle regulatorní povinnosti (NIS2 – KBI, pouze při dopadu na regulovanou službu)'
 
   - id: incident_context
-    title: Informace o kontextu UIB
+    title: 'Detekce a hlášení (L1 ITS)'
     type: section_group
     subsections:
       - id: reported_by_person
@@ -193,42 +193,6 @@ sections:
             example: >
               M365 Defender – Safe Links zablokoval přístup na URL hxxps://firma-support[.]com/login
               (kategorie: Phishing, reputace: Malicious). Uživatel proklikl odkaz z e-mailu doručeného v 09:18.
-      - id: l2_initial_assessment
-        title: Prvotní posouzení Koordinátora CSIRT (L2)
-        type: form
-        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
-        fields:
-          - key: phishing_scenario
-            label: Scénář odezvy (dle interakce uživatele)
-            type: select
-            options:
-              - 'Scénář A – uživatel neotevřel odkaz ani přílohu'
-              - 'Scénář B – klikl na odkaz nebo otevřel přílohu, nezadal údaje'
-              - 'Scénář C – zadal přihlašovací údaje (podezření na kompromitaci účtu)'
-              - 'Scénář D – otevřel přílohu a podezření na spuštění malwaru'
-              - Kombinace scénářů
-              - Zatím nezjištěno
-            hint: >
-              Scénář C → aktivuj paralelní postup dle workbooku Kompromitace účtu (uib-account-compromise-v1).
-              Scénář D → aktivuj paralelní postup dle workbooku Malware (uib-malware-v1).
-          - key: credential_submitted
-            label: Byly zadány přihlašovací údaje nebo MFA kód?
-            type: select
-            options:
-              - Ano – potvrzeno uživatelem
-              - Pravděpodobně – uživatel si není jistý
-              - Ne – potvrzeno uživatelem
-              - Nelze zjistit
-            hint: 'Pokud Ano nebo Pravděpodobně → okamžitě kontaktuj Správce IAM a zahaj reset hesla + MFA (viz Scénář C).'
-          - key: l2_initial_priority
-            label: Předběžná priorita (L2)
-            type: select
-            options:
-              - P1 – Kritická (kompromitace regulované služby nebo rozsáhlý útok)
-              - P2 – Vysoká (zadány přihlašovací údaje / podezření na malware / cílený útok)
-              - P3 – Střední (kliknutí bez zadání údajů nebo hromadný phishing)
-              - P4 – Nízká (e-mail nahlášen bez interakce, izolovaný případ)
-            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
@@ -265,6 +229,47 @@ sections:
             - Ano
         editable: true
         rows: []
+
+  - id: l2_assessment
+    title: 'Prvotní posouzení koordinátora (CSIRT – L2)'
+    type: section_group
+    subsections:
+      - id: l2_initial_assessment
+        title: Prvotní posouzení Koordinátora CSIRT (L2)
+        type: form
+        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
+        fields:
+          - key: phishing_scenario
+            label: Scénář odezvy (dle interakce uživatele)
+            type: select
+            options:
+              - 'Scénář A – uživatel neotevřel odkaz ani přílohu'
+              - 'Scénář B – klikl na odkaz nebo otevřel přílohu, nezadal údaje'
+              - 'Scénář C – zadal přihlašovací údaje (podezření na kompromitaci účtu)'
+              - 'Scénář D – otevřel přílohu a podezření na spuštění malwaru'
+              - Kombinace scénářů
+              - Zatím nezjištěno
+            hint: >
+              Scénář C → aktivuj paralelní postup dle workbooku Kompromitace účtu (uib-account-compromise-v1).
+              Scénář D → aktivuj paralelní postup dle workbooku Malware (uib-malware-v1).
+          - key: credential_submitted
+            label: Byly zadány přihlašovací údaje nebo MFA kód?
+            type: select
+            options:
+              - Ano – potvrzeno uživatelem
+              - Pravděpodobně – uživatel si není jistý
+              - Ne – potvrzeno uživatelem
+              - Nelze zjistit
+            hint: 'Pokud Ano nebo Pravděpodobně → okamžitě kontaktuj Správce IAM a zahaj reset hesla + MFA (viz Scénář C).'
+          - key: l2_initial_priority
+            label: Předběžná priorita (L2)
+            type: select
+            options:
+              - P1 – Kritická (kompromitace regulované služby nebo rozsáhlý útok)
+              - P2 – Vysoká (zadány přihlašovací údaje / podezření na malware / cílený útok)
+              - P3 – Střední (kliknutí bez zadání údajů nebo hromadný phishing)
+              - P4 – Nízká (e-mail nahlášen bez interakce, izolovaný případ)
+            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
 
   - id: triage_investigation
     title: Posouzení, třídění a rozhodování

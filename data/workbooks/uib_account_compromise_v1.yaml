@@ -157,7 +157,7 @@ sections:
         when_to_contact: Dle regulatorní povinnosti (NIS2 – KBI při dopadu na regulovanou službu)
 
   - id: incident_context
-    title: Informace o kontextu UIB
+    title: 'Detekce a hlášení (L1 ITS)'
     type: section_group
     subsections:
       - id: reported_by_person
@@ -195,42 +195,6 @@ sections:
             example: >
               AAD detekoval přihlášení z IP 185.xxx.xxx.xxx (geolokace: RU) ve 03:14 UTC –
               5 minut po legitimním přihlášení z CZ. Impossible Travel detekován. Risk level: High.
-      - id: l2_initial_assessment
-        title: Prvotní posouzení Koordinátora CSIRT (L2)
-        type: form
-        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
-        fields:
-          - key: account_type
-            label: Typ kompromitovaného účtu
-            type: select
-            options:
-              - Běžný uživatel (bez zvýšených oprávnění)
-              - Administrátor / privilegovaný účet
-              - Servisní účet
-              - Účet s přístupem k regulované službě
-              - Nelze určit
-            hint: >
-              Administrátor nebo účet s přístupem k regulované službě → ihned eskaluj na P1/P2,
-              aktivuj CISO a zahaj rotaci všech klíčů a certifikátů.
-          - key: session_active
-            label: Je účet / session stále aktivní (kompromitace probíhá)?
-            type: select
-            options:
-              - Ano – aktivní session potvrzena
-              - Pravděpodobně – nelze okamžitě ověřit
-              - Ne – aktivita ukončena
-            hint: >
-              Pokud session aktivní → okamžitá stabilizace je prioritou:
-              reset hesla, MFA a revokace tokenů (provádí Správce IAM na pokyn Koordinátora CSIRT).
-          - key: l2_initial_priority
-            label: Předběžná priorita (L2)
-            type: select
-            options:
-              - P1 – Kritická (privilegovaný účet / reg. služba / potvrzená exfiltrace)
-              - P2 – Vysoká (admin účet / podezření na exfiltraci / kompromitace probíhá)
-              - P3 – Střední (běžný uživatel, neobvyklé přihlášení, aktivita zastavena)
-              - P4 – Nízká (preventivní šetření, žádný dopad potvrzen)
-            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
@@ -268,6 +232,47 @@ sections:
             - Ano
         editable: true
         rows: []
+
+  - id: l2_assessment
+    title: 'Prvotní posouzení koordinátora (CSIRT – L2)'
+    type: section_group
+    subsections:
+      - id: l2_initial_assessment
+        title: Prvotní posouzení Koordinátora CSIRT (L2)
+        type: form
+        note: Vyplní Koordinátor CSIRT ihned po převzetí od L1 – před zahájením Posouzení, třídění a rozhodování
+        fields:
+          - key: account_type
+            label: Typ kompromitovaného účtu
+            type: select
+            options:
+              - Běžný uživatel (bez zvýšených oprávnění)
+              - Administrátor / privilegovaný účet
+              - Servisní účet
+              - Účet s přístupem k regulované službě
+              - Nelze určit
+            hint: >
+              Administrátor nebo účet s přístupem k regulované službě → ihned eskaluj na P1/P2,
+              aktivuj CISO a zahaj rotaci všech klíčů a certifikátů.
+          - key: session_active
+            label: Je účet / session stále aktivní (kompromitace probíhá)?
+            type: select
+            options:
+              - Ano – aktivní session potvrzena
+              - Pravděpodobně – nelze okamžitě ověřit
+              - Ne – aktivita ukončena
+            hint: >
+              Pokud session aktivní → okamžitá stabilizace je prioritou:
+              reset hesla, MFA a revokace tokenů (provádí Správce IAM na pokyn Koordinátora CSIRT).
+          - key: l2_initial_priority
+            label: Předběžná priorita (L2)
+            type: select
+            options:
+              - P1 – Kritická (privilegovaný účet / reg. služba / potvrzená exfiltrace)
+              - P2 – Vysoká (admin účet / podezření na exfiltraci / kompromitace probíhá)
+              - P3 – Střední (běžný uživatel, neobvyklé přihlášení, aktivita zastavena)
+              - P4 – Nízká (preventivní šetření, žádný dopad potvrzen)
+            hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
 
   - id: triage_investigation
     title: Posouzení, třídění a rozhodování

@@ -157,7 +157,7 @@ sections:
         when_to_contact: Dle regulatorní povinnosti (NIS2 – KBI při dopadu na regulovanou infrastrukturu)
 
   - id: incident_context
-    title: Informace o kontextu UIB
+    title: 'Detekce a hlášení (L1 ITS)'
     type: section_group
     subsections:
       - id: reported_by_person
@@ -194,6 +194,47 @@ sections:
             example: >
               4 820 neúspěšných pokusů o VPN přihlášení za 2 hodiny ze zdrojových IP v RU, CN a UA.
               1 úspěšné přihlášení servisního účtu svc-backup z IP 185.xxx.xxx.xxx (RU) v 13:47.
+      - id: affected_assets
+        title: Dotčená aktiva
+        type: assets_table
+        note: Vyplní Koordinátor CSIRT – doplňuj průběžně při každém rozšíření scope
+        hint: >
+          Pokud je VPN brána nebo infrastruktura za ní součástí regulované služby → ihned informuj CISO.<br><br>
+          Do pole Poznámky uveď klíčová zjištění (zdrojové IP, dotčený účet, stav VPN session, CVE číslo).
+        always_expanded: true
+        columns:
+          - asset_name
+          - fqdn
+          - asset_ip
+          - asset_type
+          - regulated_service
+          - notes
+        column_labels:
+          asset_name: Název aktiva
+          fqdn: FQDN
+          asset_ip: IP / Netmask
+          asset_type: Typ aktiva
+          regulated_service: Regulovaná služba
+          notes: Poznámky
+        column_options:
+          asset_type:
+            - VPN brána
+            - Firewall / NGFW
+            - Síťový prvek
+            - Server
+            - Endpoint
+            - Informační systém
+            - Jiné aktivum
+          regulated_service:
+            - Ne
+            - Ano
+        editable: true
+        rows: []
+
+  - id: l2_assessment
+    title: 'Prvotní posouzení koordinátora (CSIRT – L2)'
+    type: section_group
+    subsections:
       - id: l2_initial_assessment
         title: Prvotní posouzení Koordinátora CSIRT (L2)
         type: form
@@ -232,42 +273,6 @@ sections:
               - P3 – Střední (úspěšné přihlášení běžného uživatele / podezřelá aktivita)
               - P4 – Nízká (pouze neúspěšné pokusy, žádné úspěšné přihlášení)
             hint: Předběžná priorita se může upřesnit v průběhu Posouzení.
-      - id: affected_assets
-        title: Dotčená aktiva
-        type: assets_table
-        note: Vyplní Koordinátor CSIRT – doplňuj průběžně při každém rozšíření scope
-        hint: >
-          Pokud je VPN brána nebo infrastruktura za ní součástí regulované služby → ihned informuj CISO.<br><br>
-          Do pole Poznámky uveď klíčová zjištění (zdrojové IP, dotčený účet, stav VPN session, CVE číslo).
-        always_expanded: true
-        columns:
-          - asset_name
-          - fqdn
-          - asset_ip
-          - asset_type
-          - regulated_service
-          - notes
-        column_labels:
-          asset_name: Název aktiva
-          fqdn: FQDN
-          asset_ip: IP / Netmask
-          asset_type: Typ aktiva
-          regulated_service: Regulovaná služba
-          notes: Poznámky
-        column_options:
-          asset_type:
-            - VPN brána
-            - Firewall / NGFW
-            - Síťový prvek
-            - Server
-            - Endpoint
-            - Informační systém
-            - Jiné aktivum
-          regulated_service:
-            - Ne
-            - Ano
-        editable: true
-        rows: []
 
   - id: triage_investigation
     title: Posouzení, třídění a rozhodování
