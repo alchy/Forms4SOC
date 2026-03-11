@@ -32,16 +32,10 @@ sections:
         label: Stručný popis události
         hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
         example: 'BEC – podvodný e-mail s žádostí o změnu IBAN dodavatele · odesílatel: finance@dodavatel-platby[.]cz'
-      - {key: ticket_id, label: Ticket ID (TIS), editable: false, auto_value: case_id}
-      - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
-      - {key: workbook_id, label: Workbook ID, editable: false, value: UIB-005}
-      - {key: version, label: Verze, editable: false, auto_value: template_version}
-      - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-10'}
-      - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým – CSIRT}
+      - {key: last_saved, label: Datum poslední aktualizace UIB, editable: false, auto_value: last_saved}
       - key: incident_coordinator
         label: Koordinátor incidentu (CSIRT – L2)
         hint: Koordinátor CSIRT přebírá řízení od L1 ITS – vyplní se tlačítkem Převzít.
-      - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
 
   - id: classification
     type: classification
@@ -278,8 +272,6 @@ sections:
     description: >
       Cílem je potvrdit nebo vyvrátit BEC incident, stanovit zda došlo k finanční škodě nebo kompromitaci účtu,
       a připravit podklady pro Odezvu. Koordinátor CSIRT (L2) přebírá řízení od L1 ITS a řídí celou reakci.
-      Klasifikace (True/False Positive, Severity) se může v průběhu měnit – finální klasifikace se zaznamenává
-      v bloku Klasifikace a uzavření.
     step_groups:
       - id: bec_validation
         title: Validace BEC události a stanovení priority (Koordinátor CSIRT – L2)
@@ -316,6 +308,12 @@ sections:
             Pokud BEC navazuje na kompromitaci interního účtu → zahaj paralelní postup
             dle workbooku Kompromitace účtu (account_compromise_v1).
 
+  - id: response_technical
+    title: 'Odezva – technická opatření (CSIRT + TA/MA)'
+    type: checklist
+    description: >
+      Technická odezva dle playbooku. Koordinátor CSIRT řídí průběh a zadává pokyny administrátorům.
+    step_groups:
       - id: email_analysis
         title: Analýza e-mailu (CSIRT analytici + Správce M365)
         steps:
@@ -434,18 +432,20 @@ sections:
             example: 'Finanční detaily zdokumentovány v záznamu TIS UIB-XXXXXX'
 
   - id: containment_remediation
-    title: Odezva
+    title: 'Odezva – checklist'
     type: action_table
     description: >
       Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní, napiš N/A.
       Finanční kroky (část C) koordinuje Koordinátor CSIRT s finančním útvarem – CSIRT tyto kroky sám neprovádí.
       Technické zásahy provádí administrátoři výhradně na pokyn Koordinátora CSIRT.
     columns:
+      - phase
       - action
       - responsible_role
       - cooperation
       - status
     column_labels:
+      phase: Fáze
       action: Akce
       responsible_role: Zodpovědná role
       cooperation: Součinnost
@@ -458,13 +458,7 @@ sections:
       - Není nutné provést
     editable_columns:
       - status
-    allow_append: true
-    allow_delete: true
-    append_row_template:
-      action: null
-      responsible_role: null
-      cooperation: null
-      status: null
+    allow_append: false
     hints:
       - >
         Finanční kroky (C) provádí finanční útvar – Koordinátor CSIRT zajišťuje koordinaci a dokumentaci v TIS.
@@ -472,50 +466,88 @@ sections:
         Pokud BEC navazuje na kompromitaci interního účtu, zahaj paralelní Odezvu
         dle workbooku Kompromitace účtu (account_compromise_v1).
     rows:
-      - action: 'A) Blokace podvodné domény odesílatele na mail serveru / M365 (Transport rule / block list)'
+      - phase: A
+        action: Blokace podvodné domény odesílatele na mail serveru / M365 (Transport rule / block list)
         responsible_role: CSIRT analytici
         cooperation: Správce Exchange / M365
         status: null
-      - action: 'A) Search & Purge – odstranění všech doručených podvodných e-mailů ze schránek organizace (M365 Compliance Center / Content Search)'
+      - phase: A
+        action: Search & Purge – odstranění všech doručených podvodných e-mailů ze schránek organizace (M365 Compliance Center / Content Search)
         responsible_role: CSIRT analytici
         cooperation: Správce Exchange / M365
         status: null
-      - action: 'A) Blokace podvodné URL / domény na proxy / firewallu (pokud e-mail obsahoval odkaz)'
+      - phase: A
+        action: Blokace podvodné URL / domény na proxy / firewallu (pokud e-mail obsahoval odkaz)
         responsible_role: CSIRT analytici
         cooperation: Správce Proxy / FW
         status: null
-      - action: 'B) Reset hesla a MFA dotčeného uživatele nebo mailboxu – při potvrzeném podezření na kompromitaci účtu'
+      - phase: B
+        action: Reset hesla a MFA dotčeného uživatele nebo mailboxu – při potvrzeném podezření na kompromitaci účtu
         responsible_role: Správce identity / IAM
         cooperation: CSIRT analytici
         status: null
-      - action: 'B) Revokace všech aktivních sessions a tokenů dotčeného účtu (AAD / M365 – forced sign-out)'
+      - phase: B
+        action: Revokace všech aktivních sessions a tokenů dotčeného účtu (AAD / M365 – forced sign-out)
         responsible_role: Správce identity / IAM
         cooperation: CSIRT analytici
         status: null
-      - action: 'B) Odstranění podezřelých forwarding rules, delegation nastavení a neautorizovaných OAuth aplikací z mailboxu'
+      - phase: B
+        action: Odstranění podezřelých forwarding rules, delegation nastavení a neautorizovaných OAuth aplikací z mailboxu
         responsible_role: Správce Exchange / M365
         cooperation: CSIRT analytici
         status: null
-      - action: 'C) Pozastavení odchozí platby – finanční útvar kontaktuje banku (fraud linka) s žádostí o zastavení transakce'
+      - phase: C
+        action: Pozastavení odchozí platby – finanční útvar kontaktuje banku (fraud linka) s žádostí o zastavení transakce
         responsible_role: Finanční útvar
         cooperation: Koordinátor CSIRT
         status: null
-      - action: 'C) Informování právního oddělení o finanční škodě – posouzení podání trestního oznámení Policii ČR'
+      - phase: C
+        action: Informování právního oddělení o finanční škodě – posouzení podání trestního oznámení Policii ČR
         responsible_role: Právní oddělení
         cooperation: Koordinátor CSIRT
         status: null
-      - action: 'D) Informování dotčených uživatelů o BEC kampani (praktické instrukce bez technických detailů – koordinuje Koordinátor CSIRT)'
+      - phase: D
+        action: Informování dotčených uživatelů o BEC kampani (praktické instrukce bez technických detailů – koordinuje Koordinátor CSIRT)
         responsible_role: Koordinátor CSIRT
         cooperation: '–'
         status: null
-      - action: 'D) Varování dodavatele / partnera, jehož identita byla zneužita – kontaktuj na ověřeném čísle'
+      - phase: D
+        action: Varování dodavatele / partnera, jehož identita byla zneužita – kontaktuj na ověřeném čísle
         responsible_role: Koordinátor CSIRT
         cooperation: Finanční útvar
         status: null
-      - action: Jiné
-        responsible_role: null
-        cooperation: null
-        status: null
+
+  - id: additional_actions
+    title: 'Odezva – dodatečné kroky'
+    type: action_table
+    description: >
+      Prostor pro zaznamenání kroků nad rámec standardního checklistu.
+      Vyplní Koordinátor CSIRT nebo analytik dle potřeby.
+    columns:
+      - action
+      - cooperation
+      - status
+    column_labels:
+      action: Akce
+      cooperation: Součinnost
+      status: Stav
+    status_options:
+      - Provedeno
+      - Probíhá
+      - Čeká
+      - N/A
+      - Není nutné provést
+    editable_columns:
+      - action
+      - cooperation
+      - status
+    allow_append: true
+    allow_delete: true
+    append_row_template:
+      action: null
+      cooperation: null
+      status: null
+    rows: []
 
   - id: communication
     title: Komunikace a notifikace

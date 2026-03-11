@@ -35,16 +35,10 @@ sections:
         label: Stručný popis události
         hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
         example: 'Phishing – podezřelý e-mail s odkazem na fake přihlašovací stránku M365 · odesílatel: helpdesk@firma-support[.]com'
-      - {key: ticket_id, label: Ticket ID (TIS), editable: false, auto_value: case_id}
-      - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
-      - {key: workbook_id, label: Workbook ID, editable: false, value: UIB-001}
-      - {key: version, label: Verze, editable: false, auto_value: template_version}
-      - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-10'}
-      - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým – CSIRT}
+      - {key: last_saved, label: Datum poslední aktualizace UIB, editable: false, auto_value: last_saved}
       - key: incident_coordinator
         label: Koordinátor incidentu (CSIRT – L2)
         hint: Koordinátor CSIRT přebírá řízení od L1 ITS – vyplní se tlačítkem Převzít.
-      - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
 
   - id: classification
     type: classification
@@ -276,10 +270,8 @@ sections:
     title: Posouzení, třídění a rozhodování
     type: checklist
     description: >
-      Cílem je potvrdit nebo vyvrátit phishingový incident, určit scénář (A/B/C/D), posoudit dopad a připravit
-      podklady pro Odezvu. Koordinátor CSIRT (L2) přebírá řízení od L1 ITS a řídí celou reakci – administrátoři
-      a CSIRT analytici jednají výhradně na jeho pokyn. Klasifikace (True/False Positive, Severity) se může
-      v průběhu měnit – finální klasifikace se zaznamenává v bloku Klasifikace a uzavření.
+      Cílem je potvrdit nebo vyvrátit phishingový incident, určit scénář (A/B/C/D) a posoudit dopad.
+      Koordinátor CSIRT (L2) přebírá řízení od L1 ITS a řídí celou reakci.
     step_groups:
       - id: validate_alert
         title: Validace phishing události a stanovení priority (Koordinátor CSIRT – L2)
@@ -314,6 +306,12 @@ sections:
             Pokud uživatel otevřel přílohu a dochází k podezřelému chování stanice (Scénář D) →
             okamžitě aktivuj workbook Malware (uib-malware-v1).
 
+  - id: response_technical
+    title: 'Odezva – technická opatření (CSIRT + TA/MA)'
+    type: checklist
+    description: >
+      Technická odezva dle playbooku. Koordinátor CSIRT řídí průběh a zadává pokyny administrátorům.
+    step_groups:
       - id: email_analysis
         title: Analýza e-mailu (CSIRT analytici + Správce M365)
         steps:
@@ -500,18 +498,20 @@ sections:
             example: 'Timeline a opatření zdokumentována v záznamu TIS UIB-XXXXXX'
 
   - id: containment_remediation
-    title: Odezva
+    title: 'Odezva – checklist'
     type: action_table
     description: >
       Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní pro daný scénář, napiš N/A.
       Technické zásahy provádí administrátoři výhradně na pokyn Koordinátora CSIRT.
       Scénáře C a D vyžadují paralelní aktivaci workbooků Kompromitace účtu a/nebo Malware.
     columns:
+      - phase
       - action
       - responsible_role
       - cooperation
       - status
     column_labels:
+      phase: Fáze
       action: Akce
       responsible_role: Zodpovědná role
       cooperation: Součinnost
@@ -524,78 +524,114 @@ sections:
       - Není nutné provést
     editable_columns:
       - status
-    allow_append: true
-    allow_delete: true
-    append_row_template:
-      action: null
-      responsible_role: null
-      cooperation: null
-      status: null
+    allow_append: false
     hints:
       - >
         Scénář C → zahaj paralelní Odezvu dle workbooku Kompromitace účtu (uib-account-compromise-v1).
         Scénář D → zahaj paralelní Odezvu dle workbooku Malware (uib-malware-v1).
     rows:
-      - action: 'A) Blokace odesílající domény a e-mailové adresy na M365 (Transport rule / Tenant Block List)'
+      - phase: A
+        action: Blokace odesílající domény a e-mailové adresy na M365 (Transport rule / Tenant Block List)
         responsible_role: CSIRT analytici
         cooperation: Správce Exchange / M365
         status: null
-      - action: 'A) Search & Purge – odstranění všech doručených phishingových e-mailů ze schránek organizace (M365 Compliance Center)'
+      - phase: A
+        action: Search & Purge – odstranění všech doručených phishingových e-mailů ze schránek organizace (M365 Compliance Center)
         responsible_role: CSIRT analytici
         cooperation: Správce Exchange / M365
         status: null
-      - action: 'A) Blokace phishingové URL a domény na proxy / firewallu a M365 Safe Links (pokud e-mail obsahoval odkaz)'
+      - phase: A
+        action: Blokace phishingové URL a domény na proxy / firewallu a M365 Safe Links (pokud e-mail obsahoval odkaz)
         responsible_role: CSIRT analytici
         cooperation: Správce Proxy / FW
         status: null
-      - action: 'A) Ověření doručení v prostředí MIS a provedení lokální nápravy (Administrátor MIS)'
+      - phase: A
+        action: Ověření doručení v prostředí MIS a provedení lokální nápravy (Administrátor MIS)
         responsible_role: Administrátor MIS
         cooperation: CSIRT analytici
         status: null
-      - action: 'B) Analýza Safe Links / M365 Defender logů pro prokliknuté URL – ověření, zda nedošlo k download payloadu nebo token krádeži'
+      - phase: B
+        action: Analýza Safe Links / M365 Defender logů pro prokliknuté URL – ověření, zda nedošlo k download payloadu nebo token krádeži
         responsible_role: CSIRT analytici
         cooperation: Správce Exchange / M365
         status: null
-      - action: 'B) Kontrola AAD sign-in logů dotčeného uživatele po dobu prokliknutí – ověření anomálií bez zadání hesla'
+      - phase: B
+        action: Kontrola AAD sign-in logů dotčeného uživatele po dobu prokliknutí – ověření anomálií bez zadání hesla
         responsible_role: CSIRT analytici
         cooperation: Správce identity / IAM
         status: null
-      - action: 'C) Reset hesla dotčeného uživatele, vynucení nové volby hesla a re-onboarding MFA'
+      - phase: C
+        action: Reset hesla dotčeného uživatele, vynucení nové volby hesla a re-onboarding MFA
         responsible_role: Správce identity / IAM
         cooperation: CSIRT analytici
         status: null
-      - action: 'C) Revokace všech aktivních sessions a tokenů dotčeného účtu (AAD – Forced Sign-Out)'
+      - phase: C
+        action: Revokace všech aktivních sessions a tokenů dotčeného účtu (AAD – Forced Sign-Out)
         responsible_role: Správce identity / IAM
         cooperation: CSIRT analytici
         status: null
-      - action: 'C) Odstranění podezřelých forwarding rules, delegation nastavení a neautorizovaných OAuth aplikací z mailboxu'
+      - phase: C
+        action: Odstranění podezřelých forwarding rules, delegation nastavení a neautorizovaných OAuth aplikací z mailboxu
         responsible_role: Správce Exchange / M365
         cooperation: CSIRT analytici
         status: null
-      - action: 'C) Aktivace workbooku Kompromitace účtu (uib-account-compromise-v1) pro plné pokrytí kompromitovaného účtu'
+      - phase: C
+        action: Aktivace workbooku Kompromitace účtu (uib-account-compromise-v1) pro plné pokrytí kompromitovaného účtu
         responsible_role: Koordinátor CSIRT
         cooperation: CSIRT analytici
         status: null
-      - action: 'D) Izolace dotčené stanice od sítě (EDR Network Isolation nebo fyzické odpojení)'
+      - phase: D
+        action: Izolace dotčené stanice od sítě (EDR Network Isolation nebo fyzické odpojení)
         responsible_role: Administrátor MIS / TA
         cooperation: Koordinátor CSIRT
         status: null
-      - action: 'D) Sandbox analýza přílohy (hash, IoC, chování, C2 komunikace) + blokace IoC na FW a proxy'
+      - phase: D
+        action: Sandbox analýza přílohy (hash, IoC, chování, C2 komunikace) + blokace IoC na FW a proxy
         responsible_role: CSIRT analytici
         cooperation: Správce Proxy / FW
         status: null
-      - action: 'D) Aktivace workbooku Malware (uib-malware-v1) pro plné pokrytí malware incidentu'
+      - phase: D
+        action: Aktivace workbooku Malware (uib-malware-v1) pro plné pokrytí malware incidentu
         responsible_role: Koordinátor CSIRT
         cooperation: CSIRT analytici
         status: null
-      - action: 'E) Informování dotčených uživatelů o phishingové kampani (praktické instrukce – koordinuje Koordinátor CSIRT)'
+      - phase: E
+        action: Informování dotčených uživatelů o phishingové kampani (praktické instrukce – koordinuje Koordinátor CSIRT)
         responsible_role: Koordinátor CSIRT
         cooperation: '–'
         status: null
-      - action: Jiné
-        responsible_role: null
-        cooperation: null
-        status: null
+
+  - id: additional_actions
+    title: 'Odezva – dodatečné kroky'
+    type: action_table
+    description: >
+      Prostor pro zaznamenání kroků nad rámec standardního checklistu.
+      Vyplní Koordinátor CSIRT nebo analytik dle potřeby.
+    columns:
+      - action
+      - cooperation
+      - status
+    column_labels:
+      action: Akce
+      cooperation: Součinnost
+      status: Stav
+    status_options:
+      - Provedeno
+      - Probíhá
+      - Čeká
+      - N/A
+      - Není nutné provést
+    editable_columns:
+      - action
+      - cooperation
+      - status
+    allow_append: true
+    allow_delete: true
+    append_row_template:
+      action: null
+      cooperation: null
+      status: null
+    rows: []
 
   - id: communication
     title: Komunikace a notifikace

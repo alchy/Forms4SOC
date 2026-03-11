@@ -38,16 +38,10 @@ sections:
         label: Stručný popis události
         hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
         example: 'VPN brute-force – 4 800 neúspěšných pokusů z RU/CN IP za 2 h · 1 úspěšné přihlášení – servisní účet svc-backup'
-      - {key: ticket_id, label: Ticket ID (TIS), editable: false, auto_value: case_id}
-      - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
-      - {key: workbook_id, label: Workbook ID, editable: false, value: UIB-004}
-      - {key: version, label: Verze, editable: false, auto_value: template_version}
-      - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-10'}
-      - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým – CSIRT}
+      - {key: last_saved, label: Datum poslední aktualizace UIB, editable: false, auto_value: last_saved}
       - key: incident_coordinator
         label: Koordinátor incidentu (CSIRT – L2)
         hint: Koordinátor CSIRT přebírá řízení od L1 ITS – vyplní se tlačítkem Převzít.
-      - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
 
   - id: classification
     type: classification
@@ -279,10 +273,8 @@ sections:
     title: Posouzení, třídění a rozhodování
     type: checklist
     description: >
-      Cílem je potvrdit nebo vyvrátit útok na VPN, identifikovat typ útoku, ověřit zda došlo k úspěšnému
-      přihlášení nebo laterálnímu pohybu, a připravit podklady pro Odezvu.
+      Cílem je potvrdit nebo vyvrátit útok na VPN, identifikovat typ útoku a posoudit KBU/KBI.
       Koordinátor CSIRT (L2) přebírá řízení od L1 ITS a aktivuje CSIRT analytiky a administrátory.
-      Klasifikace se může v průběhu měnit – finální klasifikace se zaznamenává v bloku Klasifikace a uzavření.
     step_groups:
       - id: validate_alert
         title: Validace alertu a KBU/KBI posouzení (Koordinátor CSIRT – L2)
@@ -316,6 +308,12 @@ sections:
             které VPN běžně nepoužívají · paralelní relace z více zemí ·
             korelace s veřejnými CVE a vendor advisories · laterální pohyb po přihlášení.
 
+  - id: response_technical
+    title: 'Odezva – technická opatření (CSIRT + TA/MA)'
+    type: checklist
+    description: >
+      Technická odezva dle playbooku. Koordinátor CSIRT řídí průběh a zadává pokyny administrátorům.
+    step_groups:
       - id: immediate_stabilization
         title: A) Okamžitá stabilizace (Koordinátor CSIRT + Správce VPN + Správce sítě)
         steps:
@@ -539,17 +537,19 @@ sections:
             example: 'TIS záznam UIB-XXXXXX: odpojení session 14:15 · geo-blocking 14:18 · reset hesel 14:20'
 
   - id: containment_remediation
-    title: Odezva
+    title: 'Odezva – checklist'
     type: action_table
     description: >
       Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní, napiš N/A.
       Technické zásahy provádí administrátoři výhradně na pokyn Koordinátora CSIRT.
     columns:
+      - phase
       - action
       - responsible_role
       - cooperation
       - status
     column_labels:
+      phase: Fáze
       action: Akce
       responsible_role: Zodpovědná role
       cooperation: Součinnost
@@ -562,70 +562,105 @@ sections:
       - Není nutné provést
     editable_columns:
       - status
+    allow_append: false
+    rows:
+      - phase: A
+        action: Odpojení aktivních VPN sessions útočníka
+        responsible_role: Správce VPN
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: A
+        action: Blokace zdrojových IP/ASN útočníka na hraničním FW
+        responsible_role: Správce sítě / FW
+        cooperation: CSIRT analytici
+        status: null
+      - phase: A
+        action: Geo-blocking zdrojových regionů / zemí (bez legitimního provozu organizace)
+        responsible_role: Správce sítě / FW
+        cooperation: Správce IPS · CSIRT analytici
+        status: null
+      - phase: A
+        action: Dočasná deaktivace nebo omezení VPN profilu / skupiny (pokud útok pokračuje)
+        responsible_role: Správce VPN
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: B
+        action: Analýza VPN logů – identifikace úspěšných přihlášení, vzorů, IOC
+        responsible_role: CSIRT analytici
+        cooperation: Správce VPN
+        status: null
+      - phase: B
+        action: Reset hesel a MFA dotčených / cílených VPN účtů – vynucení MFA na VPN
+        responsible_role: Správce identity / IAM
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: B
+        action: Revokace sessions a tokenů kompromitovaných účtů
+        responsible_role: Správce identity / IAM
+        cooperation: CSIRT analytici
+        status: null
+      - phase: B
+        action: Aktivace lockout politiky na VPN (pokud dosud neaktivní)
+        responsible_role: Správce VPN
+        cooperation: Správce identity / IAM
+        status: null
+      - phase: B
+        action: Síťová segmentace nebo izolace zasaženého segmentu (při lateral movement)
+        responsible_role: Správce sítě / FW
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: B
+        action: Aplikace patchů nebo mitigací dle CVE na VPN zařízení
+        responsible_role: Správce VPN
+        cooperation: CSIRT analytici
+        status: null
+      - phase: '–'
+        action: Uložení důkazů (logy, IOC, konfigurace) do IKB
+        responsible_role: CSIRT analytici
+        cooperation: Správce VPN · Správce sítě / FW
+        status: null
+      - phase: '–'
+        action: Monitoring VPN aktivity po obnově – 48–72 h sledování anomálií
+        responsible_role: CSIRT analytici
+        cooperation: Správce VPN
+        status: null
+      - phase: '–'
+        action: Informování dotčených uživatelů – instrukce k novému heslu a MFA
+        responsible_role: Koordinátor CSIRT
+        cooperation: '–'
+        status: null
+
+  - id: additional_actions
+    title: 'Odezva – dodatečné kroky'
+    type: action_table
+    description: >
+      Prostor pro zaznamenání kroků nad rámec standardního checklistu.
+      Vyplní Koordinátor CSIRT nebo analytik dle potřeby.
+    columns:
+      - action
+      - cooperation
+      - status
+    column_labels:
+      action: Akce
+      cooperation: Součinnost
+      status: Stav
+    status_options:
+      - Provedeno
+      - Probíhá
+      - Čeká
+      - N/A
+      - Není nutné provést
+    editable_columns:
+      - action
+      - cooperation
+      - status
     allow_append: true
     allow_delete: true
     append_row_template:
       action: null
-      responsible_role: null
       cooperation: null
       status: null
-    rows:
-      - action: 'A) Odpojení aktivních VPN sessions útočníka'
-        responsible_role: Správce VPN
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'A) Blokace zdrojových IP/ASN útočníka na hraničním FW'
-        responsible_role: Správce sítě / FW
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'A) Geo-blocking zdrojových regionů / zemí (bez legitimního provozu organizace)'
-        responsible_role: Správce sítě / FW
-        cooperation: Správce IPS · CSIRT analytici
-        status: null
-      - action: 'A) Dočasná deaktivace nebo omezení VPN profilu / skupiny (pokud útok pokračuje)'
-        responsible_role: Správce VPN
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'B) Analýza VPN logů – identifikace úspěšných přihlášení, vzorů, IOC'
-        responsible_role: CSIRT analytici
-        cooperation: Správce VPN
-        status: null
-      - action: 'B) Reset hesel a MFA dotčených / cílených VPN účtů – vynucení MFA na VPN'
-        responsible_role: Správce identity / IAM
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'B) Revokace sessions a tokenů kompromitovaných účtů'
-        responsible_role: Správce identity / IAM
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'B) Aktivace lockout politiky na VPN (pokud dosud neaktivní)'
-        responsible_role: Správce VPN
-        cooperation: Správce identity / IAM
-        status: null
-      - action: 'B3) Síťová segmentace nebo izolace zasaženého segmentu (při lateral movement)'
-        responsible_role: Správce sítě / FW
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'B4) Aplikace patchů nebo mitigací dle CVE na VPN zařízení'
-        responsible_role: Správce VPN
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'Uložení důkazů (logy, IOC, konfigurace) do IKB'
-        responsible_role: CSIRT analytici
-        cooperation: Správce VPN · Správce sítě / FW
-        status: null
-      - action: 'Monitoring VPN aktivity po obnově – 48–72 h sledování anomálií'
-        responsible_role: CSIRT analytici
-        cooperation: Správce VPN
-        status: null
-      - action: 'Informování dotčených uživatelů – instrukce k novému heslu a MFA'
-        responsible_role: Koordinátor CSIRT
-        cooperation: '–'
-        status: null
-      - action: Jiné
-        responsible_role: null
-        cooperation: null
-        status: null
+    rows: []
 
   - id: communication
     title: Komunikace a notifikace

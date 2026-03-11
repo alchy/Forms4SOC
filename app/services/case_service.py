@@ -70,6 +70,19 @@ def _fill_auto_values(obj: object, auto_values: dict) -> None:
                 _fill_auto_values(v, auto_values)
 
 
+def _update_last_saved(obj: object, timestamp: str) -> None:
+    """Aktualizuje všechna pole s auto_value: last_saved na aktuální timestamp."""
+    if isinstance(obj, list):
+        for item in obj:
+            _update_last_saved(item, timestamp)
+    elif isinstance(obj, dict):
+        if obj.get("auto_value") == "last_saved":
+            obj["value"] = timestamp
+        for v in obj.values():
+            if isinstance(v, (dict, list)):
+                _update_last_saved(v, timestamp)
+
+
 def _clone_template_sections(sections: list) -> list:
     """
     Hluboká kopie sekcí šablony pro nový incident.
@@ -97,6 +110,7 @@ async def create_case(
         "template_mitre_tactic":    template.mitre_tactic or "",
         "template_mitre_technique": template.mitre_technique or "",
         "template_data_sources":    ", ".join(template.data_sources) if template.data_sources else "",
+        "last_saved":               now.strftime("%Y-%m-%dT%H:%M"),
     }
 
     document = {
@@ -144,11 +158,15 @@ async def update_case(
     if not case:
         return None
 
+    now = datetime.now(timezone.utc)
     if request.status is not None:
         case.status = request.status
     if request.data is not None:
         case.data = request.data
-    case.updated_at = datetime.now(timezone.utc)
+        sections = case.data.get("sections")
+        if sections:
+            _update_last_saved(sections, now.strftime("%Y-%m-%dT%H:%M"))
+    case.updated_at = now
 
     await storage.save_case(case)
     return case

@@ -34,16 +34,10 @@ sections:
         label: Stručný popis události
         hint: Výstižný popis pro odlišení od ostatních případů stejné šablony
         example: 'Kompromitace účtu – přihlášení z neznámé IP (RU) · uživatel: novak@firma.cz · MFA změněno bez vědomí uživatele'
-      - {key: ticket_id, label: Ticket ID (TIS), editable: false, auto_value: case_id}
-      - {key: workbook_name, label: Název workbooku, editable: false, auto_value: template_name}
-      - {key: workbook_id, label: Workbook ID, editable: false, value: UIB-003}
-      - {key: version, label: Verze, editable: false, auto_value: template_version}
-      - {key: last_updated, label: Datum poslední aktualizace, editable: false, value: '2026-03-10'}
-      - {key: author, label: Autor / vlastník šablony, editable: false, value: SOC Analytický tým – CSIRT}
+      - {key: last_saved, label: Datum poslední aktualizace UIB, editable: false, auto_value: last_saved}
       - key: incident_coordinator
         label: Koordinátor incidentu (CSIRT – L2)
         hint: Koordinátor CSIRT přebírá řízení od L1 ITS – vyplní se tlačítkem Převzít.
-      - {key: workbook_status, label: Status, editable: false, auto_value: template_status}
 
   - id: classification
     type: classification
@@ -279,9 +273,8 @@ sections:
     title: Posouzení, třídění a rozhodování
     type: checklist
     description: >
-      Cílem je validovat kompromitaci, provést okamžitou stabilizaci, analyzovat rozsah aktivity útočníka
-      a připravit podklady pro Odezvu. Koordinátor CSIRT (L2) přebírá řízení od L1 ITS.
-      Okamžitá stabilizace (reset hesla, MFA, revokace) může probíhat paralelně s analýzou.
+      Cílem je validovat kompromitaci, určit typ účtu a závažnost, posoudit KBU/KBI a aktivovat potřebné role.
+      Koordinátor CSIRT (L2) přebírá řízení od L1 ITS.
       Klasifikace se může v průběhu měnit – finální klasifikace se zaznamenává v bloku Klasifikace a uzavření.
     step_groups:
       - id: validate_alert
@@ -310,6 +303,12 @@ sections:
             změna hesla/MFA bez vědomí uživatele · neznámá forwarding pravidla · MFA fatigue (opakované žádosti) ·
             podezření na token replay / session hijack · uživatel hlásí neznámou aktivitu.
 
+  - id: response_technical
+    title: 'Odezva – technická opatření (CSIRT + TA/MA)'
+    type: checklist
+    description: >
+      Technická odezva dle playbooku. Koordinátor CSIRT řídí průběh a zadává pokyny administrátorům.
+    step_groups:
       - id: immediate_stabilization
         title: A) Okamžitá stabilizace (Správce IAM + Správce M365 – dle pokynů Koordinátora CSIRT)
         steps:
@@ -498,18 +497,20 @@ sections:
             example: 'TIS záznam UIB-XXXXXX: reset hesla 11:35 · MFA reset 11:36 · revokace sessions 11:37'
 
   - id: containment_remediation
-    title: Odezva
+    title: 'Odezva – checklist'
     type: action_table
     description: >
       Zaznamenej u každé akce zodpovědnou roli a aktuální stav. Pokud akce není relevantní, napiš N/A.
       Technické zásahy provádí administrátoři výhradně na pokyn Koordinátora CSIRT.
       Stabilizace (A) může probíhat paralelně s analýzou (B) – nečekej na dokončení analýzy.
     columns:
+      - phase
       - action
       - responsible_role
       - cooperation
       - status
     column_labels:
+      phase: Fáze
       action: Akce
       responsible_role: Zodpovědná role
       cooperation: Součinnost
@@ -522,70 +523,105 @@ sections:
       - Není nutné provést
     editable_columns:
       - status
+    allow_append: false
+    rows:
+      - phase: A
+        action: Reset hesla dotčeného uživatele s vynucenou změnou při přihlášení
+        responsible_role: Správce identity / IAM
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: A
+        action: Reset MFA – odebrání stávajících metod a re-enrollment uživatele
+        responsible_role: Správce identity / IAM
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: A
+        action: Revokace všech aktivních sessions a refresh tokenů (AAD forced sign-out)
+        responsible_role: Správce identity / IAM
+        cooperation: CSIRT analytici
+        status: null
+      - phase: A
+        action: Dočasné uzamčení účtu (pokud aktivita útočníka stále probíhá)
+        responsible_role: Správce identity / IAM
+        cooperation: Koordinátor CSIRT
+        status: null
+      - phase: B
+        action: Audit sign-in logů, risk events a token aktivity v AAD
+        responsible_role: CSIRT analytici
+        cooperation: Správce identity / IAM
+        status: null
+      - phase: B
+        action: Kontrola a odstranění forwarding rules (včetně hidden rules) z mailboxu
+        responsible_role: Správce Exchange / M365
+        cooperation: CSIRT analytici
+        status: null
+      - phase: B
+        action: Odebrání neautorizovaných OAuth aplikací a delegací přístupu
+        responsible_role: Správce Exchange / M365
+        cooperation: CSIRT analytici
+        status: null
+      - phase: C
+        action: Nastavení nebo zpřísnění Conditional Access politik (blokace rizikových zemí, session lifetime, Token Protection)
+        responsible_role: Správce identity / IAM
+        cooperation: CSIRT analytici
+        status: null
+      - phase: C
+        action: Rotace klíčů, certifikátů a přístupů privilegovaného účtu
+        responsible_role: Správce AD / IAM
+        cooperation: CSIRT analytici
+        status: null
+      - phase: C
+        action: Audit administrátorských akcí provedených v okně kompromitace
+        responsible_role: CSIRT analytici
+        cooperation: Správce AD / IAM
+        status: null
+      - phase: C
+        action: Informování DPO při exfiltraci nebo přístupu k osobním údajům
+        responsible_role: Koordinátor CSIRT
+        cooperation: DPO
+        status: null
+      - phase: '–'
+        action: Uložení důkazů (logy, audit, screenshots) do IKB
+        responsible_role: CSIRT analytici
+        cooperation: Správce Exchange / M365
+        status: null
+      - phase: '–'
+        action: Informování dotčeného uživatele – pokyny k novému heslu, MFA a hlídání aktivit
+        responsible_role: Koordinátor CSIRT
+        cooperation: '–'
+        status: null
+
+  - id: additional_actions
+    title: 'Odezva – dodatečné kroky'
+    type: action_table
+    description: >
+      Prostor pro zaznamenání kroků nad rámec standardního checklistu.
+      Vyplní Koordinátor CSIRT nebo analytik dle potřeby.
+    columns:
+      - action
+      - cooperation
+      - status
+    column_labels:
+      action: Akce
+      cooperation: Součinnost
+      status: Stav
+    status_options:
+      - Provedeno
+      - Probíhá
+      - Čeká
+      - N/A
+      - Není nutné provést
+    editable_columns:
+      - action
+      - cooperation
+      - status
     allow_append: true
     allow_delete: true
     append_row_template:
       action: null
-      responsible_role: null
       cooperation: null
       status: null
-    rows:
-      - action: 'A) Reset hesla dotčeného uživatele s vynucenou změnou při přihlášení'
-        responsible_role: Správce identity / IAM
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'A) Reset MFA – odebrání stávajících metod a re-enrollment uživatele'
-        responsible_role: Správce identity / IAM
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'A) Revokace všech aktivních sessions a refresh tokenů (AAD forced sign-out)'
-        responsible_role: Správce identity / IAM
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'A) Dočasné uzamčení účtu (pokud aktivita útočníka stále probíhá)'
-        responsible_role: Správce identity / IAM
-        cooperation: Koordinátor CSIRT
-        status: null
-      - action: 'B) Audit sign-in logů, risk events a token aktivity v AAD'
-        responsible_role: CSIRT analytici
-        cooperation: Správce identity / IAM
-        status: null
-      - action: 'B) Kontrola a odstranění forwarding rules (včetně hidden rules) z mailboxu'
-        responsible_role: Správce Exchange / M365
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'B) Odebrání neautorizovaných OAuth aplikací a delegací přístupu'
-        responsible_role: Správce Exchange / M365
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'C1/C2) Nastavení nebo zpřísnění Conditional Access politik (blokace rizikových zemí, session lifetime, Token Protection)'
-        responsible_role: Správce identity / IAM
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'C3) Rotace klíčů, certifikátů a přístupů privilegovaného účtu'
-        responsible_role: Správce AD / IAM
-        cooperation: CSIRT analytici
-        status: null
-      - action: 'C3) Audit administrátorských akcí provedených v okně kompromitace'
-        responsible_role: CSIRT analytici
-        cooperation: Správce AD / IAM
-        status: null
-      - action: 'C4) Informování DPO při exfiltraci nebo přístupu k osobním údajům'
-        responsible_role: Koordinátor CSIRT
-        cooperation: DPO
-        status: null
-      - action: 'Uložení důkazů (logy, audit, screenshots) do IKB'
-        responsible_role: CSIRT analytici
-        cooperation: Správce Exchange / M365
-        status: null
-      - action: 'Informování dotčeného uživatele – pokyny k novému heslu, MFA a hlídání aktivit'
-        responsible_role: Koordinátor CSIRT
-        cooperation: '–'
-        status: null
-      - action: Jiné
-        responsible_role: null
-        cooperation: null
-        status: null
+    rows: []
 
   - id: communication
     title: Komunikace a notifikace
