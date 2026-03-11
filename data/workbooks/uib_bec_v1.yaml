@@ -538,8 +538,6 @@ sections:
       - N/A
       - Není nutné provést
     editable_columns:
-      - action
-      - cooperation
       - status
     allow_append: true
     allow_delete: true

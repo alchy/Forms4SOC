@@ -741,7 +741,8 @@ function renderActionTable(section) {
         const tr = document.createElement('tr');
         (section.columns || []).forEach(col => {
             const td = el('td', 'small align-middle');
-            const isStatus = (section.editable_columns || []).includes(col) && section.status_options;
+            const statusCol = section.status_column || 'status';
+            const isStatus = col === statusCol && (section.editable_columns || []).includes(col) && section.status_options;
 
             if (isStatus) {
                 // Sloupec Stav – dropdown z předdefinovaných možností
