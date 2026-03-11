@@ -161,11 +161,9 @@ sections:
     type: section_group
     subsections:
       - id: reported_by_person
-        title: Hlášeno osobou (L1 ITS – záznam dle SM/25/0100/P5)
+        title: Hlášeno zaměstnancem / osobou
         type: form
-        note: >
-          Vyplní Koordinátor CSIRT na základě předání od L1 ITS.
-          L1 eviduje UIB/IIB v TIS a okamžitě předává – bez analýzy VPN logů nebo technických zásahů.
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         condition: source_type == 'person'
         fields:
           - {key: reported_at, label: Datum a čas nahlášení (UIB/IIB), type: datetime, example: '2026-03-10T14:05'}
@@ -179,9 +177,9 @@ sections:
               SIEM vyhlásil alert na masivní počet neúspěšných VPN přihlášení ze zahraničních IP adres.
               Ve VPN logu vidím tisíce pokusů za poslední hodinu. Jeden účet se zdá, že se přihlásil úspěšně.
       - id: automated_detection
-        title: Automatizovaná detekce (SIEM / VPN GW / IPS)
+        title: Automatizovaná detekce
         type: form
-        note: Vyplní Koordinátor CSIRT – přeskoč pokud hlásila osoba
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         condition: source_type == 'automated'
         fields:
           - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, example: '2026-03-10T13:58'}
@@ -197,7 +195,7 @@ sections:
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
-        note: Vyplní Koordinátor CSIRT – doplňuj průběžně při každém rozšíření scope
+        note: 'Průběžně doplňuj při každém rozšíření scope'
         hint: >
           Pokud je VPN brána nebo infrastruktura za ní součástí regulované služby → ihned informuj CISO.<br><br>
           Do pole Poznámky uveď klíčová zjištění (zdrojové IP, dotčený účet, stav VPN session, CVE číslo).

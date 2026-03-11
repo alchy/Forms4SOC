@@ -155,11 +155,9 @@ sections:
     type: section_group
     subsections:
       - id: reported_by_person
-        title: Hlášeno osobou (L1 ITS – záznam dle SM/25/0100/P5)
+        title: Hlášeno zaměstnancem / osobou
         type: form
-        note: >
-          Vyplní Koordinátor CSIRT na základě předání od L1 ITS.
-          L1 eviduje UIB/IIB v TIS a okamžitě předává – bez technické analýzy nebo zásahu.
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         fields:
           - {key: reported_at, label: Datum a čas nahlášení (UIB/IIB), type: datetime, example: '2026-03-10T10:15'}
           - {key: reporter_name, label: Jméno oznamovatele, example: Ing. Jana Procházková}
@@ -182,9 +180,9 @@ sections:
               Obdrželi jsme e-mail od „dodavatele" s žádostí o změnu IBAN pro nadcházející platbu.
               E-mail se jevil jako legitimní, ale kolegovi přišlo podezřelé, že přišel náhle bez předchozí komunikace.
       - id: automated_detection
-        title: Automatizovaná detekce (M365 Defender / SIEM)
+        title: Automatizovaná detekce
         type: form
-        note: Vyplní Koordinátor CSIRT – přeskoč pokud hlásila osoba
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         condition: source_type == 'automated'
         fields:
           - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, example: '2026-03-10T10:08'}
@@ -200,7 +198,7 @@ sections:
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
-        note: Vyplní Koordinátor CSIRT – doplňuj průběžně při každém rozšíření scope
+        note: 'Průběžně doplňuj při každém rozšíření scope'
         hint: >
           Pokud je dotčený mailbox nebo finanční systém součástí regulované služby → ihned informuj CISO.<br><br>
           Do pole Poznámky uveď důležitá zjištění (výše platby, dotčený dodavatel, stav transakce, IBAN).

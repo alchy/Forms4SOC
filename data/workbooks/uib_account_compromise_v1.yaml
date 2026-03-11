@@ -161,11 +161,9 @@ sections:
     type: section_group
     subsections:
       - id: reported_by_person
-        title: Hlášeno osobou (L1 ITS – záznam dle SM/25/0100/P5)
+        title: Hlášeno zaměstnancem / osobou
         type: form
-        note: >
-          Vyplní Koordinátor CSIRT na základě předání od L1 ITS.
-          L1 eviduje UIB/IIB v TIS a okamžitě předává – bez technické analýzy, blokací nebo resetů.
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         condition: source_type == 'person'
         fields:
           - {key: reported_at, label: Datum a čas nahlášení (UIB/IIB), type: datetime, example: '2026-03-10T11:20'}
@@ -180,9 +178,9 @@ sections:
               Uživatel hlásí, že dostal notifikaci o přihlášení z neznámého zařízení a heslo mu bylo změněno.
               Přišlo mu velké množství MFA žádostí o potvrzení, které neinicializoval.
       - id: automated_detection
-        title: Automatizovaná detekce (AAD / M365 Defender / SIEM)
+        title: Automatizovaná detekce
         type: form
-        note: Vyplní Koordinátor CSIRT – přeskoč pokud hlásila osoba
+        note: 'L1 ITS – záznam dle SM/25/0100/P5'
         condition: source_type == 'automated'
         fields:
           - {key: alert_timestamp, label: Datum a čas alertu, type: datetime, example: '2026-03-10T11:15'}
@@ -198,7 +196,7 @@ sections:
       - id: affected_assets
         title: Dotčená aktiva
         type: assets_table
-        note: Vyplní Koordinátor CSIRT – doplňuj průběžně při každém rozšíření scope
+        note: 'Průběžně doplňuj při každém rozšíření scope'
         hint: >
           Pokud je kompromitovaný účet součástí regulované služby nebo má administrátorská oprávnění
           → ihned informuj CISO.<br><br>
